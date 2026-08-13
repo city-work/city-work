@@ -50,7 +50,7 @@
         <nav class="flex flex-col items-center space-y-3 w-full px-2" id="navRail"></nav>
       </div>
       <div class="flex flex-col items-center space-y-3 w-full px-2">
-        <a href="log in page.html" onclick="localStorage.removeItem('archivehub_user');" class="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
+        <a href="../login.html" onclick="localStorage.removeItem('archivehub_user');" class="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
           <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
         </a>
       </div>
@@ -232,7 +232,6 @@
 
     // ─── SESSION CHECK ──────────────────────────────────────────────
     async function checkUserSession() {
-      // Render layout immediately
       renderAll();
 
       try {
@@ -253,7 +252,7 @@
               if (error || !data.user) {
                 console.warn('Invalid local session token. Returning to login.');
                 localStorage.removeItem('archivehub_user');
-                window.location.href = 'log in page.html';
+                window.location.href = '../login.html';
                 return;
               }
 
@@ -272,7 +271,7 @@
             } catch (e) {
               console.warn('Session verification fallback:', e);
               localStorage.removeItem('archivehub_user');
-              window.location.href = 'log in page.html';
+              window.location.href = '../login.html';
               return;
             }
           }
@@ -280,13 +279,13 @@
         }
 
         if (!supabase) {
-          window.location.href = 'log in page.html';
+          window.location.href = '../login.html';
           return;
         }
 
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error || !session) {
-          window.location.href = 'log in page.html';
+          window.location.href = '../login.html';
           return;
         }
 
@@ -310,7 +309,7 @@
         console.error('Session error:', err);
         const saved = localStorage.getItem('archivehub_user');
         if (!saved) {
-          window.location.href = 'log in page.html';
+          window.location.href = '../login.html';
         }
       }
     }
@@ -381,7 +380,7 @@
       const container = document.getElementById('archiveGrid');
       if (!container || !design.archiveModules) return;
       container.innerHTML = design.archiveModules.map(item =>
-        `<a href="./${item.folder}/index.html" class="archive-card bg-white hover:border-${item.color}-500 rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition group flex flex-col justify-between" data-search="${item.title} ${item.desc} ${item.folder}">
+        `<a href="../${item.folder}/index.html" class="archive-card bg-white hover:border-${item.color}-500 rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition group flex flex-col justify-between" data-search="${item.title} ${item.desc} ${item.folder}">
           <div>
             <div class="w-10 h-10 rounded-xl bg-${item.color}-50 text-${item.color}-600 flex items-center justify-center mb-3 group-hover:bg-${item.color}-600 group-hover:text-white transition">
               <i class="fa-solid ${item.icon} text-lg"></i>
@@ -468,7 +467,7 @@
       const container = document.getElementById('treeLinks');
       if (!container || !design.archiveModules) return;
       const links = design.archiveModules.map(item =>
-        `<a href="./${item.folder}/index.html" class="flex items-center space-x-2 hover:text-brand-accent p-1 rounded hover:bg-slate-50">
+        `<a href="../${item.folder}/index.html" class="flex items-center space-x-2 hover:text-brand-accent p-1 rounded hover:bg-slate-50">
           <i class="fa-solid fa-folder text-slate-400"></i>
           <span>${item.folder}/index.html</span>
         </a>`
