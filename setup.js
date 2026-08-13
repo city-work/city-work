@@ -4,7 +4,7 @@ const path = require('path');
 // Root folder name
 const rootFolder = path.join(__dirname, 'ArchiveHub');
 
-// Archives configuration
+// Archives config (matches your config.js)
 const archives = [
   { folder: 'events-archive', title: 'Events Archive', icon: 'fa-calendar-check', color: 'blue', desc: 'Special events, logs, and historical records.' },
   { folder: 'lg-masterlist', title: 'LG Masterlist', icon: 'fa-list-check', color: 'emerald', desc: 'Complete database and operational roster for LG.' },
@@ -20,7 +20,7 @@ const archives = [
 
 // ─── GENERATE SELF-CONTAINED HTML ──────────────────────────────────
 function generateHTML(item) {
-  const { title, icon, color, desc } = item;
+  const { title, icon, color, desc, folder } = item;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -49,6 +49,7 @@ function generateHTML(item) {
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../config.js"></script>
 
   <style>
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -69,10 +70,10 @@ function generateHTML(item) {
     <!-- ─── LEFT RAIL ─── -->
     <aside class="w-16 sm:w-20 bg-white border-r border-slate-200 flex flex-col items-center justify-between py-6 shrink-0 z-20">
         <div class="flex flex-col items-center space-y-5 w-full">
-            <a href="../index.html" class="w-10 h-10 rounded-xl bg-[#0F172A] flex items-center justify-center text-white mb-2 shadow-md hover:scale-105 transition">
+            <a href="../../index.html" class="w-10 h-10 rounded-xl bg-[#0F172A] flex items-center justify-center text-white mb-2 shadow-md hover:scale-105 transition">
                 <i class="fa-solid fa-box-archive text-lg text-[#4F46E5]"></i>
             </a>
-            <a href="../index.html" class="w-10 h-10 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition flex items-center justify-center" title="Back to Dashboard">
+            <a href="../../index.html" class="w-10 h-10 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition flex items-center justify-center" title="Back to Dashboard">
                 <i class="fa-solid fa-arrow-left text-base"></i>
             </a>
             <span class="w-8 h-8 rounded-xl bg-${color}-50 text-${color}-600 flex items-center justify-center text-sm font-bold border border-${color}-100 mt-1" title="${title}">
@@ -80,7 +81,7 @@ function generateHTML(item) {
             </span>
         </div>
         <div class="flex flex-col items-center space-y-3 w-full px-2">
-            <a href="../log in page.html" onclick="localStorage.removeItem('archivehub_user');" class="w-10 h-10 rounded-xl text-rose-400 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
+            <a href="../../index.html" onclick="localStorage.removeItem('archivehub_user');" class="w-10 h-10 rounded-xl text-rose-400 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
                 <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
             </a>
         </div>
@@ -91,7 +92,7 @@ function generateHTML(item) {
 
         <header class="px-6 sm:px-8 py-4 bg-white/90 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between shrink-0 z-10">
             <div class="flex items-center space-x-3">
-                <a href="../index.html" class="text-lg font-extrabold tracking-tight text-[#0F172A]">
+                <a href="../../index.html" class="text-lg font-extrabold tracking-tight text-[#0F172A]">
                     Archive<span class="text-[#4F46E5]">Hub</span>
                 </a>
                 <span class="text-slate-300">/</span>
@@ -99,7 +100,7 @@ function generateHTML(item) {
                 <span id="roleBadge" class="text-[10px] font-bold px-2.5 py-1 rounded-full role-badge-user">👤 User</span>
             </div>
             <div class="flex items-center space-x-3">
-                <a href="../index.html" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-[#0F172A] text-white hover:bg-slate-800 transition shadow-sm">Main Hub</a>
+                <a href="../../index.html" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-[#0F172A] text-white hover:bg-slate-800 transition shadow-sm">Main Hub</a>
             </div>
         </header>
 
@@ -139,36 +140,24 @@ function generateHTML(item) {
 </div>
 
 <script>
-// ─── SUPABASE ──────────────────────────────────────────────────────
+// ─── 🔐 SESSION CHECK ──────────────────────────────────────────────
 const SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
 
-let supabase = null;
-if (window.supabase && typeof window.supabase.createClient === 'function') {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ─── CHECK SESSION ──────────────────────────────────────────────────
-async function checkUserSession() {
+// ─── CHECK ACCESS ──────────────────────────────────────────────────
+async function checkAccess() {
     try {
         const saved = localStorage.getItem('archivehub_user');
         if (saved) {
             const userData = JSON.parse(saved);
-            if (supabase) {
-                const { data } = await supabase.auth.setSession(userData.session);
-                if (data.user) {
-                    updateUI(userData.role || 'user');
-                    return;
-                }
-            } else {
+            const { data } = await supabase.auth.setSession(userData.session);
+            if (data.user) {
                 updateUI(userData.role || 'user');
+                console.log('🔓 Access granted for:', data.user.email);
                 return;
             }
-        }
-
-        if (!supabase) {
-            window.location.href = '../log in page.html';
-            return;
         }
 
         const { data } = await supabase.auth.getSession();
@@ -188,12 +177,14 @@ async function checkUserSession() {
             };
             localStorage.setItem('archivehub_user', JSON.stringify(userData));
             updateUI(role);
+            console.log('🔓 Access granted for:', data.session.user.email);
         } else {
-            window.location.href = '../log in page.html';
+            console.warn('🔒 Access denied – redirecting to login');
+            window.location.href = '../../index.html';
         }
     } catch (err) {
-        console.error('Session check error:', err);
-        window.location.href = '../log in page.html';
+        console.error('Access check error:', err);
+        window.location.href = '../../index.html';
     }
 }
 
@@ -208,7 +199,8 @@ function updateUI(role) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', checkUserSession);
+document.addEventListener('DOMContentLoaded', checkAccess);
+console.log('📁 ${title} module – Protected');
 </script>
 </body>
 </html>`;
@@ -230,3 +222,4 @@ archives.forEach(item => {
 });
 
 console.log('\n🎉 All subfolder modules generated successfully!');
+console.log('📝 Each folder has a self-contained index.html with Supabase session checking.');
