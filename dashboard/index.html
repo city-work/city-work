@@ -50,7 +50,7 @@
         <nav class="flex flex-col items-center space-y-3 w-full px-2" id="navRail"></nav>
       </div>
       <div class="flex flex-col items-center space-y-3 w-full px-2">
-        <a href="../login.html" onclick="localStorage.removeItem('archivehub_user');" class="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
+        <a href="../" onclick="localStorage.removeItem('archivehub_user');" class="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
           <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
         </a>
       </div>
@@ -252,7 +252,7 @@
               if (error || !data.user) {
                 console.warn('Invalid local session token. Returning to login.');
                 localStorage.removeItem('archivehub_user');
-                window.location.href = '../login.html';
+                window.location.href = '../';
                 return;
               }
 
@@ -271,7 +271,7 @@
             } catch (e) {
               console.warn('Session verification fallback:', e);
               localStorage.removeItem('archivehub_user');
-              window.location.href = '../login.html';
+              window.location.href = '../';
               return;
             }
           }
@@ -279,13 +279,13 @@
         }
 
         if (!supabase) {
-          window.location.href = '../login.html';
+          window.location.href = '../';
           return;
         }
 
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error || !session) {
-          window.location.href = '../login.html';
+          window.location.href = '../';
           return;
         }
 
@@ -309,7 +309,7 @@
         console.error('Session error:', err);
         const saved = localStorage.getItem('archivehub_user');
         if (!saved) {
-          window.location.href = '../login.html';
+          window.location.href = '../';
         }
       }
     }
@@ -481,7 +481,7 @@
       `;
     }
 
-    // ─── SEARCH ──────────────────────────────────────────────────────
+    // ─── SEARCH ────────────────────────────────____________________
     function filterArchives(query) {
       const cards = document.querySelectorAll('.archive-card');
       const q = query.toLowerCase().trim();
