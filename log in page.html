@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - ArchiveHub</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: { brand: { purple: '#702652', purpleHover: '#581c40' } }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @keyframes sinkWobble { 0%, 100% { transform: rotate(-8deg) translateY(0px); } 50% { transform: rotate(-14deg) translateY(6px); } }
+        .animate-sink { animation: sinkWobble 4s ease-in-out infinite; }
+        @keyframes fishEscape { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-16px) rotate(12deg); } }
+        .animate-escape { animation: fishEscape 2.5s ease-in-out infinite; }
+        @keyframes wavePulse { 0%, 100% { transform: scaleX(1); opacity: 0.8; } 50% { transform: scaleX(1.08); opacity: 0.4; } }
+        .animate-wave { animation: wavePulse 3s ease-in-out infinite; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 9999px; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+        .shake { animation: shake 0.4s ease; }
+        .fade-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen w-screen bg-slate-100 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-x-hidden text-slate-800 antialiased font-sans">
+
+    <div class="bg-white w-full max-w-[1100px] min-h-[560px] lg:h-full lg:max-h-[750px] rounded-3xl shadow-xl flex flex-col lg:flex-row border border-slate-200/80 overflow-hidden relative my-auto">
+
+        <!-- LEFT HERO -->
+        <div class="w-full lg:w-1/2 bg-gradient-to-br from-[#FFF8F3] via-[#FDF1E7] to-[#F7E7DA] relative p-6 sm:p-12 flex flex-col justify-between overflow-hidden select-none shrink-0 min-h-[300px] sm:min-h-[420px] lg:min-h-0">
+            <div class="absolute -top-16 -left-16 w-48 h-48 rounded-full bg-gradient-to-br from-[#A83244]/15 to-[#702652]/15 blur-2xl pointer-events-none"></div>
+            <div class="absolute -bottom-16 -right-16 w-64 h-64 rounded-full bg-gradient-to-tr from-[#702652]/10 to-orange-300/15 blur-2xl pointer-events-none"></div>
+            <div class="z-10 flex items-center justify-start">
+                <span class="inline-flex items-center space-x-1.5 text-[11px] font-bold uppercase tracking-wider text-[#702652] bg-white/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-orange-200/60 shadow-sm">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                    <span>Secure Login</span>
+                </span>
+            </div>
+            <div class="my-auto py-4 z-10 flex flex-col items-center justify-center text-center relative">
+                <div class="relative flex flex-col items-center justify-center">
+                    <div class="absolute -right-4 sm:-right-10 top-2 bg-[#702652] text-white px-3.5 py-1.5 rounded-2xl shadow-md flex items-center space-x-1.5 z-30 scale-90 sm:scale-100 font-bold text-xs">
+                        <span>Welcome Back! 🚀</span>
+                        <div class="absolute -bottom-1 left-3 w-2.5 h-2.5 bg-[#702652] rotate-45"></div>
+                    </div>
+                    <div class="w-36 h-36 sm:w-56 sm:h-56 lg:w-64 lg:h-64 rounded-full bg-gradient-to-b from-white via-[#FFF0E5] to-[#FCE2CE] border-4 border-white shadow-lg flex items-center justify-center relative overflow-hidden">
+                        <div class="absolute bottom-0 inset-x-0 h-16 sm:h-20 bg-sky-200/60 border-t border-sky-300/50 flex items-end justify-center">
+                            <div class="w-full h-4 bg-sky-300/40 rounded-full blur-xs animate-wave"></div>
+                        </div>
+                        <div class="absolute bottom-4 left-4 sm:left-10 text-amber-700 text-3xl sm:text-5xl animate-sink z-10 drop-shadow-sm">
+                            <i class="fa-solid fa-ship"></i>
+                        </div>
+                        <div class="absolute bottom-8 right-6 sm:right-8 text-rose-500 text-base sm:text-xl rotate-12 z-10 animate-bounce">
+                            <i class="fa-solid fa-life-ring"></i>
+                        </div>
+                        <div class="text-[#702652] text-4xl sm:text-7xl lg:text-8xl flex flex-col items-center animate-escape z-20 drop-shadow-md -mt-4">
+                            <i class="fa-solid fa-fish-fins"></i>
+                        </div>
+                        <div class="absolute bottom-8 sm:bottom-10 inset-x-0 flex justify-center space-x-1 text-sky-400 text-xs opacity-75 z-10">
+                            <i class="fa-solid fa-droplet animate-ping"></i>
+                            <i class="fa-solid fa-droplet"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center space-x-2 -mt-4 z-10">
+                        <span class="w-3 h-6 sm:w-5 sm:h-10 bg-amber-500/80 rounded-full rotate-[25deg] shadow-sm"></span>
+                        <span class="w-4 h-8 sm:w-6 sm:h-12 bg-[#A83244] rounded-full -rotate-[12deg] shadow-sm"></span>
+                        <span class="w-5 h-10 sm:w-8 sm:h-16 bg-[#702652] rounded-full rotate-[3deg] shadow-md"></span>
+                        <span class="w-4 h-8 sm:w-6 sm:h-12 bg-amber-500/80 rounded-full rotate-[15deg] shadow-sm"></span>
+                        <span class="w-3 h-6 sm:w-5 sm:h-10 bg-[#A83244] rounded-full -rotate-[20deg] shadow-sm"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="z-10 text-center max-w-md mx-auto">
+                <h2 class="text-lg sm:text-2xl font-extrabold text-[#702652] tracking-tight">Secure Your Archive</h2>
+                <p class="text-xs text-slate-500 font-medium mt-1">Sign in to access your protected files and vaults.</p>
+            </div>
+        </div>
+
+        <!-- RIGHT FORM -->
+        <div class="w-full lg:w-1/2 bg-white p-6 sm:p-12 lg:p-14 flex flex-col justify-between overflow-y-auto custom-scrollbar shrink-0">
+            <div class="flex items-center justify-center mb-4 sm:mb-6">
+                <div class="inline-flex items-center space-x-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+                    <div class="w-8 h-8 rounded-xl bg-[#702652] flex items-center justify-center text-white text-base shadow-sm">
+                        <i class="fa-solid fa-fish-fins"></i>
+                    </div>
+                    <span class="font-extrabold text-slate-800 tracking-tight text-base">Archive<span class="text-[#702652]">Hub</span></span>
+                </div>
+            </div>
+            <div class="max-w-sm w-full mx-auto my-auto space-y-5 sm:space-y-6">
+                <div class="text-center space-y-1">
+                    <h1 id="formTitle" class="text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Account Login</h1>
+                    <p id="formSubtitle" class="text-xs text-slate-400 font-medium">Please enter your email and password</p>
+                </div>
+
+                <form id="loginForm" class="space-y-4 pt-2" novalidate>
+                    <div class="space-y-1.5 text-left">
+                        <label for="email" class="text-xs font-bold text-slate-700 block">Email</label>
+                        <div class="relative">
+                            <i class="fa-regular fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="email" id="email" required placeholder="you@example.com" class="w-full pl-9 pr-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#702652] focus:ring-2 focus:ring-[#702652]/10 transition" />
+                            <div class="text-[10px] text-rose-500 mt-1 hidden" id="emailError">Email is required</div>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5 text-left">
+                        <label for="password" class="text-xs font-bold text-slate-700 block">Password</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="password" id="password" required placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#702652] focus:ring-2 focus:ring-[#702652]/10 transition" />
+                            <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition text-xs">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                            <div class="text-[10px] text-rose-500 mt-1 hidden" id="passwordError">Password is required</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xs pt-1">
+                        <label class="flex items-center space-x-2 cursor-pointer text-slate-500 font-medium select-none">
+                            <input type="checkbox" id="rememberMe" class="w-3.5 h-3.5 rounded border-slate-300 text-[#702652] focus:ring-[#702652]" />
+                            <span>Remember Me</span>
+                        </label>
+                        <button type="button" id="forgotPasswordBtn" class="font-bold text-[#702652] hover:underline">Forgot Password?</button>
+                    </div>
+                    <button type="submit" id="loginBtn" class="w-full py-3 bg-[#702652] hover:bg-[#581c40] text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all active:translate-y-0 mt-3 flex items-center justify-center space-x-2">
+                        <span>Login</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                    <div id="formError" class="text-center text-xs text-rose-500 font-medium hidden mt-2">
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i>
+                        <span id="formErrorText">Invalid email or password.</span>
+                    </div>
+                </form>
+
+                <div class="text-center text-xs text-slate-400 font-medium mt-2">
+                    <span id="authPromptText">Don't have an account?</span>
+                    <button id="toggleAuthModeBtn" class="font-bold text-[#702652] hover:underline ml-1">Create one</button>
+                </div>
+            </div>
+            <div class="text-center text-[10px] sm:text-xs text-slate-400 font-medium mt-6 sm:mt-8">
+                <span>By continuing, you agree to our</span>
+                <a href="#" class="font-bold text-[#702652] hover:underline ml-1">Terms</a>
+                <span class="mx-1">·</span>
+                <a href="#" class="font-bold text-[#702652] hover:underline">Privacy</a>
+            </div>
+        </div>
+    </div>
+
+<script>
+(function() {
+    'use strict';
+
+    const SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
+
+    const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+    const form = document.getElementById('loginForm');
+    const formTitle = document.getElementById('formTitle');
+    const formSubtitle = document.getElementById('formSubtitle');
+    const toggleAuthModeBtn = document.getElementById('toggleAuthModeBtn');
+    const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+    const authPromptText = document.getElementById('authPromptText');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    const formError = document.getElementById('formError');
+    const formErrorText = document.getElementById('formErrorText');
+    const toggleBtn = document.getElementById('togglePassword');
+    const loginBtn = document.getElementById('loginBtn');
+
+    let isSignupMode = false;
+
+    // ─── CHECK IF ALREADY LOGGED IN ──────────────────────────────
+    (async function checkSession() {
+        try {
+            const saved = localStorage.getItem('archivehub_user');
+            if (saved) {
+                const userData = JSON.parse(saved);
+                if (supabase && userData.session && userData.session.access_token) {
+                    const { data } = await supabase.auth.setSession({
+                        access_token: userData.session.access_token,
+                        refresh_token: userData.session.refresh_token
+                    });
+                    if (data.user) {
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                } else if (userData.id) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+            }
+            if (supabase) {
+                const { data } = await supabase.auth.getSession();
+                if (data && data.session) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn('Session check warning:', e);
+        }
+    })();
+
+    // ─── TOGGLE PASSWORD VISIBILITY ──────────────────────────────
+    toggleBtn.addEventListener('click', function() {
+        const isPassword = password.type === 'password';
+        password.type = isPassword ? 'text' : 'password';
+        this.innerHTML = isPassword ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+    });
+
+    // ─── REAL-TIME VALIDATION ──────────────────────────────────────
+    email.addEventListener('input', function() {
+        if (this.value.trim().length > 0) {
+            emailError.classList.add('hidden');
+            this.classList.remove('border-rose-500');
+        }
+    });
+
+    password.addEventListener('input', function() {
+        if (this.value.trim().length > 0) {
+            passwordError.classList.add('hidden');
+            this.classList.remove('border-rose-500');
+        }
+    });
+
+    function setFormError(message, isSuccess = false) {
+        if (message) {
+            formErrorText.textContent = message;
+            formError.classList.remove('hidden');
+            formError.className = isSuccess 
+                ? 'text-center text-xs text-emerald-600 font-medium mt-2' 
+                : 'text-center text-xs text-rose-500 font-medium mt-2';
+        } else {
+            formError.classList.add('hidden');
+        }
+    }
+
+    async function fetchUserRole(userId) {
+        if (!supabase) return 'user';
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', userId)
+                .single();
+            if (error) throw error;
+            return data?.role || 'user';
+        } catch (err) {
+            console.warn('Role fetch error:', err);
+            return 'user';
+        }
+    }
+
+    function updateUIMode() {
+        if (isSignupMode) {
+            formTitle.textContent = 'Create Account';
+            formSubtitle.textContent = 'Sign up to access ArchiveHub';
+            loginBtn.innerHTML = '<span>Sign Up</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+            authPromptText.textContent = 'Already have an account?';
+            toggleAuthModeBtn.textContent = 'Sign in';
+            forgotPasswordBtn.classList.add('hidden');
+        } else {
+            formTitle.textContent = 'Account Login';
+            formSubtitle.textContent = 'Please enter your email and password';
+            loginBtn.innerHTML = '<span>Login</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+            authPromptText.textContent = "Don't have an account?";
+            toggleAuthModeBtn.textContent = 'Create one';
+            forgotPasswordBtn.classList.remove('hidden');
+        }
+        setFormError('');
+    }
+
+    toggleAuthModeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        isSignupMode = !isSignupMode;
+        updateUIMode();
+    });
+
+    forgotPasswordBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const emailVal = email.value.trim();
+        if (!emailVal) {
+            setFormError('Please enter your email address first.');
+            return;
+        }
+
+        forgotPasswordBtn.disabled = true;
+        forgotPasswordBtn.textContent = 'Sending...';
+
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(emailVal, {
+                redirectTo: window.location.origin + '/reset-password.html',
+            });
+            if (error) throw error;
+            setFormError('✅ Password reset email sent! Check your inbox.', true);
+            setTimeout(() => setFormError(''), 6000);
+        } catch (err) {
+            setFormError(err.message || 'Failed to send reset email.');
+        } finally {
+            forgotPasswordBtn.disabled = false;
+            forgotPasswordBtn.textContent = 'Forgot Password?';
+        }
+    });
+
+    async function handleLogin(emailVal, passwordVal) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: emailVal,
+            password: passwordVal
+        });
+        if (error) throw error;
+
+        const role = await fetchUserRole(data.user.id);
+        const userData = {
+            id: data.user.id,
+            email: data.user.email,
+            role: role,
+            session: data.session
+        };
+        localStorage.setItem('archivehub_user', JSON.stringify(userData));
+        return userData;
+    }
+
+    async function handleSignup(emailVal, passwordVal) {
+        if (passwordVal.length < 6) {
+            throw new Error('Password must be at least 6 characters.');
+        }
+        const { data, error } = await supabase.auth.signUp({
+            email: emailVal,
+            password: passwordVal,
+        });
+        if (error) throw error;
+        if (!data.user) throw new Error('Signup failed. Please try again.');
+        return data;
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        emailError.classList.add('hidden');
+        passwordError.classList.add('hidden');
+        setFormError('');
+        email.classList.remove('border-rose-500', 'shake');
+        password.classList.remove('border-rose-500', 'shake');
+
+        const emailVal = email.value.trim();
+        const passwordVal = password.value.trim();
+
+        let valid = true;
+        if (!emailVal) {
+            emailError.classList.remove('hidden');
+            email.classList.add('border-rose-500', 'shake');
+            valid = false;
+        }
+        if (!passwordVal) {
+            passwordError.classList.remove('hidden');
+            password.classList.add('border-rose-500', 'shake');
+            valid = false;
+        }
+        if (!valid) {
+            setTimeout(() => {
+                email.classList.remove('shake');
+                password.classList.remove('shake');
+            }, 500);
+            return;
+        }
+
+        loginBtn.innerHTML = isSignupMode
+            ? '<span>Creating...</span><i class="fa-solid fa-spinner fa-spin text-xs"></i>'
+            : '<span>Logging in...</span><i class="fa-solid fa-spinner fa-spin text-xs"></i>';
+        loginBtn.disabled = true;
+
+        try {
+            if (isSignupMode) {
+                await handleSignup(emailVal, passwordVal);
+                setFormError('✅ Account created! Check your email to confirm.', true);
+                setTimeout(() => {
+                    isSignupMode = false;
+                    updateUIMode();
+                    password.value = '';
+                    setFormError('');
+                }, 3000);
+            } else {
+                await handleLogin(emailVal, passwordVal);
+                window.location.href = 'index.html';
+            }
+        } catch (err) {
+            console.error('Auth error:', err);
+            let message = err.message || 'Something went wrong.';
+            if (err.message.includes('Email not confirmed')) {
+                message = 'Please confirm your email before logging in.';
+            } else if (err.message.includes('Invalid login credentials')) {
+                message = 'Incorrect email or password. Please try again.';
+            } else if (err.message.includes('rate limit')) {
+                message = 'Too many attempts. Please wait a moment.';
+            }
+            setFormError(message);
+            form.classList.add('shake');
+            setTimeout(() => form.classList.remove('shake'), 500);
+        } finally {
+            loginBtn.innerHTML = isSignupMode
+                ? '<span>Sign Up</span><i class="fa-solid fa-arrow-right text-xs"></i>'
+                : '<span>Login</span><i class="fa-solid fa-arrow-right text-xs"></i>';
+            loginBtn.disabled = false;
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && (document.activeElement === email || document.activeElement === password)) {
+            form.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    updateUIMode();
+    email.focus();
+})();
+</script>
+</body>
+</html>
