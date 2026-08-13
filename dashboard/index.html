@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ArchiveHub - Enterprise Knowledge Platform</title>
 
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,8 +29,7 @@
     }
   </script>
 
-  <!-- ─── IMPORTANT: Load config.js from parent folder ─── -->
-  <script src="../config.js"></script>
+  <script src="../config.js?v=2"></script>
 
   <style>
     .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -52,7 +55,8 @@
         <nav class="flex flex-col items-center space-y-3 w-full px-2" id="navRail"></nav>
       </div>
       <div class="flex flex-col items-center space-y-3 w-full px-2">
-        <a href="../index.html" onclick="localStorage.removeItem('archivehub_user');" class="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
+        <!-- ─── FIXED LOGOUT BUTTON ─── -->
+        <a href="#" onclick="logoutUser(); return false;" class="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
           <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
         </a>
       </div>
@@ -166,13 +170,32 @@
     let currentUser = null;
     let userRole = 'user';
 
+    // ─── LOGOUT ──────────────────────────────────────────────────────
+    async function logoutUser() {
+      try {
+        if (supabase) {
+          await supabase.auth.signOut();
+        }
+        localStorage.removeItem('archivehub_user');
+        window.location.href = '../index.html';
+      } catch (err) {
+        console.error('Logout error:', err);
+        localStorage.removeItem('archivehub_user');
+        window.location.href = '../index.html';
+      }
+    }
+
     // ─── SESSION CHECK ──────────────────────────────────────────────
     async function checkUserSession() {
-      // Ensure design exists (loaded from config.js)
       if (typeof design === 'undefined') {
         console.error('❌ config.js not loaded!');
+        document.getElementById('archiveGrid').innerHTML = 
+          '<div class="col-span-full text-center text-amber-600 text-sm py-8">⚠️ Config not loaded. Check console.</div>';
         return;
       }
+
+      console.log('✅ design loaded:', design);
+      console.log('📋 archiveModules:', design.archiveModules);
 
       renderAll();
 
@@ -320,7 +343,20 @@
 
     function renderArchiveCards() {
       const container = document.getElementById('archiveGrid');
-      if (!container || !design.archiveModules) return;
+      
+      if (!container) {
+        console.error('❌ archiveGrid container not found!');
+        return;
+      }
+      
+      if (!design.archiveModules) {
+        console.error('❌ design.archiveModules is undefined!');
+        container.innerHTML = '<div class="col-span-full text-center text-amber-600 text-sm py-8">⚠️ archiveModules missing in config.js</div>';
+        return;
+      }
+
+      console.log('📋 Rendering', design.archiveModules.length, 'cards');
+      
       container.innerHTML = design.archiveModules.map(item =>
         `<a href="./${item.folder}/index.html" class="archive-card bg-white hover:border-${item.color}-500 rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition group flex flex-col justify-between" data-search="${item.title} ${item.desc} ${item.folder}">
           <div>
@@ -336,6 +372,8 @@
           </div>
         </a>`
       ).join('');
+      
+      console.log('✅ Cards rendered');
     }
 
     function renderMetrics() {
