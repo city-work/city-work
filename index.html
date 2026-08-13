@@ -196,18 +196,18 @@
                         refresh_token: userData.session.refresh_token
                     });
                     if (data.user) {
-                        window.location.href = 'index.html';
+                        window.location.href = 'dashboard/index.html';
                         return;
                     }
                 } else if (userData.id) {
-                    window.location.href = 'index.html';
+                    window.location.href = 'dashboard/index.html';
                     return;
                 }
             }
             if (supabase) {
                 const { data } = await supabase.auth.getSession();
                 if (data && data.session) {
-                    window.location.href = 'index.html';
+                    window.location.href = 'dashboard/index.html';
                     return;
                 }
             }
@@ -396,7 +396,7 @@
                 }, 3000);
             } else {
                 await handleLogin(emailVal, passwordVal);
-                window.location.href = 'index.html';
+                window.location.href = 'dashboard/index.html';
             }
         } catch (err) {
             console.error('Auth error:', err);
