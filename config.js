@@ -65,4 +65,4 @@ const design = {
 // expose globally for pages that rely on `design`
 if (typeof window !== 'undefined') window.design = design;
 
-export default design;
+// Note: intentionally NOT an ES module export to keep this file compatible with <script src="config.js"></script>
