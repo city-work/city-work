@@ -44,296 +44,254 @@
     .nav-link-active { background: #EFF6FF; color: #2563EB; border-color: #2563EB; }
     .role-badge-admin { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
     .role-badge-user { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-    #loadingSpinner { display: none; }
+    .error-banner { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 1rem; border-radius: 1rem; margin-bottom: 1rem; }
+
+    /* Auth Lock */
+    #authLock {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      transition: opacity 0.3s ease;
+    }
+    #authLock.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .lock-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #2563EB;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="h-screen w-screen bg-[#E5E7EB] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden text-slate-800 antialiased font-sans">
 
-  <!-- Loading Spinner -->
-  <div id="loadingSpinner" class="fixed inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-50">
-    <div class="flex flex-col items-center">
-      <i class="fa-solid fa-spinner fa-spin text-4xl text-brand-accent"></i>
-      <p class="mt-3 text-sm font-medium text-slate-600">Loading dashboard...</p>
-    </div>
+  <!-- ═══ AUTH LOCK ═══ -->
+  <div id="authLock">
+    <div class="lock-spinner"></div>
+    <p class="text-sm font-medium text-slate-600">Verifying access...</p>
   </div>
 
-  <div class="bg-brand-bg w-full max-w-[1440px] h-full max-h-[920px] rounded-[28px] shadow-2xl flex border border-slate-300/80 overflow-hidden relative">
+<div class="bg-brand-bg w-full max-w-[1440px] h-full max-h-[920px] rounded-[28px] shadow-2xl flex border border-slate-300/80 overflow-hidden relative">
 
-    <!-- ─── LEFT RAIL ─── -->
-    <aside class="w-16 sm:w-20 bg-brand-surface border-r border-slate-200 flex flex-col items-center justify-between py-6 shrink-0 z-20">
-      <div class="flex flex-col items-center space-y-5 w-full">
-        <a href="../index.html" class="w-10 h-10 rounded-xl bg-brand-dark flex items-center justify-center text-white mb-2 shadow-md">
-          <i class="fa-solid fa-box-archive text-lg text-brand-accent"></i>
-        </a>
-        <nav class="flex flex-col items-center space-y-3 w-full px-2" id="navRail"></nav>
+  <!-- ─── LEFT RAIL ─── -->
+  <aside class="w-16 sm:w-20 bg-brand-surface border-r border-slate-200 flex flex-col items-center justify-between py-6 shrink-0 z-20">
+    <div class="flex flex-col items-center space-y-5 w-full">
+      <a href="../index.html" class="w-10 h-10 rounded-xl bg-brand-dark flex items-center justify-center text-white mb-2 shadow-md">
+        <i class="fa-solid fa-box-archive text-lg text-brand-accent"></i>
+      </a>
+      <nav class="flex flex-col items-center space-y-3 w-full px-2" id="navRail">
+        <!-- Rendered instantly -->
+      </nav>
+    </div>
+    <div class="flex flex-col items-center space-y-3 w-full px-2">
+      <button id="logoutBtn" class="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
+        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN CONTENT ─── -->
+  <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+
+    <header class="px-6 sm:px-8 py-4 bg-brand-surface/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between shrink-0 gap-4 z-10">
+      <div class="flex items-center space-x-3">
+        <a href="../index.html" class="text-xl font-bold tracking-tight text-brand-dark" id="logoText">Archive<span class="text-brand-accent">Hub</span></a>
+        <span class="text-slate-300">/</span>
+        <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full border border-slate-200">Main Dashboard</span>
+        <span id="roleBadge" class="text-[10px] font-bold px-2.5 py-1 rounded-full role-badge-user hidden">👤 User</span>
       </div>
-      <div class="flex flex-col items-center space-y-3 w-full px-2">
-        <button id="logoutBtn" class="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
-          <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
-        </button>
+
+      <div class="flex items-center space-x-3 sm:space-x-4">
+        <div class="relative hidden sm:block">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
+          <input id="globalSearchInput" type="text" placeholder="Search archives..." class="bg-slate-100/80 text-xs font-medium text-slate-800 pl-9 pr-12 py-2 rounded-full border border-slate-200 focus:outline-none focus:border-brand-accent focus:bg-white w-48 lg:w-64 transition" />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 bg-slate-200/60 px-1.5 py-0.5 rounded">⌘K</span>
+        </div>
       </div>
-    </aside>
+    </header>
 
-    <!-- ─── MAIN CONTENT ─── -->
-    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+    <main class="flex-1 overflow-y-auto px-6 sm:px-8 py-6 custom-scrollbar space-y-6" id="mainContent">
 
-      <header class="px-6 sm:px-8 py-4 bg-brand-surface/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between shrink-0 gap-4 z-10">
-        <div class="flex items-center space-x-3">
-          <a href="../index.html" class="text-xl font-bold tracking-tight text-brand-dark" id="logoText">Archive<span class="text-brand-accent">Hub</span></a>
-          <span class="text-slate-300">/</span>
-          <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full border border-slate-200">Main Dashboard</span>
-          <span id="roleBadge" class="text-[10px] font-bold px-2.5 py-1 rounded-full role-badge-user hidden">👤 User</span>
-        </div>
-
-        <div class="flex items-center space-x-3 sm:space-x-4">
-          <div class="relative hidden sm:block">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
-            <input id="globalSearchInput" type="text" placeholder="Search archives..." class="bg-slate-100/80 text-xs font-medium text-slate-800 pl-9 pr-12 py-2 rounded-full border border-slate-200 focus:outline-none focus:border-brand-accent focus:bg-white w-48 lg:w-64 transition" />
-            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 bg-slate-200/60 px-1.5 py-0.5 rounded">⌘K</span>
-          </div>
-        </div>
-      </header>
-
-      <main class="flex-1 overflow-y-auto px-6 sm:px-8 py-6 custom-scrollbar space-y-6">
-
-        <!-- Admin Panel -->
-        <div id="adminPanel" class="hidden bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg">
-              <i class="fa-solid fa-users-cog"></i>
-            </div>
-            <div>
-              <p class="text-sm font-bold text-indigo-900">Admin Panel</p>
-              <p class="text-xs text-indigo-700">Manage users, roles, and system settings.</p>
-            </div>
-          </div>
-          <a href="./admin/index.html" class="text-xs font-semibold px-4 py-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm">Go to Admin →</a>
-        </div>
-
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <!-- Error Banner -->
+      <div id="errorBanner" class="error-banner hidden">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-circle-exclamation text-rose-500 text-lg"></i>
           <div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Archive Directory</h1>
-            <p class="text-xs text-slate-500 font-medium mt-0.5">Direct links to masterlists, schedules, and operations archives.</p>
+            <p class="font-bold text-sm">Something went wrong</p>
+            <p id="errorMessage" class="text-xs text-rose-700"></p>
           </div>
-          <div class="flex items-center gap-2 flex-wrap" id="tagFilters"></div>
+          <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="ml-auto text-rose-500 hover:text-rose-700">✕</button>
         </div>
+      </div>
 
-        <!-- ─── SUBFOLDER GRID ─── -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="archiveGrid"></div>
-
-        <div class="mt-6 pt-4 border-t border-slate-200">
-          <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-chart-simple text-brand-accent"></i> System Metrics</h2>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="metricsGrid"></div>
+      <!-- Admin Panel -->
+      <div id="adminPanel" class="hidden bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-users-cog"></i>
+          </div>
+          <div>
+            <p class="text-sm font-bold text-indigo-900">Admin Panel</p>
+            <p class="text-xs text-indigo-700">Manage users, roles, and system settings.</p>
+          </div>
         </div>
+        <a href="./admin/index.html" class="text-xs font-semibold px-4 py-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm">Go to Admin →</a>
+      </div>
 
-        <div class="mt-4 pt-4 border-t border-slate-200">
-          <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-folder-open text-brand-accent"></i> Active Vaults</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="vaultsGrid"></div>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Archive Directory</h1>
+          <p class="text-xs text-slate-500 font-medium mt-0.5">Direct links to masterlists, schedules, and operations archives.</p>
         </div>
-
-        <div class="mt-4 pt-4 border-t border-slate-200">
-          <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-rss text-brand-accent"></i> Activity Feed</h2>
-          <div class="space-y-3" id="feedContainer"></div>
+        <div class="flex items-center gap-2 flex-wrap" id="tagFilters">
+          <!-- Rendered instantly -->
         </div>
+      </div>
 
-      </main>
-    </div>
+      <!-- ─── SUBFOLDER GRID ─── -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="archiveGrid">
+        <!-- Rendered instantly -->
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-slate-200">
+        <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-chart-simple text-brand-accent"></i> System Metrics</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="metricsGrid">
+          <!-- Rendered instantly -->
+        </div>
+      </div>
+
+      <div class="mt-4 pt-4 border-t border-slate-200">
+        <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-folder-open text-brand-accent"></i> Active Vaults</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="vaultsGrid">
+          <!-- Rendered instantly -->
+        </div>
+      </div>
+
+      <div class="mt-4 pt-4 border-t border-slate-200">
+        <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-rss text-brand-accent"></i> Activity Feed</h2>
+        <div class="space-y-3" id="feedContainer">
+          <!-- Rendered instantly -->
+        </div>
+      </div>
+
+    </main>
   </div>
+</div>
 
-  <script>
-  (function() {
-    'use strict';
+<script>
+(function() {
+  'use strict';
 
-    // ─── READ SUPABASE CONFIG FROM design ──────────────────────
-    let SUPABASE_URL, SUPABASE_ANON_KEY;
+  console.log('🚀 Dashboard script starting...');
+
+  // ─── DOM REFS ──────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const errorBanner = $('errorBanner');
+  const errorMessage = $('errorMessage');
+  const authLock = $('authLock');
+
+  function showError(msg) {
+    errorMessage.textContent = msg;
+    errorBanner.classList.remove('hidden');
+    console.error('❌', msg);
+  }
+
+  // ─── CONFIG ─────────────────────────────────────────────────────
+  let SUPABASE_URL, SUPABASE_ANON_KEY;
+  try {
+    if (typeof design === 'undefined') {
+      throw new Error('design object not found – config.js may not have loaded.');
+    }
+    if (!design.supabase || !design.supabase.url || !design.supabase.anonKey) {
+      throw new Error('design.supabase missing credentials.');
+    }
+    SUPABASE_URL = design.supabase.url;
+    SUPABASE_ANON_KEY = design.supabase.anonKey;
+    console.log('✅ Config loaded:', SUPABASE_URL);
+  } catch (e) {
+    showError('Configuration error: ' + e.message);
+    authLock.classList.add('hidden'); // hide lock so user can see error
+    tryRenderStatic();
+    return;
+  }
+
+  // ─── SUPABASE ──────────────────────────────────────────────────
+  let supabase;
+  try {
+    if (typeof window.supabase === 'undefined' || typeof window.supabase.createClient !== 'function') {
+      throw new Error('Supabase library not loaded.');
+    }
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Supabase client created');
+  } catch (e) {
+    showError('Supabase error: ' + e.message);
+    authLock.classList.add('hidden');
+    tryRenderStatic();
+    return;
+  }
+
+  // ─── RENDER STATIC CONTENT ──────────────────────────────────────
+  function tryRenderStatic() {
     try {
-      if (typeof design !== 'undefined' && design.supabase) {
-        SUPABASE_URL = design.supabase.url;
-        SUPABASE_ANON_KEY = design.supabase.anonKey;
-      } else {
-        throw new Error('design.supabase not found');
-      }
+      renderStaticContent();
+      console.log('✅ Static content rendered');
     } catch (e) {
-      console.error('❌ Failed to load Supabase config from design:', e);
-      document.body.innerHTML = `
-        <div class="flex items-center justify-center min-h-screen bg-slate-100 p-4">
-          <div class="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center">
-            <i class="fa-solid fa-triangle-exclamation text-4xl text-amber-500 mb-4"></i>
-            <h2 class="text-xl font-bold text-slate-800">Configuration Error</h2>
-            <p class="text-sm text-slate-600 mt-2">Could not load Supabase credentials. Please check <code>config.js</code>.</p>
-          </div>
-        </div>
-      `;
+      showError('Failed to render content: ' + e.message);
+    }
+  }
+
+  function renderStaticContent() {
+    if (typeof design === 'undefined') {
+      console.warn('design not available – skipping static render');
       return;
     }
 
-    let supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    let currentUser = null;
-    let userRole = 'user';
-
-    // ─── LOGOUT ──────────────────────────────────────────────────
-    async function logoutUser() {
-      try {
-        await supabase.auth.signOut();
-        localStorage.removeItem('archivehub_user');
-        window.location.href = '../index.html';
-      } catch (err) {
-        console.error('Logout error:', err);
-        localStorage.removeItem('archivehub_user');
-        window.location.href = '../index.html';
-      }
+    // Logo
+    const logoEl = $('logoText');
+    if (logoEl && design.header?.logoText) {
+      const parts = design.header.logoText.split(/(hub)/i);
+      logoEl.innerHTML = parts.length > 1 ? parts[0] + '<span class="text-brand-accent">' + parts[1] + '</span>' : design.header.logoText;
     }
 
-    document.getElementById('logoutBtn').addEventListener('click', logoutUser);
-
-    // ─── ENSURE PROFILE EXISTS ──────────────────────────────────
-    async function ensureProfileExists(userId, email) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userId)
-        .maybeSingle();
-      if (error && error.code !== 'PGRST116') throw error;
-      if (!data) {
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({ id: userId, email: email, role: 'user' });
-        if (insertError) throw insertError;
-      }
-    }
-
-    // ─── SESSION CHECK ──────────────────────────────────────────
-    async function checkUserSession() {
-      const loadingSpinner = document.getElementById('loadingSpinner');
-      loadingSpinner.style.display = 'flex';
-
-      try {
-        if (typeof design === 'undefined' || !design.archiveModules) {
-          throw new Error('Config missing or invalid');
-        }
-
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        const session = data?.session;
-        if (!session || !session.user) {
-          localStorage.removeItem('archivehub_user');
-          window.location.href = '../index.html';
-          return;
-        }
-
-        // Ensure profile exists (creates if missing)
-        await ensureProfileExists(session.user.id, session.user.email);
-
-        let role = 'user';
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .maybeSingle();
-          if (!profileError && profile?.role) {
-            role = profile.role;
-          }
-        } catch (profileError) {
-          console.warn('Profile role lookup failed:', profileError);
-        }
-
-        currentUser = {
-          id: session.user.id,
-          email: session.user.email,
-          role: role,
-          session: session
-        };
-        userRole = role;
-        localStorage.setItem('archivehub_user', JSON.stringify(currentUser));
-
-        // Now render everything
-        renderAll();
-        updateUIForRole();
-
-        // Hide spinner
-        loadingSpinner.style.display = 'none';
-
-        console.log('🔓 Access granted for:', session.user.email);
-
-      } catch (err) {
-        console.error('Session error:', err);
-        loadingSpinner.style.display = 'none';
-        localStorage.removeItem('archivehub_user');
-        window.location.href = '../index.html';
-      }
-    }
-
-    function updateUIForRole() {
-      const badge = document.getElementById('roleBadge');
-      const adminPanel = document.getElementById('adminPanel');
-      badge.classList.remove('hidden'); // show now that we know
-
-      if (userRole === 'admin') {
-        badge.textContent = '👑 Admin';
-        badge.className = 'text-[10px] font-bold px-2.5 py-1 rounded-full role-badge-admin';
-        if (adminPanel) adminPanel.classList.remove('hidden');
-      } else {
-        badge.textContent = '👤 User';
-        badge.className = 'text-[10px] font-bold px-2.5 py-1 rounded-full role-badge-user';
-        if (adminPanel) adminPanel.classList.add('hidden');
-      }
-    }
-
-    // ─── RENDER FUNCTIONS (each wrapped in try-catch) ──────────
-    function renderAll() {
-      try { renderLogo(); } catch (e) { console.warn('renderLogo failed:', e); }
-      try { renderNavRail(); } catch (e) { console.warn('renderNavRail failed:', e); }
-      try { renderTags(); } catch (e) { console.warn('renderTags failed:', e); }
-      try { renderArchiveCards(); } catch (e) { console.warn('renderArchiveCards failed:', e); }
-      try { renderMetrics(); } catch (e) { console.warn('renderMetrics failed:', e); }
-      try { renderVaults(); } catch (e) { console.warn('renderVaults failed:', e); }
-      try { renderFeed(); } catch (e) { console.warn('renderFeed failed:', e); }
-    }
-
-    function renderLogo() {
-      const el = document.getElementById('logoText');
-      if (!el || !design.header.logoText) return;
-      const raw = design.header.logoText;
-      const parts = raw.split(/(hub)/i);
-      el.innerHTML = parts.length > 1 ? parts[0] + '<span class="text-brand-accent">' + parts[1] + '</span>' : raw;
-    }
-
-    function renderNavRail() {
-      const container = document.getElementById('navRail');
-      if (!container || !design.header.navLinks) return;
+    // Nav Rail
+    const navRail = $('navRail');
+    if (navRail && design.header?.navLinks) {
       const iconMap = {
-        'Vaults': 'folder',
-        'Tools': 'wrench',
-        'Learn': 'graduation-cap',
-        'Virtual Sandbox': 'flask',
-        'Public Drive': 'cloud',
-        'Analytics': 'chart-line'
+        'Vaults': 'folder', 'Tools': 'wrench', 'Learn': 'graduation-cap',
+        'Virtual Sandbox': 'flask', 'Public Drive': 'cloud', 'Analytics': 'chart-line'
       };
-      container.innerHTML = design.header.navLinks.map((link) => {
-        const activeClass = link.active ? 'nav-link-active border border-brand-accent' : '';
-        // Use button to prevent page jump
-        return `<button class="w-10 h-10 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition flex items-center justify-center relative group ${activeClass}" aria-label="${link.label}" title="${link.label}">
+      navRail.innerHTML = design.header.navLinks.map(link => {
+        const active = link.active ? 'nav-link-active border border-brand-accent' : '';
+        return `<button class="w-10 h-10 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition flex items-center justify-center relative group ${active}" aria-label="${link.label}" title="${link.label}">
           <i class="fa-solid fa-${iconMap[link.label] || 'circle'} text-base"></i>
         </button>`;
       }).join('');
     }
 
-    function renderTags() {
-      const container = document.getElementById('tagFilters');
-      if (!container || !design.tags) return;
-      container.innerHTML = design.tags.map(tag =>
+    // Tags
+    const tagFilters = $('tagFilters');
+    if (tagFilters && design.tags) {
+      tagFilters.innerHTML = design.tags.map(tag =>
         `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-200 bg-white/60 text-slate-600 shadow-sm cursor-pointer hover:bg-${tag.color}-50 hover:border-${tag.color}-400 transition" data-tag="${tag.label}">${tag.label}</span>`
       ).join('');
     }
 
-    function renderArchiveCards() {
-      const container = document.getElementById('archiveGrid');
-      if (!container || !design.archiveModules) {
-        container.innerHTML = '<div class="col-span-full text-center text-amber-600 text-sm py-8">⚠️ Archive modules missing in config.</div>';
-        return;
-      }
-      container.innerHTML = design.archiveModules.map(item =>
+    // Archive Cards
+    const archiveGrid = $('archiveGrid');
+    if (archiveGrid && design.archiveModules) {
+      archiveGrid.innerHTML = design.archiveModules.map(item =>
         `<a href="./${item.folder}/index.html" class="archive-card bg-white hover:border-${item.color}-500 rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition group flex flex-col justify-between" data-search="${item.title} ${item.desc} ${item.folder}">
           <div>
             <div class="w-10 h-10 rounded-xl bg-${item.color}-50 text-${item.color}-600 flex items-center justify-center mb-3 group-hover:bg-${item.color}-600 group-hover:text-white transition">
@@ -350,9 +308,9 @@
       ).join('');
     }
 
-    function renderMetrics() {
-      const container = document.getElementById('metricsGrid');
-      if (!container || !design.metrics) return;
+    // Metrics
+    const metricsGrid = $('metricsGrid');
+    if (metricsGrid && design.metrics) {
       const m = design.metrics;
       const items = [
         { label: 'Storage', value: `${m.storage.used} / ${m.storage.total}`, sub: `Free: ${m.storage.free}`, icon: 'fa-hard-drive', color: 'blue' },
@@ -360,7 +318,7 @@
         { label: 'Vaults', value: m.vaults.count, sub: m.vaults.change, icon: 'fa-folder', color: 'purple' },
         { label: 'Encryption', value: m.encryption.status, sub: m.encryption.badge, icon: 'fa-shield', color: 'cyan' }
       ];
-      container.innerHTML = items.map(item =>
+      metricsGrid.innerHTML = items.map(item =>
         `<div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-start gap-3">
           <div class="w-8 h-8 rounded-lg bg-${item.color}-50 text-${item.color}-600 flex items-center justify-center text-sm shrink-0">
             <i class="fa-solid ${item.icon}"></i>
@@ -374,11 +332,11 @@
       ).join('');
     }
 
-    function renderVaults() {
-      const container = document.getElementById('vaultsGrid');
-      if (!container || !design.vaults) return;
+    // Vaults
+    const vaultsGrid = $('vaultsGrid');
+    if (vaultsGrid && design.vaults) {
       const colorMap = { cyan: 'cyan', yellow: 'amber', purple: 'purple' };
-      container.innerHTML = design.vaults.map(v =>
+      vaultsGrid.innerHTML = design.vaults.map(v =>
         `<div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition">
           <div class="flex items-center justify-between">
             <h4 class="text-sm font-bold text-slate-900">${v.name}</h4>
@@ -389,10 +347,10 @@
       ).join('');
     }
 
-    function renderFeed() {
-      const container = document.getElementById('feedContainer');
-      if (!container || !design.feed) return;
-      container.innerHTML = design.feed.map(item =>
+    // Feed
+    const feedContainer = $('feedContainer');
+    if (feedContainer && design.feed) {
+      feedContainer.innerHTML = design.feed.map(item =>
         `<div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-full bg-brand-accent/10 text-brand-accent flex items-center justify-center text-xs font-bold">${item.avatar}</div>
@@ -416,34 +374,140 @@
         </div>`
       ).join('');
     }
+  }
 
-    // ─── SEARCH WITH DEBOUNCE ──────────────────────────────────
-    let searchTimeout;
-    function filterArchives(query) {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        const cards = document.querySelectorAll('.archive-card');
-        const q = query.toLowerCase().trim();
-        cards.forEach(card => {
-          const searchData = card.dataset.search?.toLowerCase() || '';
-          card.classList.toggle('hidden-card', q && !searchData.includes(q));
-        });
-      }, 300);
+  // ─── SESSION CHECK WITH LOCK ────────────────────────────────────
+  let userRole = 'user';
+
+  async function checkSession() {
+    // Lock is visible by default from HTML
+    try {
+      console.log('🔐 Checking session...');
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      const session = data?.session;
+      if (!session || !session.user) {
+        console.warn('No session – redirecting to login');
+        localStorage.removeItem('archivehub_user');
+        window.location.href = '../index.html';
+        return;
+      }
+
+      // Fetch profile (but we already rendered content)
+      let role = 'user';
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        if (!profileError && profile?.role) {
+          role = profile.role;
+        } else if (!profile) {
+          // Create profile if missing
+          await supabase.from('profiles').insert({
+            id: session.user.id,
+            email: session.user.email,
+            role: 'user'
+          });
+        }
+      } catch (e) {
+        console.warn('Profile fetch failed, using default role:', e);
+      }
+
+      userRole = role;
+      const userData = {
+        id: session.user.id,
+        email: session.user.email,
+        role: role,
+        session: session
+      };
+      localStorage.setItem('archivehub_user', JSON.stringify(userData));
+
+      // Update UI
+      const badge = $('roleBadge');
+      const adminPanel = $('adminPanel');
+      if (badge) {
+        badge.textContent = role === 'admin' ? '👑 Admin' : '👤 User';
+        badge.className = `text-[10px] font-bold px-2.5 py-1 rounded-full ${role === 'admin' ? 'role-badge-admin' : 'role-badge-user'}`;
+        badge.classList.remove('hidden');
+      }
+      if (adminPanel) {
+        adminPanel.classList.toggle('hidden', role !== 'admin');
+      }
+
+      console.log('✅ Session verified:', session.user.email, 'role:', role);
+
+      // Hide lock – successful auth
+      authLock.classList.add('hidden');
+
+    } catch (err) {
+      console.error('Session error:', err);
+      // If there's a network error, don't redirect immediately – show error and let user retry
+      showError('Session check failed: ' + err.message + ' – you may need to reload.');
+      // Hide lock so user can see error and maybe refresh
+      authLock.classList.add('hidden');
+    }
+  }
+
+  // ─── SEARCH ──────────────────────────────────────────────────────
+  let searchTimeout;
+  function filterArchives(query) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const cards = document.querySelectorAll('.archive-card');
+      const q = query.toLowerCase().trim();
+      cards.forEach(card => {
+        const searchData = card.dataset.search?.toLowerCase() || '';
+        card.classList.toggle('hidden-card', q && !searchData.includes(q));
+      });
+    }, 300);
+  }
+
+  // ─── LOGOUT ──────────────────────────────────────────────────────
+  async function logoutUser() {
+    try {
+      if (supabase) await supabase.auth.signOut();
+    } catch (_) {}
+    localStorage.removeItem('archivehub_user');
+    window.location.href = '../index.html';
+  }
+
+  // ─── INIT ────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM ready – rendering content...');
+
+    // 1. Render static content (always happens)
+    tryRenderStatic();
+
+    // 2. Attach search listener
+    const searchInput = $('globalSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', e => filterArchives(e.target.value));
     }
 
-    // ─── INIT ────────────────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', function() {
-      // Attach search input listener
-      const searchInput = document.getElementById('globalSearchInput');
-      if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-          filterArchives(this.value);
-        });
-      }
-      checkUserSession();
-    });
+    // 3. Attach logout
+    const logoutBtn = $('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', logoutUser);
+    }
 
-  })();
-  </script>
+    // 4. Check session (non-blocking, but lock prevents clicks)
+    if (supabase) {
+      // Small delay to let content paint, but lock stays visible
+      setTimeout(() => {
+        checkSession();
+      }, 50);
+    } else {
+      showError('Supabase client not available – please refresh.');
+      authLock.classList.add('hidden'); // hide lock so user can see error
+    }
+
+    console.log('✅ Dashboard initialised – content visible, session check in progress.');
+  });
+
+})();
+</script>
+
 </body>
 </html>
