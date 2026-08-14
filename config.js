@@ -1,14 +1,14 @@
 // config.js - Site design and non-sensitive defaults
 // IMPORTANT: Replace the SUPABASE url and anonKey below with your project's values.
-// Do NOT commit real keys. Instead copy config.example.js -> config.js locally and fill the values.
+// Do NOT commit real keys. Copy this file to config.js locally and fill the values.
 
 const design = {
   supabase: {
-    url: "<YOUR_SUPABASE_URL>",
-    anonKey: "<YOUR_ANON_KEY>"
+    url: "https://yffqtbqnzrcctfnjibbo.supabase.co",  // <-- replace with your URL
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE" // <-- replace
   },
   header: {
-    logoText: "archivehub",
+    logoText: "ArchiveHub",   // fixed casing for consistency
     navLinks: [
       { label: "Vaults", active: true },
       { label: "Tools" },
@@ -46,8 +46,6 @@ const design = {
     comments: 8,
     views: "1.2k"
   }],
-
-  // ═══ ALL 10 SUBFOLDERS ═══
   archiveModules: [
     { folder: 'events-archive', title: 'Events Archive', desc: 'Special events, logs, and historical records.', color: 'blue', icon: 'fa-calendar-check' },
     { folder: 'lg-masterlist', title: 'LG Masterlist', desc: 'Complete database and operational roster for LG.', color: 'emerald', icon: 'fa-list-check' },
@@ -62,7 +60,5 @@ const design = {
   ]
 };
 
-// expose globally for pages that rely on `design`
+// expose globally
 if (typeof window !== 'undefined') window.design = design;
-
-// Note: intentionally NOT an ES module export to keep this file compatible with <script src="config.js"></script>
