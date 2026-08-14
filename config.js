@@ -1,8 +1,11 @@
-// config.js - All content, text, and dynamic data
+// config.js - Site design and non-sensitive defaults
+// IMPORTANT: Replace the SUPABASE url and anonKey below with your project's values.
+// Do NOT commit real keys. Instead copy config.example.js -> config.js locally and fill the values.
+
 const design = {
   supabase: {
-    url: 'https://yffqtbqnzrcctfnjibbo.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE'
+    url: "<YOUR_SUPABASE_URL>",
+    anonKey: "<YOUR_ANON_KEY>"
   },
   header: {
     logoText: "archivehub",
@@ -58,3 +61,8 @@ const design = {
     { folder: 'classic-movie-schedules', title: 'Classic Movie Schedules', desc: 'Schedules and programming for classic movies.', color: 'orange', icon: 'fa-film' }
   ]
 };
+
+// expose globally for pages that rely on `design`
+if (typeof window !== 'undefined') window.design = design;
+
+export default design;
