@@ -1,0 +1,27 @@
+/* style.css - Light theme */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #E5E7EB;
+  color: #0F172A;
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #F1F5F9; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+.gradient-card {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #0F172A 100%);
+}
+.card-bg { background-color: #FFFFFF; border: 1px solid #E2E8F0; }
+.card-hover:hover { border-color: #94A3B8; transform: translateY(-2px); transition: all 0.2s ease; }
+.mobile-nav { transition: transform 0.25s ease, opacity 0.25s ease; }
+.mobile-nav.open { transform: translateX(0) !important; opacity: 1 !important; pointer-events: auto !important; }
+.right-sidebar { transition: transform 0.25s ease, opacity 0.25s ease; }
+.right-sidebar.open { transform: translateX(0) !important; opacity: 1 !important; pointer-events: auto !important; }
+.rail-icon-btn { min-width: 2.5rem; min-height: 2.5rem; }
+.tap-highlight-none { -webkit-tap-highlight-color: transparent; }
+.nav-link-active { background: #EFF6FF; color: #2563EB; border-color: #2563EB; }
+@media (max-width: 640px) { .gradient-card, .card-bg { border-radius: 1.25rem; } }
+.archive-card.hidden-card { display: none !important; }

@@ -155,7 +155,7 @@
         </div>
         <div class="flex flex-col items-center space-y-3 w-full px-2">
             <!-- ─── FIXED: Logout Button ─── -->
-            <a href="../../index.html" onclick="localStorage.removeItem('archivehub_user');" class="w-10 h-10 rounded-xl text-rose-400 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
+            <a href="../../index.html" onclick="logoutUser(event)" class="w-10 h-10 rounded-xl text-rose-400 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
                 <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
             </a>
         </div>
@@ -280,32 +280,67 @@
 
     const TABLE_NAME = 'tgirj_masterlist';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ─── 🔐 SUPABASE CLIENT ────────────────────────────────────────
+    const supabase = window.supabase
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        : null;
 
     // ─── 🔐 SESSION CHECK ──────────────────────────────────────────
+    // Always trust the current Supabase session first.
+    // localStorage is only refreshed after Supabase confirms access.
     async function checkAccess() {
         try {
-            const saved = localStorage.getItem('archivehub_user');
-            if (saved) {
-                const userData = JSON.parse(saved);
-                const { data } = await supabase.auth.setSession(userData.session);
-                if (data.user) {
-                    console.log('🔓 Access granted for:', data.user.email);
-                    return true;
+            if (!supabase) {
+                throw new Error('Supabase failed to load.');
+            }
+
+            const { data, error } = await supabase.auth.getSession();
+
+            if (error) {
+                throw error;
+            }
+
+            const session = data?.session;
+
+            if (!session || !session.user) {
+                console.warn('🔒 No active Supabase session – redirecting to login');
+                localStorage.removeItem('archivehub_user');
+                window.location.href = '../../index.html';
+                return false;
+            }
+
+            // Refresh the local cache only after Supabase verifies the session.
+            let role = 'user';
+
+            try {
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (!profileError && profile?.role) {
+                    role = profile.role;
                 }
+            } catch (profileError) {
+                console.warn('Profile role lookup failed:', profileError);
             }
 
-            const { data } = await supabase.auth.getSession();
-            if (data.session) {
-                console.log('🔓 Access granted for:', data.session.user.email);
-                return true;
-            }
+            localStorage.setItem('archivehub_user', JSON.stringify({
+                id: session.user.id,
+                email: session.user.email,
+                role: role,
+                session: session
+            }));
 
-            console.warn('🔒 Access denied – redirecting to login');
-            window.location.href = '../../index.html';
-            return false;
+            console.log('🔓 Access granted for:', session.user.email);
+            return true;
+
         } catch (err) {
             console.error('Access check error:', err);
+
+            localStorage.removeItem('archivehub_user');
+
             window.location.href = '../../index.html';
             return false;
         }
@@ -600,6 +635,23 @@
             document.getElementById('priority-view').classList.remove('hidden');
             document.getElementById('masterlist-view').classList.add('hidden');
             renderPriorityGroups();
+        }
+    };
+
+
+    // ─── LOGOUT ────────────────────────────────────────────────────
+    window.logoutUser = async function(event) {
+        if (event) event.preventDefault();
+
+        try {
+            if (supabase) {
+                await supabase.auth.signOut();
+            }
+        } catch (err) {
+            console.warn('Logout warning:', err);
+        } finally {
+            localStorage.removeItem('archivehub_user');
+            window.location.href = '../../index.html';
         }
     };
 

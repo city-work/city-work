@@ -74,10 +74,6 @@
         </div>
 
         <div class="flex items-center space-x-3 sm:space-x-4">
-          <button onclick="toggleFolderTree()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-full border border-slate-200 transition flex items-center space-x-1.5">
-            <i class="fa-solid fa-sitemap text-brand-accent"></i>
-            <span class="hidden sm:inline">Button Tree Map</span>
-          </button>
           <div class="relative hidden sm:block">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
             <input id="globalSearchInput" type="text" placeholder="Search archives..." class="bg-slate-100/80 text-xs font-medium text-slate-800 pl-9 pr-12 py-2 rounded-full border border-slate-200 focus:outline-none focus:border-brand-accent focus:bg-white w-48 lg:w-64 transition" oninput="filterArchives(this.value)" />
@@ -130,32 +126,6 @@
 
       </main>
 
-      <!-- Modal -->
-      <div id="folderTreeModal" onclick="handleBackdropClick(event)" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex justify-end transition-opacity opacity-0 pointer-events-none duration-300">
-        <div class="w-full sm:max-w-md bg-white h-full shadow-2xl border-l border-slate-200 flex flex-col translate-x-full transition-transform duration-300 ease-out" id="folderTreePanel">
-          <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-            <div class="flex items-center space-x-2.5">
-              <div class="w-8 h-8 rounded-lg bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent">
-                <i class="fa-solid fa-folder-tree text-sm"></i>
-              </div>
-              <div>
-                <h3 class="text-sm font-bold text-slate-900">Archive Button Map</h3>
-                <p class="text-[11px] font-medium text-slate-500">Quick page navigation</p>
-              </div>
-            </div>
-            <button onclick="toggleFolderTree()" class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
-              <i class="fa-solid fa-xmark text-sm"></i>
-            </button>
-          </div>
-          <div class="flex-1 overflow-y-auto p-5 custom-scrollbar text-xs font-medium text-slate-700 space-y-4" id="treeLinks"></div>
-          <div class="p-4 border-t border-slate-200 bg-slate-50 text-center">
-            <button onclick="toggleFolderTree()" class="w-full py-2 bg-slate-900 text-white font-semibold text-xs rounded-xl shadow hover:bg-slate-800 transition">Close Navigation Tree</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
 
   <script>
     // ─── SUPABASE ──────────────────────────────────────────────────────
@@ -187,95 +157,91 @@
 
     // ─── SESSION CHECK ──────────────────────────────────────────────
     async function checkUserSession() {
-      if (typeof design === 'undefined') {
-        console.error('❌ config.js not loaded!');
-        document.getElementById('archiveGrid').innerHTML = 
-          '<div class="col-span-full text-center text-amber-600 text-sm py-8">⚠️ Config not loaded. Check console.</div>';
-        return;
-      }
-
-      console.log('✅ design loaded:', design);
-      console.log('📋 archiveModules:', design.archiveModules);
-
-      renderAll();
+      const archiveGrid = document.getElementById('archiveGrid');
 
       try {
-        const saved = localStorage.getItem('archivehub_user');
-        if (saved) {
-          const userData = JSON.parse(saved);
-          currentUser = userData;
-          userRole = userData.role || 'user';
-          updateUIForRole();
-
-          if (supabase && userData.session && userData.session.access_token) {
-            try {
-              const { data, error } = await supabase.auth.setSession({
-                access_token: userData.session.access_token,
-                refresh_token: userData.session.refresh_token
-              });
-              
-              if (error || !data.user) {
-                console.warn('Invalid local session token. Returning to login.');
-                localStorage.removeItem('archivehub_user');
-                window.location.href = '../index.html';
-                return;
-              }
-
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', data.user.id)
-                .single();
-
-              if (profile && profile.role) {
-                userRole = profile.role;
-                userData.role = profile.role;
-                localStorage.setItem('archivehub_user', JSON.stringify(userData));
-                updateUIForRole();
-              }
-            } catch (e) {
-              console.warn('Session verification fallback:', e);
-              localStorage.removeItem('archivehub_user');
-              window.location.href = '../index.html';
-              return;
-            }
+        if (typeof design === 'undefined') {
+          console.error('❌ config.js not loaded!');
+          if (archiveGrid) {
+            archiveGrid.innerHTML =
+              '<div class="col-span-full text-center text-amber-600 text-sm py-8">⚠️ Config not loaded. Check console.</div>';
           }
           return;
         }
 
+        if (!Array.isArray(design.archiveModules)) {
+          console.error('❌ design.archiveModules is missing or invalid!');
+          if (archiveGrid) {
+            archiveGrid.innerHTML =
+              '<div class="col-span-full text-center text-amber-600 text-sm py-8">⚠️ Archive modules are missing in config.js.</div>';
+          }
+          return;
+        }
+
+        console.log('✅ design loaded:', design);
+        console.log('📋 archiveModules:', design.archiveModules);
+
+        // Render all dashboard cards, including TGIRJ, from config.js.
+        renderAll();
+
+        // Always verify the live Supabase session.
         if (!supabase) {
+          throw new Error('Supabase failed to load.');
+        }
+
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          throw error;
+        }
+
+        const session = data?.session;
+
+        if (!session || !session.user) {
+          console.warn('🔒 No active Supabase session. Redirecting to login.');
+          localStorage.removeItem('archivehub_user');
           window.location.href = '../index.html';
           return;
         }
 
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error || !session) {
-          window.location.href = '../index.html';
-          return;
+        let role = 'user';
+
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+          if (!profileError && profile?.role) {
+            role = profile.role;
+          }
+        } catch (profileError) {
+          console.warn('Profile role lookup failed:', profileError);
         }
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
-        userRole = profile?.role || 'user';
         currentUser = {
           id: session.user.id,
           email: session.user.email,
-          role: userRole,
+          role: role,
           session: session
         };
-        localStorage.setItem('archivehub_user', JSON.stringify(currentUser));
+
+        userRole = role;
+
+        localStorage.setItem(
+          'archivehub_user',
+          JSON.stringify(currentUser)
+        );
+
         updateUIForRole();
+
+        console.log('🔓 Access granted for:', session.user.email);
 
       } catch (err) {
         console.error('Session error:', err);
-        const saved = localStorage.getItem('archivehub_user');
-        if (!saved) {
-          window.location.href = '../index.html';
-        }
+        localStorage.removeItem('archivehub_user');
+        window.location.href = '../index.html';
       }
     }
 
@@ -303,7 +269,6 @@
       renderMetrics();
       renderVaults();
       renderFeed();
-      renderTreeLinks();
     }
 
     function renderLogo() {
@@ -443,24 +408,6 @@
       ).join('');
     }
 
-    function renderTreeLinks() {
-      const container = document.getElementById('treeLinks');
-      if (!container || !design.archiveModules) return;
-      const links = design.archiveModules.map(item =>
-        `<a href="./${item.folder}/index.html" class="flex items-center space-x-2 hover:text-brand-accent p-1 rounded hover:bg-slate-50">
-          <i class="fa-solid fa-folder text-slate-400"></i>
-          <span>${item.folder}/index.html</span>
-        </a>`
-      ).join('');
-      container.innerHTML = `
-        <div class="font-bold text-slate-900 flex items-center space-x-2">
-          <i class="fa-solid fa-folder-open text-amber-500 text-sm"></i>
-          <span>All Dedicated Page Folders</span>
-        </div>
-        <div class="ml-4 pl-3 border-l-2 border-slate-200 space-y-2 text-slate-600">${links}</div>
-      `;
-    }
-
     // ─── SEARCH ──────────────────────────────────────────────────────
     function filterArchives(query) {
       const cards = document.querySelectorAll('.archive-card');
@@ -471,35 +418,6 @@
       });
     }
 
-    // ─── FOLDER TREE ────────────────────────────────────────────────
-    function toggleFolderTree() {
-      const modal = document.getElementById('folderTreeModal');
-      const panel = document.getElementById('folderTreePanel');
-      if (modal.classList.contains('opacity-0')) {
-        modal.classList.remove('opacity-0', 'pointer-events-none');
-        panel.classList.remove('translate-x-full');
-      } else {
-        modal.classList.add('opacity-0', 'pointer-events-none');
-        panel.classList.add('translate-x-full');
-      }
-    }
-
-    function handleBackdropClick(event) {
-      if (event.target.id === 'folderTreeModal') toggleFolderTree();
-    }
-
-    // ─── KEYBOARD ────────────────────────────────────────────────────
-    document.addEventListener('keydown', (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        document.getElementById('globalSearchInput')?.focus();
-      }
-      if (e.key === 'Escape') {
-        const modal = document.getElementById('folderTreeModal');
-        if (modal && !modal.classList.contains('opacity-0')) toggleFolderTree();
-        else document.getElementById('globalSearchInput')?.blur();
-      }
-    });
 
     // ─── INIT ────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', checkUserSession);
