@@ -56,43 +56,6 @@
         .nav-item:hover { background: #f1f5f9; color: #0f172a; }
         .nav-item-active { background: #eef2ff; color: #4F46E5; }
 
-        .nav-stat {
-            padding: 0.4rem 1rem;
-            border-radius: 0.75rem;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #64748b;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
-            cursor: default;
-        }
-        .nav-stat .stat-value {
-            font-weight: 700;
-            color: #0f172a;
-        }
-        .nav-stat .stat-value.songs { color: #059669; }
-        .nav-stat .stat-value.spel { color: #475569; }
-        .nav-stat .stat-value.events { color: #2563eb; }
-
-        .date-card {
-            padding: 1rem 1.25rem;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 1rem;
-            transition: all 0.2s;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .date-card:hover {
-            border-color: #4F46E5;
-            box-shadow: 0 4px 12px -4px rgba(79, 70, 229, 0.15);
-            transform: translateY(-2px);
-        }
-
         .priority-filter {
             padding: 0.3rem 0.9rem;
             border-radius: 0.6rem;
@@ -112,6 +75,12 @@
         .priority-a { background: #fee2e2; color: #991b1b; }
         .priority-b { background: #fef3c7; color: #92400e; }
         .priority-c { background: #dbeafe; color: #1e40af; }
+
+        .badge-song { background: #d1fae5; color: #065f46; }
+        .badge-spel { background: #f1f5f9; color: #475569; }
+        .badge-intro { background: #dbeafe; color: #1e40af; }
+        .badge-outro { background: #fce4ec; color: #9a1b32; }
+        .badge-commercial { background: #fef3c7; color: #92400e; }
 
         .modal-overlay {
             position: fixed;
@@ -133,7 +102,7 @@
         .modal-card {
             background: white;
             border-radius: 1.5rem;
-            max-width: 700px;
+            max-width: 800px;
             width: 95%;
             max-height: 85vh;
             overflow-y: auto;
@@ -148,36 +117,6 @@
         .modal-card::-webkit-scrollbar { width: 4px; }
         .modal-card::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
 
-        .badge-song { background: #d1fae5; color: #065f46; }
-        .badge-spel { background: #f1f5f9; color: #475569; }
-        .badge-intro { background: #dbeafe; color: #1e40af; }
-        .badge-outro { background: #fce4ec; color: #9a1b32; }
-        .badge-commercial { background: #fef3c7; color: #92400e; }
-
-        /* ─── LOADING SPINNER ─── */
-        #loadingSpinner {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(4px);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        #loadingSpinner .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #e2e8f0;
-            border-top-color: #4F46E5;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ─── STATUS BADGE ─── */
         .status-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
         .status-error { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
         .status-waiting { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
@@ -222,43 +161,31 @@
             transform: scale(1.02);
         }
 
-        /* ─── YEAR/MONTH/DATE LAYOUT ─── */
-        .year-section {
-            margin-bottom: 0.5rem;
+        #loadingSpinner {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
         }
-        .month-section {
-            margin-bottom: 0.25rem;
+        #loadingSpinner .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #4F46E5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
-        .date-card-compact {
-            padding: 0.6rem 0.75rem;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.6rem;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .date-card-compact:hover {
-            border-color: #4F46E5;
-            box-shadow: 0 2px 8px -4px rgba(79, 70, 229, 0.12);
-            transform: translateX(4px);
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .sidebar-divider {
-            border: none;
-            border-top: 1px solid #e2e8f0;
-            margin: 0.5rem 0;
-        }
-
-        .sidebar-label {
-            font-size: 0.65rem;
-            font-weight: 700;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 0.25rem 1rem;
-        }
-
-        /* ─── LEFT RAIL (Full Menu) ─── */
+        .table-row-hover:hover { background: #f8fafc; }
+        
+        /* ─── LEFT RAIL FULL MENU ─── */
         .left-rail-full {
             width: 200px;
             background: white;
@@ -302,6 +229,88 @@
             border-radius: 999px;
             font-weight: 600;
             margin-left: auto;
+        }
+
+        .sidebar-label {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            font-weight: 700;
+            padding: 0.5rem 0.5rem 0.25rem 0.5rem;
+        }
+
+        .sidebar-divider {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 0.5rem 0;
+        }
+
+        .nav-stat {
+            padding: 0.3rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            cursor: default;
+        }
+        .nav-stat .stat-value {
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .nav-stat .stat-value.songs { color: #059669; }
+        .nav-stat .stat-value.spel { color: #475569; }
+        .nav-stat .stat-value.events { color: #2563eb; }
+
+        .date-card-compact {
+            padding: 0.6rem 0.75rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.6rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .date-card-compact:hover {
+            border-color: #4F46E5;
+            box-shadow: 0 2px 8px -4px rgba(79, 70, 229, 0.12);
+            transform: translateX(4px);
+        }
+
+        .month-section {
+            margin-bottom: 0.25rem;
+        }
+
+        .priority-groups-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+        .priority-groups-table th {
+            text-align: left;
+            padding: 0.4rem 0.6rem;
+            font-weight: 600;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #94a3b8;
+            border-bottom: 2px solid #e5e7eb;
+            background: #f8fafc;
+        }
+        .priority-groups-table td {
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #0f172a;
+            vertical-align: middle;
+        }
+        .priority-groups-table tr:last-child td {
+            border-bottom: none;
+        }
+        .priority-groups-table tr:hover td {
+            background: #f8fafc;
         }
 
         @media (max-width: 768px) {
@@ -432,15 +441,36 @@
 
             <!-- ═══ MASTERLIST VIEW ═══ -->
             <div id="masterlist-view">
-                <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">📋 Bravo Masterlist</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6" id="date-list">
-                    <div class="col-span-full text-center text-slate-400 text-sm py-8">⏳ Loading dates...</div>
+                <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">📋 Bravo Masterlist</h2>
+                        <p class="text-xs text-slate-500 mt-0.5" id="masterlistInfo">All entries organized by date.</p>
+                    </div>
+                    <!-- ─── FILTER BUTTONS ─── -->
+                    <div class="flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200/80 shadow-sm">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Filter:</span>
+                        <div onclick="filterPriority('all')" class="priority-filter priority-filter-active text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="all" style="background: #f1f5f9; color: #475569; font-weight:600;">
+                            All
+                        </div>
+                        <div onclick="filterPriority('A')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="A" style="background: #fee2e2; color: #991b1b; font-weight:600;">
+                            🔴 A
+                        </div>
+                        <div onclick="filterPriority('B')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="B" style="background: #fef3c7; color: #92400e; font-weight:600;">
+                            🟡 B
+                        </div>
+                        <div onclick="filterPriority('C')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="C" style="background: #dbeafe; color: #1e40af; font-weight:600;">
+                            🔵 C
+                        </div>
+                    </div>
+                </div>
+                <div id="masterlist-content">
+                    <div class="text-center text-slate-400 text-sm py-8">⏳ Loading...</div>
                 </div>
             </div>
 
             <!-- ═══ PRIORITY VIEW ═══ -->
             <div id="priority-view" class="hidden">
-                <div class="flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">🏷️ Priority Groups</h2>
                         <p class="text-xs text-slate-500 mt-0.5" id="priorityInfo">Entries grouped by priority level.</p>
@@ -462,7 +492,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="priority-groups" class="mt-4 space-y-4">
+                <div id="priority-content">
                     <div class="text-center text-slate-400 text-sm py-8">⏳ Loading...</div>
                 </div>
             </div>
@@ -493,15 +523,16 @@
 (function() {
     'use strict';
 
-    // ─── SUPABASE CONFIG (Embedded) ──────────────────────────────
+    // ─── SUPABASE CONFIG ──────────────────────────────────────────
     const SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
-    const TABLE_NAME = 'bravo_masterlist';
+    const MASTERLIST_TABLE = 'bravo_masterlist';
+    const PRIORITIZATION_TABLE = 'bravo_prioritization';
 
-    let supabase = null;
+    let supabaseClient = null;
     try {
         if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         } else {
             console.warn('Supabase library not loaded');
         }
@@ -511,8 +542,8 @@
 
     // ─── DOM REFS ──────────────────────────────────────────────────
     const $ = id => document.getElementById(id);
-    const dateList = $('date-list');
-    const priorityGroups = $('priority-groups');
+    const masterlistContent = $('masterlist-content');
+    const priorityContent = $('priority-content');
     const modalOverlay = $('modal-overlay');
     const modalTitle = $('modal-title');
     const modalBody = $('modal-body');
@@ -522,11 +553,10 @@
     const statEvents = $('stat-events');
     const statusBadge = $('statusBadge');
     const userInfo = $('userInfo');
-    const priorityInfo = $('priorityInfo');
     const loadingSpinner = $('loadingSpinner');
     const refreshIcon = $('refresh-icon');
 
-    // ─── STATE ─────────────────────────────────────────────────────
+    // ─── STATE ──────────────────────────────────────────────────────
     let allEntries = [];
     let allDates = [];
     let dateDataMap = {};
@@ -551,13 +581,10 @@
 
     function formatDate(dateStr) {
         if (!dateStr) return '—';
-        const d = new Date(dateStr + 'T00:00:00');
-        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    }
-
-    function getPriorityLabel(p) {
-        const map = { 'A': '🔴 A – Top', 'B': '🟡 B – Mid', 'C': '🔵 C – Lower' };
-        return map[p] || p || '—';
+        try {
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        } catch { return dateStr; }
     }
 
     function getPriorityClass(p) {
@@ -565,12 +592,27 @@
         return map[p] || '';
     }
 
+    function getPriorityLabel(p) {
+        const map = { 'A': '🔴 A', 'B': '🟡 B', 'C': '🔵 C' };
+        return map[p] || p || '—';
+    }
+
+    function getTypeBadge(type) {
+        const map = { 'song': 'badge-song', 'spel': 'badge-spel', 'intro': 'badge-intro', 'outro': 'badge-outro', 'commercial': 'badge-commercial' };
+        return map[type] || 'badge-spel';
+    }
+
+    function getTypeLabel(type) {
+        const map = { 'song': '🎵 Song', 'spel': '⏸️ SPEL', 'intro': '▶️ Intro', 'outro': '⏹️ Outro', 'commercial': '📺 Commercial' };
+        return map[type] || type || '—';
+    }
+
     // ─── AUTH ──────────────────────────────────────────────────────
     async function checkSession() {
         loadingSpinner.style.display = 'flex';
         setStatus('Checking...', 'warning');
 
-        if (!supabase) {
+        if (!supabaseClient) {
             setStatus('⚠️ No Supabase', 'error');
             userInfo.textContent = '⚠️ Supabase client missing';
             loadingSpinner.style.display = 'none';
@@ -578,7 +620,7 @@
         }
 
         try {
-            const { data, error } = await supabase.auth.getSession();
+            const { data, error } = await supabaseClient.auth.getSession();
             if (error) throw error;
             const session = data?.session;
 
@@ -594,7 +636,7 @@
 
             let role = 'user';
             try {
-                const { data: profile, error: profileError } = await supabase
+                const { data: profile, error: profileError } = await supabaseClient
                     .from('profiles')
                     .select('role')
                     .eq('id', session.user.id)
@@ -603,7 +645,7 @@
                 if (!profileError && profile?.role) {
                     role = profile.role;
                 } else if (!profile) {
-                    await supabase.from('profiles').insert({
+                    await supabaseClient.from('profiles').insert({
                         id: session.user.id,
                         email: session.user.email,
                         role: 'user'
@@ -618,7 +660,6 @@
             const roleDisplay = role === 'admin' ? '👑 Admin' : '👤 User';
             setStatus(`✅ ${roleDisplay}`, 'ok');
             userInfo.textContent = `Logged in as ${roleDisplay} · ${userEmail}`;
-            if (priorityInfo) priorityInfo.textContent = `Entries grouped by priority level. Logged in as ${roleDisplay}`;
 
             localStorage.setItem('archivehub_user', JSON.stringify({
                 id: session.user.id,
@@ -640,13 +681,20 @@
 
     // ─── FETCH DATA ──────────────────────────────────────────────
     async function fetchAllData() {
-        if (!supabase) return;
+        if (!supabaseClient) return;
 
         try {
-            const { data, error } = await supabase
-                .from(TABLE_NAME)
-                .select('*')
-                .neq('type', 'header')
+            // Fetch masterlist with joined prioritization data
+            const { data, error } = await supabaseClient
+                .from(MASTERLIST_TABLE)
+                .select(`
+                    *,
+                    bravo_prioritization (
+                        categorization,
+                        notes,
+                        priority
+                    )
+                `)
                 .order('event_date', { ascending: true });
 
             if (error) throw error;
@@ -679,29 +727,31 @@
 
         } catch (err) {
             console.error('Fetch error:', err);
-            dateList.innerHTML = `<div class="col-span-full text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>`;
-            priorityGroups.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>`;
+            masterlistContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>`;
+            priorityContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>`;
         }
     }
 
-    // ─── RENDER MASTERLIST (Year → Month → Date) ──────────────────
+    // ─── RENDER MASTERLIST ──────────────────────────────────────
     function renderMasterlist() {
-        let filteredEntries = allEntries;
+        let filteredDates = allDates;
+
         if (currentPriority !== 'all') {
-            filteredEntries = allEntries.filter(e => e.priority === currentPriority);
+            filteredDates = allDates.filter(date => {
+                const entries = dateDataMap[date] || [];
+                return entries.some(e => e.bravo_prioritization && e.bravo_prioritization.priority === currentPriority);
+            });
         }
 
-        if (!filteredEntries.length) {
-            dateList.innerHTML = `<div class="col-span-full text-center text-slate-400 text-sm py-8">No entries found${currentPriority !== 'all' ? ' with priority ' + currentPriority : ''}</div>`;
+        if (!filteredDates.length) {
+            masterlistContent.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries found${currentPriority !== 'all' ? ' with priority ' + currentPriority : ''}</div>`;
             return;
         }
 
         // Group by Year → Month → Date
         const yearMap = {};
-        filteredEntries.forEach(entry => {
-            const date = entry.event_date;
-            if (!date) return;
-            
+        filteredDates.forEach(date => {
+            const entries = dateDataMap[date] || [];
             const d = new Date(date + 'T00:00:00');
             const year = d.getFullYear();
             const month = d.getMonth();
@@ -710,7 +760,7 @@
             if (!yearMap[year]) yearMap[year] = {};
             if (!yearMap[year][month]) yearMap[year][month] = {};
             if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
-            yearMap[year][month][day].push(entry);
+            yearMap[year][month][day] = entries;
         });
 
         const sortedYears = Object.keys(yearMap).sort((a, b) => b - a);
@@ -722,10 +772,10 @@
             const sortedMonths = Object.keys(months).sort((a, b) => b - a);
             
             html += `
-                <div class="col-span-full year-section">
-                    <div class="flex items-center gap-3 mb-3 mt-2">
+                <div class="year-section mb-4">
+                    <div class="flex items-center gap-3 mb-3">
                         <h3 class="text-lg font-extrabold text-slate-700">📁 ${year}</h3>
-                        <span class="text-xs text-slate-400 bg-slate-100 px-3 py-0.5 rounded-full">${filteredEntries.filter(e => new Date(e.event_date + 'T00:00:00').getFullYear() === parseInt(year)).length} entries</span>
+                        <span class="text-xs text-slate-400 bg-slate-100 px-3 py-0.5 rounded-full">${Object.values(months).reduce((sum, days) => sum + Object.values(days).reduce((s, entries) => s + entries.length, 0), 0)} entries</span>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-4">
             `;
@@ -733,7 +783,7 @@
             sortedMonths.forEach(month => {
                 const days = months[month];
                 const sortedDays = Object.keys(days).sort((a, b) => b - a);
-                const totalInMonth = Object.values(days).reduce((sum, dayEntries) => sum + dayEntries.length, 0);
+                const totalInMonth = Object.values(days).reduce((sum, entries) => sum + entries.length, 0);
                 
                 html += `
                     <div class="month-section col-span-1">
@@ -750,11 +800,13 @@
                     const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                     const dateKey = `${year}-${String(parseInt(month)+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
                     
-                    const priorities = [...new Set(entries.map(e => e.priority).filter(Boolean))];
-                    const priorityBadges = priorities.map(p => `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getPriorityClass(p)}">${p}</span>`).join('');
+                    // Get priority badges
+                    const priorities = [...new Set(entries.map(e => e.bravo_prioritization?.priority).filter(Boolean))];
+                    const priorityBadges = priorities.map(p => `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getPriorityClass(p)}">${getPriorityLabel(p)}</span>`).join('');
                     
+                    // Get type badges
                     const types = [...new Set(entries.map(e => e.type).filter(Boolean))];
-                    const typeBadges = types.map(t => `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full badge-${t}">${t}</span>`).join('');
+                    const typeBadges = types.map(t => `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${getTypeBadge(t)}">${t}</span>`).join('');
                     
                     html += `
                         <div class="date-card-compact" onclick="openModal('${dateKey}')">
@@ -767,7 +819,7 @@
                                 ${typeBadges}
                             </div>
                             <div class="text-[10px] text-slate-400 mt-1 truncate">
-                                ${entries.slice(0, 3).map(e => esc(e.name)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
+                                ${entries.slice(0, 3).map(e => esc(e.title)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
                             </div>
                         </div>
                     `;
@@ -785,19 +837,19 @@
             `;
         });
 
-        dateList.innerHTML = html;
+        masterlistContent.innerHTML = html;
     }
 
     // ─── RENDER PRIORITY GROUPS ──────────────────────────────────
     function renderPriorityGroups() {
         let filteredEntries = allEntries;
         if (currentPriority !== 'all') {
-            filteredEntries = allEntries.filter(e => e.priority === currentPriority);
+            filteredEntries = allEntries.filter(e => e.bravo_prioritization && e.bravo_prioritization.priority === currentPriority);
         }
 
         const groups = { 'A': [], 'B': [], 'C': [] };
         filteredEntries.forEach(row => {
-            const p = row.priority || 'C';
+            const p = row.bravo_prioritization?.priority || 'C';
             if (groups[p]) groups[p].push(row);
         });
 
@@ -836,26 +888,29 @@
                         </div>
                         <button onclick="filterPriority('${p}')" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">View all →</button>
                     </div>
-                    <div class="overflow-x-auto max-h-[200px] overflow-y-auto custom-scrollbar">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead class="bg-white sticky top-0 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                    <div class="overflow-x-auto max-h-[250px] overflow-y-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse text-sm priority-groups-table">
+                            <thead>
                                 <tr>
-                                    <th class="py-2 px-4">Date</th>
-                                    <th class="py-2 px-4">Segment</th>
-                                    <th class="py-2 px-4">Artist</th>
-                                    <th class="py-2 px-4 text-center">Type</th>
+                                    <th>Date</th>
+                                    <th>Title</th>
+                                    <th>Artist</th>
+                                    <th class="text-center">Type</th>
+                                    <th class="text-center">Notes</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                ${entries.slice(0, 10).map(row => `
+                            <tbody>
+                                ${entries.map(row => `
                                     <tr class="table-row-hover fade-in">
-                                        <td class="py-2 px-4 text-slate-400 text-[11px]">${row.event_date ? formatDate(row.event_date) : '—'}</td>
-                                        <td class="py-2 px-4 text-slate-700">${esc(row.name)}</td>
-                                        <td class="py-2 px-4 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
-                                        <td class="py-2 px-4 text-center"><span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full badge-${row.type || 'spel'}">${row.type || '—'}</span></td>
+                                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.event_date ? formatDate(row.event_date) : '—'}</td>
+                                        <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.title)}</td>
+                                        <td class="py-2 px-3 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
+                                        <td class="py-2 px-3 text-center"><span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${getTypeBadge(row.type)}">${getTypeLabel(row.type)}</span></td>
+                                        <td class="py-2 px-3 text-center">
+                                            ${row.bravo_prioritization?.notes ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.bravo_prioritization.notes)}</span>` : '—'}
+                                        </td>
                                     </tr>
                                 `).join('')}
-                                ${entries.length > 10 ? `<tr><td colspan="4" class="py-2 px-4 text-center text-slate-400 text-xs">+ ${entries.length - 10} more entries</td></tr>` : ''}
                             </tbody>
                         </table>
                     </div>
@@ -871,7 +926,7 @@
             `;
         }
 
-        priorityGroups.innerHTML = html;
+        priorityContent.innerHTML = html;
     }
 
     // ─── MODAL ──────────────────────────────────────────────────
@@ -882,48 +937,33 @@
         if (!entries.length) {
             modalBody.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>`;
         } else {
-            const badges = {
-                'song': 'badge-song',
-                'spel': 'badge-spel',
-                'intro': 'badge-intro',
-                'outro': 'badge-outro',
-                'commercial': 'badge-commercial'
-            };
-            const labels = {
-                'song': '🎵 Song',
-                'spel': '⏸️ SPEL',
-                'intro': '▶️ Intro',
-                'outro': '⏹️ Outro',
-                'commercial': '📺 Commercial'
-            };
-
             let tableHtml = `
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                    <table class="w-full text-left border-collapse text-sm priority-groups-table">
+                        <thead>
                             <tr>
-                                <th class="py-2.5 px-3 w-12">#</th>
-                                <th class="py-2.5 px-3">Segment</th>
-                                <th class="py-2.5 px-3">Artist</th>
-                                <th class="py-2.5 px-3 text-center">Type</th>
-                                <th class="py-2.5 px-3 text-center">Priority</th>
+                                <th class="w-12 text-center">#</th>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th class="text-center">Type</th>
+                                <th class="text-center">Priority</th>
+                                <th class="text-center">Notes</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody>
             `;
 
             entries.forEach((row, idx) => {
-                const badgeClass = badges[row.type] || 'badge-spel';
-                const label = labels[row.type] || row.type;
-                const priorityClass = getPriorityClass(row.priority);
-                const priorityLabel = getPriorityLabel(row.priority);
+                const priority = row.bravo_prioritization?.priority || 'C';
+                const notes = row.bravo_prioritization?.notes || '';
                 tableHtml += `
                     <tr class="table-row-hover fade-in">
-                        <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px] text-center">${idx + 1}</td>
-                        <td class="py-2.5 px-3 text-slate-700">${esc(row.name)}</td>
-                        <td class="py-2.5 px-3 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
-                        <td class="py-2.5 px-3 text-center"><span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${badgeClass}">${label}</span></td>
-                        <td class="py-2.5 px-3 text-center"><span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full ${priorityClass}">${priorityLabel}</span></td>
+                        <td class="py-2 px-3 text-slate-400 font-mono text-[11px] text-center">${idx + 1}</td>
+                        <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.title)}</td>
+                        <td class="py-2 px-3 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
+                        <td class="py-2 px-3 text-center"><span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${getTypeBadge(row.type)}">${getTypeLabel(row.type)}</span></td>
+                        <td class="py-2 px-3 text-center"><span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full ${getPriorityClass(priority)}">${getPriorityLabel(priority)}</span></td>
+                        <td class="py-2 px-3 text-center">${notes ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(notes)}</span>` : '—'}</td>
                     </tr>
                 `;
             });
@@ -989,7 +1029,7 @@
     // ─── LOGOUT ────────────────────────────────────────────────────
     window.logoutUser = async function() {
         try {
-            if (supabase) await supabase.auth.signOut();
+            if (supabaseClient) await supabaseClient.auth.signOut();
         } catch (_) {}
         localStorage.removeItem('archivehub_user');
         window.location.href = '../../index.html';
@@ -1003,18 +1043,18 @@
     // ─── INIT ──────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function() {
         loadingSpinner.style.display = 'flex';
-        if (supabase) {
+        if (supabaseClient) {
             checkSession();
         } else {
             setStatus('⚠️ No Supabase', 'error');
             userInfo.textContent = '⚠️ Supabase client not available';
             loadingSpinner.style.display = 'none';
-            dateList.innerHTML = `<div class="col-span-full text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available. Check network.</div>`;
-            priorityGroups.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>`;
+            masterlistContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>`;
+            priorityContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>`;
         }
     });
 
-    console.log('📋 Bravo Masterlist – Left Rail Full Menu');
+    console.log('📋 Bravo Masterlist – Separated Tables (Masterlist + Prioritization)');
 })();
 </script>
 
