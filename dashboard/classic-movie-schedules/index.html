@@ -10,8 +10,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Use UMD build served with correct MIME type -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Supabase loader: tries local copy first, then multiple CDNs (UMD builds) -->
+    <script>
+    (function loadSupabaseFallback(){
+      function loadScript(src, cb, errcb){
+        try {
+          var s=document.createElement('script'); s.src=src; s.async=true;
+          s.onload=function(){ cb && cb(); };
+          s.onerror=function(){ errcb && errcb(); };
+          document.head.appendChild(s);
+        } catch(e){ errcb && errcb(e); }
+      }
+      function tryUrls(urls, i){
+        if(window.supabase && window.supabase.createClient) return;
+        if(i>=urls.length){ console.error('Supabase load failed'); var b=document.getElementById('statusBadge'); if(b) b.textContent='⚠️ Supabase load failed'; return; }
+        loadScript(urls[i], function(){
+          // Give the loaded script a tick to initialize
+          setTimeout(function(){
+            if(window.supabase && window.supabase.createClient){ console.log('supabase loaded from', urls[i]); return; }
+            // If not present, try next
+            tryUrls(urls, i+1);
+          }, 50);
+        }, function(){
+          console.warn('failed to load', urls[i]);
+          tryUrls(urls, i+1);
+        });
+      }
+      var urls = [
+        // Prefer a local vendor copy (place supabase UMD here for offline reliability)
+        './libs/supabase.min.js',
+        '/dashboard/classic-movie-schedules/libs/supabase.min.js',
+        // Fall back to known-working UMD URLs
+        'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+        'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+      ];
+      // Start loading after a short delay so other head scripts can run
+      setTimeout(function(){ if(window.supabase && window.supabase.createClient) return; tryUrls(urls,0); }, 0);
+    })();
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
