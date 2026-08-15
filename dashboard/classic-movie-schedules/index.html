@@ -40,7 +40,6 @@
             --accent-red: #ef4444;
             --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
             --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.08);
-            --gradient-progress: linear-gradient(90deg, #2563eb, #22c55e);
         }
 
         body {
@@ -71,18 +70,12 @@
         /* ─── UNIFIED DASHBOARD LAYOUT ─── */
         .unified-dashboard {
             display: grid;
-            grid-template-columns: 340px 1fr;
+            grid-template-columns: 220px 1fr;
             gap: 1.25rem;
             padding: 1.25rem;
             min-height: 100vh;
             max-width: 1600px;
             margin: 0 auto;
-        }
-
-        @media (max-width: 1200px) {
-            .unified-dashboard {
-                grid-template-columns: 300px 1fr;
-            }
         }
 
         @media (max-width: 1024px) {
@@ -96,10 +89,10 @@
         .sidebar {
             background: var(--bg-sidebar);
             border-radius: 1.5rem;
-            padding: 1.25rem;
+            padding: 1.25rem 0.75rem;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.25rem;
             height: calc(100vh - 2.5rem);
             position: sticky;
             top: 1.25rem;
@@ -109,7 +102,7 @@
         }
 
         .sidebar::-webkit-scrollbar {
-            width: 4px;
+            width: 3px;
         }
         .sidebar::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
@@ -123,273 +116,123 @@
         .sidebar-header {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding-bottom: 0.75rem;
+            gap: 0.6rem;
+            padding: 0 0.5rem 0.75rem 0.5rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
         .sidebar-header .icon-box {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             background: var(--accent-blue);
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1rem;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            font-size: 0.9rem;
+            flex-shrink: 0;
         }
         .sidebar-header h2 {
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 700;
             color: white;
         }
         .sidebar-header .badge {
-            font-size: 0.5rem;
+            font-size: 0.45rem;
             background: rgba(255, 255, 255, 0.08);
-            padding: 0.1rem 0.5rem;
+            padding: 0.1rem 0.4rem;
             border-radius: 999px;
             color: #94a3b8;
             margin-left: auto;
             font-weight: 600;
-            letter-spacing: 0.3px;
         }
 
-        .show-list-label {
-            font-size: 0.6rem;
+        .sidebar-label {
+            font-size: 0.55rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #64748b;
             font-weight: 700;
-            margin-top: 0.15rem;
-        }
-        .show-list-label i {
-            margin-right: 0.3rem;
+            padding: 0.5rem 0.5rem 0.25rem 0.5rem;
         }
 
-        .show-item {
-            display: grid;
-            grid-template-columns: 1fr auto auto;
+        .sidebar-btn {
+            display: flex;
             align-items: center;
-            gap: 0.4rem;
-            padding: 0.55rem 0.7rem;
-            border-radius: 0.6rem;
+            gap: 0.6rem;
+            padding: 0.5rem 0.7rem;
+            border-radius: 0.5rem;
             cursor: pointer;
             transition: all 0.2s ease;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid transparent;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 500;
+            width: 100%;
+            text-align: left;
         }
-        .show-item:hover {
-            background: rgba(255, 255, 255, 0.07);
+        .sidebar-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: white;
         }
-        .show-item.active {
+        .sidebar-btn.active {
             background: var(--accent-blue);
             color: white;
-            border-color: var(--accent-blue);
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
         }
-        .show-item.active .episode-count {
-            color: rgba(255, 255, 255, 0.8);
+        .sidebar-btn.active i {
+            color: white;
         }
-        .show-item .show-name {
-            font-weight: 600;
-            font-size: 0.8rem;
+        .sidebar-btn i {
+            width: 18px;
+            font-size: 0.85rem;
+            color: #64748b;
+            flex-shrink: 0;
+        }
+        .sidebar-btn.active i {
+            color: white;
+        }
+        .sidebar-btn .btn-label {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-        .show-item .episode-count {
-            font-size: 0.65rem;
-            color: #94a3b8;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        .show-item .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .show-item .status-dot.green {
-            background: var(--accent-green);
-        }
-        .show-item .status-dot.yellow {
-            background: var(--accent-yellow);
-        }
-        .show-item .status-dot.red {
-            background: var(--accent-red);
-        }
-        .show-item .progress-bar {
-            grid-column: 1 / -1;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 999px;
-            overflow: hidden;
-            margin-top: 0.1rem;
-        }
-        .show-item .progress-bar .fill {
-            height: 100%;
-            border-radius: 999px;
-            background: var(--gradient-progress);
-            transition: width 0.6s ease;
-        }
-        .show-item.active .progress-bar .fill {
-            background: linear-gradient(90deg, #60a5fa, #34d399);
         }
 
         .sidebar-divider {
             border: none;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
-            margin: 0.1rem 0;
+            margin: 0.25rem 0.5rem;
         }
 
-        .episode-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-        .episode-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.2rem 0 0.4rem 0;
-        }
-        .episode-section-header h4 {
-            font-size: 0.6rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            color: #94a3b8;
-        }
-        .episode-section-header .episode-count-badge {
-            font-size: 0.55rem;
-            background: rgba(255, 255, 255, 0.06);
-            padding: 0.1rem 0.5rem;
-            border-radius: 999px;
-            color: #94a3b8;
-        }
-
-        .episode-list-container {
-            flex: 1;
-            overflow-y: auto;
-            margin: 0 -0.25rem;
-            padding: 0 0.25rem;
-        }
-        .episode-list-container::-webkit-scrollbar {
-            width: 3px;
-        }
-        .episode-list-container::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.12);
-            border-radius: 999px;
-        }
-
-        .episode-item {
-            display: grid;
-            grid-template-columns: 1fr 2fr auto auto;
-            gap: 0.3rem;
-            padding: 0.3rem 0.5rem;
-            font-size: 0.7rem;
-            border-radius: 0.4rem;
-            align-items: center;
-            transition: background 0.15s;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        }
-        .episode-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-        }
-        .episode-item.done {
-            opacity: 0.4;
-        }
-        .episode-item.done .episode-title {
-            text-decoration: line-through;
-        }
-        .episode-item .episode-date {
-            font-size: 0.6rem;
-            color: #94a3b8;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        .episode-item .episode-title {
-            color: #e2e8f0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .episode-item .episode-actions {
-            display: flex;
-            gap: 0.15rem;
-        }
-        .episode-item .episode-actions button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 0.6rem;
-            padding: 0.1rem 0.2rem;
-            border-radius: 4px;
-            transition: all 0.15s;
-            color: #64748b;
-        }
-        .episode-item .episode-actions .toggle-btn:hover {
-            color: var(--accent-green);
-            background: rgba(34, 197, 94, 0.1);
-        }
-        .episode-item .episode-actions .delete-btn:hover {
-            color: var(--accent-red);
-            background: rgba(239, 68, 68, 0.1);
-        }
-
-        .add-episode-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px dashed rgba(255, 255, 255, 0.1);
-            color: #94a3b8;
-            padding: 0.35rem;
-            border-radius: 0.5rem;
-            font-size: 0.65rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 0.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.4rem;
-        }
-        .add-episode-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: white;
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .empty-episodes {
-            color: #64748b;
-            font-size: 0.7rem;
-            text-align: center;
-            padding: 1.5rem 0;
-            font-style: italic;
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         /* ─── MAIN CONTENT ─── */
         .main-content {
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
+            gap: 1rem;
         }
 
+        /* Header */
         .main-header {
             background: var(--bg-white);
             border-radius: 1.25rem;
-            padding: 1rem 1.5rem;
+            padding: 0.75rem 1.25rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border: 1px solid var(--border-color);
             flex-wrap: wrap;
-            gap: 0.75rem;
+            gap: 0.5rem;
             box-shadow: var(--shadow);
         }
         .main-header h1 {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 800;
             color: var(--text-primary);
         }
@@ -407,68 +250,30 @@
             background: var(--text-primary);
             color: white;
             border: none;
-            padding: 0.4rem 1rem;
+            padding: 0.35rem 0.9rem;
             border-radius: 999px;
             font-weight: 600;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             cursor: pointer;
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.3rem;
         }
         .btn-import:hover {
             background: #1e293b;
             transform: scale(1.02);
         }
 
-        .btn-signout {
-            background: #fef2f2;
-            color: #dc2626;
-            border: 1px solid #fca5a5;
-            padding: 0.3rem 0.9rem;
-            border-radius: 9999px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        .btn-signout:hover {
-            background: #fee2e2;
-            border-color: #ef4444;
-        }
-
-        .btn-mainhub {
-            background: var(--text-primary);
-            color: white;
-            border: none;
-            padding: 0.3rem 0.9rem;
-            border-radius: 9999px;
-            font-weight: 600;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        .btn-mainhub:hover {
-            background: #1e293b;
-        }
-
         .status-badge-top {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: 600;
-            padding: 0.2rem 0.7rem;
+            padding: 0.15rem 0.6rem;
             border-radius: 9999px;
             border: 1px solid;
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.3rem;
         }
         .status-badge-top.status-ok {
             background: #dcfce7;
@@ -486,8 +291,8 @@
             border-color: #fcd34d;
         }
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             display: inline-block;
         }
@@ -506,57 +311,44 @@
             50% { opacity: 0.3; }
         }
 
+        /* Stats Row */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 0.75rem;
+        }
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
         .stat-card {
             background: var(--bg-white);
             border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            padding: 1rem 1.25rem;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1rem;
             transition: box-shadow 0.2s;
             box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
         .stat-card:hover {
             box-shadow: var(--shadow-hover);
         }
-        .stat-card .stat-label {
-            font-size: 0.6rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            color: var(--text-muted);
-        }
-        .stat-card .stat-value {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin-top: 0.1rem;
-        }
-        .stat-card .stat-sub {
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
         .stat-card .stat-icon {
-            float: right;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 0.85rem;
+            flex-shrink: 0;
         }
         .stat-card .stat-icon.blue {
             background: #eff6ff;
             color: var(--accent-blue);
-        }
-        .stat-card .stat-icon.indigo {
-            background: #eef2ff;
-            color: #4f46e5;
         }
         .stat-card .stat-icon.amber {
             background: #fffbeb;
@@ -566,43 +358,110 @@
             background: #ecfdf5;
             color: #059669;
         }
+        .stat-card .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-card .stat-label {
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: var(--text-muted);
+        }
+        .stat-card .stat-value {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+        .stat-card .stat-sub {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
 
+        /* Show Header (when a show is selected) */
+        .show-header {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .show-header .show-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .show-header .show-title i {
+            color: var(--accent-blue);
+            margin-right: 0.5rem;
+        }
+        .show-header .show-stats {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.75rem;
+        }
+        .show-header .show-stats span {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .show-header .show-stats .num {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        /* Section Cards */
         .section-card {
             background: var(--bg-white);
             border: 1px solid var(--border-color);
-            border-radius: 1rem;
+            border-radius: 0.75rem;
             overflow: hidden;
             box-shadow: var(--shadow);
         }
         .section-card .section-header {
-            padding: 0.6rem 1rem;
+            padding: 0.5rem 1rem;
             font-weight: 700;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
             border-bottom: 1px solid var(--border-color);
             background: var(--bg-header);
             color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
         .section-card .section-header i {
             color: var(--accent-blue);
         }
         .section-card .section-header .badge-pill {
             margin-left: auto;
-            font-size: 0.55rem;
+            font-size: 0.5rem;
             font-weight: 600;
             background: #e5e7eb;
-            padding: 0.1rem 0.6rem;
+            padding: 0.05rem 0.5rem;
             border-radius: 999px;
             color: var(--text-muted);
         }
+        .section-card .section-header .progress-text {
+            margin-left: auto;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: none;
+        }
 
+        /* Table */
         .table-wrap {
             overflow-x: auto;
-            padding: 0 0.25rem 0.25rem 0.25rem;
+            padding: 0 0.15rem 0.15rem 0.15rem;
         }
         .table-wrap table {
             width: 100%;
@@ -611,17 +470,17 @@
         }
         .table-wrap th {
             text-align: left;
-            padding: 0.5rem 0.75rem;
+            padding: 0.4rem 0.6rem;
             font-weight: 600;
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
             color: var(--text-muted);
             border-bottom: 2px solid var(--border-color);
             background: var(--bg-header);
         }
         .table-wrap td {
-            padding: 0.5rem 0.75rem;
+            padding: 0.4rem 0.6rem;
             border-bottom: 1px solid var(--border-light);
             color: var(--text-primary);
             vertical-align: middle;
@@ -632,17 +491,21 @@
         .table-wrap tr:hover td {
             background: var(--bg-hover);
         }
-        .table-wrap tr.highlight-row td {
-            background: #eff6ff !important;
-            border-left: 3px solid var(--accent-blue);
-        }
 
         .status-badge {
-            padding: 0.1rem 0.6rem;
+            padding: 0.05rem 0.5rem;
             border-radius: 999px;
             font-size: 0.6rem;
             font-weight: 600;
             display: inline-block;
+        }
+        .badge-done {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-toair {
+            background: #fef9c3;
+            color: #854d0e;
         }
         .badge-avail {
             background: #dcfce7;
@@ -659,8 +522,8 @@
 
         .indicator-dot {
             display: inline-block;
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
         }
         .indicator-dot.green {
@@ -673,10 +536,28 @@
             background: var(--accent-red);
         }
 
+        /* Progress Bar */
+        .progress-bar-container {
+            padding: 0.5rem 1rem 0.75rem 1rem;
+        }
+        .progress-bar-track {
+            height: 6px;
+            border-radius: 999px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+        .progress-bar-track .fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            transition: width 0.6s ease;
+        }
+
+        /* Two-column */
         .two-col {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.25rem;
+            gap: 1rem;
         }
         @media (max-width: 768px) {
             .two-col {
@@ -684,8 +565,9 @@
             }
         }
 
+        /* Schedule */
         .schedule-day {
-            padding: 0.4rem 0.75rem;
+            padding: 0.3rem 0.75rem;
             font-size: 0.7rem;
             border-bottom: 1px solid var(--border-light);
             display: flex;
@@ -701,7 +583,7 @@
             font-size: 0.6rem;
         }
         .schedule-day .title {
-            font-weight: 600;
+            font-weight: 500;
             color: var(--text-primary);
         }
         .schedule-day .day-label {
@@ -712,12 +594,13 @@
             letter-spacing: 0.3px;
         }
 
+        /* Turnovers */
         .turnover-item {
-            padding: 0.4rem 0.75rem;
+            padding: 0.3rem 0.75rem;
             border-bottom: 1px solid var(--border-light);
             font-size: 0.7rem;
             display: grid;
-            grid-template-columns: 1fr auto auto;
+            grid-template-columns: 1fr auto;
             gap: 0.5rem;
             align-items: center;
         }
@@ -731,21 +614,21 @@
         .turnover-item .turnover-dates {
             font-size: 0.6rem;
             color: var(--text-muted);
+            white-space: nowrap;
         }
         .turnover-item .turnover-notes {
-            font-size: 0.6rem;
+            grid-column: 1 / -1;
+            font-size: 0.55rem;
             color: var(--text-muted);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100px;
+            font-style: italic;
         }
 
+        /* Calendar */
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 0.5rem;
-            padding: 0.75rem;
+            gap: 0.4rem;
+            padding: 0.6rem;
         }
         @media (max-width: 1024px) {
             .calendar-grid {
@@ -760,14 +643,14 @@
         .calendar-day {
             background: #fafafa;
             border: 1px solid var(--border-color);
-            border-radius: 0.6rem;
+            border-radius: 0.5rem;
             overflow: hidden;
-            min-height: 60px;
+            min-height: 50px;
         }
         .calendar-day .day-header {
             background: var(--bg-header);
-            padding: 0.2rem 0.4rem;
-            font-size: 0.55rem;
+            padding: 0.15rem 0.3rem;
+            font-size: 0.5rem;
             font-weight: 700;
             text-transform: uppercase;
             color: var(--text-muted);
@@ -782,17 +665,17 @@
             color: var(--text-muted);
         }
         .calendar-day .day-body {
-            padding: 0.25rem 0.3rem;
-            max-height: 80px;
+            padding: 0.15rem 0.2rem;
+            max-height: 60px;
             overflow-y: auto;
         }
         .calendar-day .day-body .cal-event {
-            font-size: 0.55rem;
-            padding: 0.1rem 0.25rem;
+            font-size: 0.5rem;
+            padding: 0.05rem 0.2rem;
             background: white;
-            border-radius: 4px;
+            border-radius: 3px;
             border: 1px solid var(--border-color);
-            margin-bottom: 0.15rem;
+            margin-bottom: 0.1rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -800,10 +683,10 @@
             color: var(--text-primary);
         }
         .calendar-day .day-body .empty-cal {
-            font-size: 0.5rem;
+            font-size: 0.45rem;
             color: #d1d5db;
             text-align: center;
-            padding: 0.25rem 0;
+            padding: 0.15rem 0;
             font-style: italic;
         }
 
@@ -825,7 +708,7 @@
         .modal-card {
             background: var(--bg-white);
             border-radius: 1.25rem;
-            max-width: 500px;
+            max-width: 700px;
             width: 100%;
             padding: 1.5rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -856,90 +739,7 @@
         .modal-card .modal-header .close-btn:hover {
             color: var(--accent-red);
         }
-        .modal-card label {
-            font-size: 0.65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            letter-spacing: 0.3px;
-            display: block;
-            margin-bottom: 0.15rem;
-        }
-        .modal-card input,
-        .modal-card select {
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            font-size: 0.8rem;
-            background: var(--bg-input);
-            transition: border-color 0.2s;
-            margin-bottom: 0.75rem;
-            color: var(--text-primary);
-        }
-        .modal-card input:focus,
-        .modal-card select:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-            background: var(--bg-white);
-        }
-        .modal-card .btn-row {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-        .modal-card .btn-row button {
-            flex: 1;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            font-weight: 700;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-        }
-        .modal-card .btn-row .btn-primary {
-            background: var(--accent-blue);
-            color: white;
-        }
-        .modal-card .btn-row .btn-primary:hover {
-            background: var(--accent-blue-hover);
-        }
-        .modal-card .btn-row .btn-secondary {
-            background: #f1f5f9;
-            color: var(--text-muted);
-        }
-        .modal-card .btn-row .btn-secondary:hover {
-            background: #e5e7eb;
-        }
 
-        .import-modal .modal-card {
-            max-width: 800px;
-        }
-        .import-summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 0.5rem;
-            margin: 0.75rem 0;
-        }
-        .import-summary-item {
-            background: var(--bg-header);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 0.5rem;
-            text-align: center;
-        }
-        .import-summary-item .number {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: var(--text-primary);
-        }
-        .import-summary-item .label {
-            font-size: 0.55rem;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
         .drop-zone {
             border: 2px dashed var(--border-color);
             border-radius: 0.75rem;
@@ -960,6 +760,32 @@
             color: var(--text-muted);
             margin-top: 0.25rem;
         }
+
+        .import-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.5rem;
+            margin: 0.75rem 0;
+        }
+        .import-summary-item {
+            background: var(--bg-header);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.4rem;
+            text-align: center;
+        }
+        .import-summary-item .number {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .import-summary-item .label {
+            font-size: 0.5rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
         .preview-table-wrap {
             max-height: 200px;
             overflow-y: auto;
@@ -993,10 +819,10 @@
             background: var(--accent-blue);
             color: white;
             border: none;
-            padding: 0.4rem 1.2rem;
+            padding: 0.35rem 1rem;
             border-radius: 999px;
             font-weight: 700;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             cursor: pointer;
             transition: all 0.2s;
             display: inline-flex;
@@ -1044,7 +870,30 @@
             .sidebar {
                 height: auto;
                 position: static;
-                max-height: 450px;
+                max-height: 300px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 0.15rem;
+                padding: 0.75rem;
+            }
+            .sidebar-header {
+                width: 100%;
+                padding-bottom: 0.4rem;
+                margin-bottom: 0.2rem;
+            }
+            .sidebar-label {
+                display: none;
+            }
+            .sidebar-btn {
+                width: auto;
+                padding: 0.3rem 0.6rem;
+                font-size: 0.7rem;
+            }
+            .sidebar-divider {
+                display: none;
+            }
+            .sidebar-footer {
+                display: none;
             }
             .unified-dashboard {
                 grid-template-columns: 1fr;
@@ -1065,27 +914,34 @@
 
         <!-- ═══ SIDEBAR ═══ -->
         <aside class="sidebar" id="sidebar">
+            <!-- Header -->
             <div class="sidebar-header">
                 <div class="icon-box"><i class="fa-solid fa-box-archive"></i></div>
                 <h2>Classics</h2>
-                <span class="badge">v2.0</span>
+                <span class="badge">v2</span>
             </div>
 
-            <span class="show-list-label"><i class="fa-regular fa-circle-play mr-1"></i> Shows</span>
-            <div id="showList"></div>
+            <!-- Navigation -->
+            <div class="sidebar-label">Menu</div>
+            <button class="sidebar-btn active" data-view="main" onclick="switchView('main')">
+                <i class="fa-solid fa-house"></i>
+                <span class="btn-label">Main</span>
+            </button>
 
-            <hr class="sidebar-divider" />
+            <div class="sidebar-label" style="margin-top:0.25rem;">Shows</div>
+            <div id="showButtons">
+                <!-- Rendered by JS -->
+            </div>
 
-            <div class="episode-section">
-                <div class="episode-section-header">
-                    <h4><i class="fa-regular fa-list-check mr-1"></i> Episodes</h4>
-                    <span class="episode-count-badge" id="episodeCountBadge">0</span>
-                </div>
-                <div class="episode-list-container" id="episodeListContainer">
-                    <div class="empty-episodes">Select a show to view episodes</div>
-                </div>
-                <button class="add-episode-btn" onclick="openAddEpisodeModal()">
-                    <i class="fa-solid fa-plus"></i> Add Episode
+            <!-- Footer -->
+            <div class="sidebar-footer">
+                <button class="sidebar-btn" onclick="window.location.href='../index.html'">
+                    <i class="fa-solid fa-link"></i>
+                    <span class="btn-label">Main Hub</span>
+                </button>
+                <button class="sidebar-btn" id="logoutBtn" style="color:#ef4444;">
+                    <i class="fa-solid fa-sign-out-alt" style="color:#ef4444;"></i>
+                    <span class="btn-label">Sign Out</span>
                 </button>
             </div>
         </aside>
@@ -1103,69 +959,79 @@
                     <button onclick="openImportModal()" class="btn-import">
                         <i class="fa-solid fa-file-import"></i> Import Excel
                     </button>
-                    <button id="logoutBtn" class="btn-signout">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
-                    </button>
-                    <a href="../index.html" class="btn-mainhub">Main Hub</a>
                 </div>
             </header>
 
-            <!-- Stats -->
-            <div class="stats-grid">
+            <!-- Stats Row -->
+            <div class="stats-grid" id="statsRow">
                 <div class="stat-card">
                     <div class="stat-icon blue"><i class="fa-solid fa-film"></i></div>
-                    <div class="stat-label">Total Titles</div>
-                    <div class="stat-value" id="statTotalTitles">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon indigo"><i class="fa-solid fa-circle-play"></i></div>
-                    <div class="stat-label">Available Episodes</div>
-                    <div class="stat-value" id="statAvailableEpisodes">0</div>
-                    <div class="stat-sub" id="statTotalEpisodes">Out of 0 Total</div>
+                    <div class="stat-info">
+                        <div class="stat-label">Total Shows</div>
+                        <div class="stat-value" id="statTotalShows">0</div>
+                    </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon amber"><i class="fa-regular fa-clock"></i></div>
-                    <div class="stat-label">Next Expiration</div>
-                    <div class="stat-value" id="statNextExpire" style="font-size:1rem;">—</div>
-                    <div class="stat-sub" id="statNextExpireTitle">—</div>
+                    <div class="stat-info">
+                        <div class="stat-label">Next Expiration</div>
+                        <div class="stat-value" id="statNextExpire" style="font-size:0.9rem;">—</div>
+                    </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon emerald"><i class="fa-solid fa-signal"></i></div>
-                    <div class="stat-label">Status</div>
-                    <div class="stat-value" id="statSheetStatus" style="font-size:1rem;color:#059669;">✅ Live</div>
-                    <div class="stat-sub">Supabase Connected</div>
+                    <div class="stat-info">
+                        <div class="stat-label">Status</div>
+                        <div class="stat-value" id="statStatus" style="font-size:0.9rem;color:#059669;">✅ Live</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Show Header (hidden when on Main) -->
+            <div id="showHeader" class="show-header" style="display:none;">
+                <div class="show-title"><i class="fa-solid fa-tv"></i> <span id="showHeaderTitle">Show Name</span></div>
+                <div class="show-stats">
+                    <span>Total: <span class="num" id="showHeaderTotal">0</span></span>
+                    <span>Available: <span class="num" id="showHeaderAvailable">0</span></span>
+                    <span>Until: <span class="num" id="showHeaderUntil">—</span></span>
                 </div>
             </div>
 
             <!-- Collection Table -->
             <div class="section-card">
                 <div class="section-header">
-                    <i class="fa-solid fa-list"></i> Classics Collection
-                    <span class="badge-pill">read-only</span>
+                    <i class="fa-solid fa-list"></i>
+                    <span id="tableTitle">TITLES</span>
+                    <span class="badge-pill" id="tableBadge">read-only</span>
+                    <span class="progress-text" id="progressText" style="display:none;"></span>
                 </div>
                 <div class="table-wrap">
                     <table>
-                        <thead>
+                        <thead id="tableHead">
                             <tr>
                                 <th>Title</th>
                                 <th class="text-center">Total</th>
-                                <th class="text-center">Status</th>
                                 <th class="text-center">Available</th>
-                                <th class="text-center">Indicator</th>
                                 <th class="text-right">Available Until</th>
                             </tr>
                         </thead>
-                        <tbody id="collectionBody">
-                            <tr><td colspan="6" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
+                        <tbody id="tableBody">
+                            <tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
                         </tbody>
                     </table>
+                </div>
+                <!-- Progress Bar (only for show view) -->
+                <div id="progressBarContainer" class="progress-bar-container" style="display:none;">
+                    <div class="progress-bar-track">
+                        <div class="fill" id="progressFill" style="width:0%;"></div>
+                    </div>
                 </div>
             </div>
 
             <!-- Two Column: Schedule + Turnovers -->
             <div class="two-col">
                 <div class="section-card">
-                    <div class="section-header"><i class="fa-regular fa-calendar"></i> Weekend Schedule</div>
+                    <div class="section-header"><i class="fa-regular fa-calendar"></i> SCHEDULE</div>
                     <div id="scheduleContainer">
                         <div class="schedule-day"><span class="day-label">Saturday</span></div>
                         <div id="scheduleSat"><div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div></div>
@@ -1174,7 +1040,7 @@
                     </div>
                 </div>
                 <div class="section-card">
-                    <div class="section-header"><i class="fa-regular fa-note-sticky"></i> Turnovers</div>
+                    <div class="section-header"><i class="fa-regular fa-note-sticky"></i> TURNOVERS</div>
                     <div id="turnoversContainer">
                         <div class="turnover-item"><span class="turnover-title">No turnovers</span></div>
                     </div>
@@ -1183,35 +1049,15 @@
 
             <!-- Calendar -->
             <div class="section-card">
-                <div class="section-header"><i class="fa-regular fa-calendar-circle-plus"></i> Weekly Calendar</div>
+                <div class="section-header"><i class="fa-regular fa-calendar-circle-plus"></i> WEEKLY CALENDAR</div>
                 <div class="calendar-grid" id="calendarGrid"></div>
             </div>
 
         </main>
     </div>
 
-    <!-- ─── ADD EPISODE MODAL ─── -->
-    <div id="addEpisodeModal" class="modal-overlay">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h3><i class="fa-solid fa-plus-circle text-blue-600 mr-2"></i> Add Episode</h3>
-                <button class="close-btn" onclick="closeAddEpisodeModal()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form id="addEpisodeForm" onsubmit="handleAddEpisode(event)">
-                <label>Air Date</label>
-                <input type="text" id="episodeDate" placeholder="e.g., 2025-12-01" required />
-                <label>Episode Title</label>
-                <input type="text" id="episodeName" placeholder="e.g., E17 - New Episode" required />
-                <div class="btn-row">
-                    <button type="button" class="btn-secondary" onclick="closeAddEpisodeModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Add Episode</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- ─── IMPORT MODAL ─── -->
-    <div id="importModal" class="modal-overlay import-modal">
+    <div id="importModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
                 <h3><i class="fa-solid fa-file-import text-blue-600 mr-2"></i> Import Excel</h3>
@@ -1251,19 +1097,27 @@
         let allEpisodes = [];
         let weekendData = [];
         let turnoverData = [];
-        let calendarData = [];
+        let currentView = 'main';
         let currentShowId = null;
-        let currentShowTitle = null;
         let importedData = null;
 
         // ─── DOM REFS ──────────────────────────────────────────────────
         const $ = id => document.getElementById(id);
         const loadingSpinner = $('loadingSpinner');
         const statusBadge = $('statusBadge');
-        const showList = $('showList');
-        const episodeListContainer = $('episodeListContainer');
-        const episodeCountBadge = $('episodeCountBadge');
-        const collectionBody = $('collectionBody');
+        const showButtons = $('showButtons');
+        const tableBody = $('tableBody');
+        const tableHead = $('tableHead');
+        const tableTitle = $('tableTitle');
+        const tableBadge = $('tableBadge');
+        const progressText = $('progressText');
+        const progressBarContainer = $('progressBarContainer');
+        const progressFill = $('progressFill');
+        const showHeader = $('showHeader');
+        const showHeaderTitle = $('showHeaderTitle');
+        const showHeaderTotal = $('showHeaderTotal');
+        const showHeaderAvailable = $('showHeaderAvailable');
+        const showHeaderUntil = $('showHeaderUntil');
         const scheduleSat = $('scheduleSat');
         const scheduleSun = $('scheduleSun');
         const turnoversContainer = $('turnoversContainer');
@@ -1284,7 +1138,20 @@
 
         function formatDate(dateStr) {
             if (!dateStr || dateStr === '—') return '—';
-            try { const d = new Date(dateStr + 'T00:00:00'); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return dateStr; }
+            try {
+                const d = new Date(dateStr + 'T00:00:00');
+                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            } catch { return dateStr; }
+        }
+
+        function getStatusBadge(status) {
+            if (status === true || status === 'Done' || status === 'true') return 'badge-done';
+            return 'badge-toair';
+        }
+
+        function getStatusText(status) {
+            if (status === true || status === 'Done' || status === 'true') return '✅ Done';
+            return '⏳ To Air';
         }
 
         // ─── AUTH ──────────────────────────────────────────────────────
@@ -1306,12 +1173,14 @@
                     const { data: profile } = await supabase
                         .from('profiles').select('role').eq('id', session.user.id).maybeSingle();
                     if (!profile) {
-                        await supabase.from('profiles').insert({ id: session.user.id, email: session.user.email, role: 'user' });
+                        await supabase.from('profiles').insert({ id: session.user.id, email: session.user.email,
+                            role: 'user' });
                     }
                 } catch (e) { console.warn('Profile fetch error:', e.message); }
-                setStatus('✅ Connected', 'ok');
+                setStatus('✅ Live', 'ok');
                 await fetchAllData();
-            } catch (err) { console.error('Session error:', err); setStatus('❌ Connection error', 'error'); } finally { loadingSpinner.style.display = 'none'; }
+            } catch (err) { console.error('Session error:', err);
+                setStatus('❌ Connection error', 'error'); } finally { loadingSpinner.style.display = 'none'; }
         }
 
         // ─── FETCH DATA ──────────────────────────────────────────────
@@ -1334,155 +1203,232 @@
                 weekendData = weekendRes.data || [];
                 turnoverData = turnoversRes.data || [];
 
+                renderSidebar();
                 renderAll();
-                if (allShows.length) selectShow(allShows[0].id);
-            } catch (err) { console.error('Fetch error:', err); setStatus('⚠️ Error loading', 'error'); }
-        }
-
-        // ─── RENDER ALL ──────────────────────────────────────────────
-        function renderAll() {
-            renderStats();
-            renderSidebar();
-            renderCollectionTable();
-            renderSchedule();
-            renderTurnovers();
-            renderCalendar();
-        }
-
-        function renderStats() {
-            const totalShows = allShows.length;
-            let availEpisodes = 0, totalEpisodes = 0, nextExpire = '—', nextExpireTitle = '—';
-            allShows.forEach(item => {
-                availEpisodes += parseInt(item.available_episodes) || 0;
-                totalEpisodes += parseInt(item.total_episodes) || 0;
-                if (item.available_until && (nextExpire === '—' || item.available_until < nextExpire)) {
-                    nextExpire = item.available_until;
-                    nextExpireTitle = item.title;
+                if (currentView === 'main') {
+                    switchView('main');
+                } else if (currentShowId) {
+                    const show = allShows.find(s => s.id === currentShowId);
+                    if (show) switchView('show', show.id);
+                    else switchView('main');
+                } else if (allShows.length) {
+                    switchView('main');
                 }
-            });
-            $('statTotalTitles').textContent = totalShows;
-            $('statAvailableEpisodes').textContent = availEpisodes;
-            $('statTotalEpisodes').textContent = `Out of ${totalEpisodes} Total`;
-            $('statNextExpire').textContent = formatDate(nextExpire);
-            $('statNextExpireTitle').textContent = nextExpireTitle;
-            $('statSheetStatus').textContent = totalShows > 0 ? '✅ Live' : '—';
+            } catch (err) { console.error('Fetch error:', err);
+                setStatus('⚠️ Error loading', 'error'); }
         }
 
+        // ─── RENDER SIDEBAR ──────────────────────────────────────────
         function renderSidebar() {
             if (!allShows.length) {
-                showList.innerHTML = '<div style="color:#64748b;font-size:0.75rem;padding:0.5rem;">No shows found</div>';
+                showButtons.innerHTML = '<div style="color:#64748b;font-size:0.65rem;padding:0.3rem 0.5rem;">No shows</div>';
                 return;
             }
-            showList.innerHTML = allShows.map(show => {
-                const showEpisodes = allEpisodes.filter(ep => ep.show_title === show.title);
-                const done = showEpisodes.filter(ep => ep.status === true).length;
-                const total = show.total_episodes || showEpisodes.length || 1;
-                const percent = Math.round((done / total) * 100);
-                const dot = show.available_episodes > 10 ? 'green' : (show.available_episodes > 0 ? 'yellow' : 'red');
-                const isActive = currentShowId === show.id;
-                return `
-                    <div class="show-item ${isActive ? 'active' : ''}" onclick="selectShow('${show.id}')" data-show-id="${show.id}">
-                        <span class="show-name">${esc(show.title)}</span>
-                        <span class="episode-count">${done}/${total}</span>
-                        <span class="status-dot ${dot}"></span>
-                        <div class="progress-bar"><div class="fill" style="width:${percent}%"></div></div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function selectShow(showId) {
-            currentShowId = showId;
-            const show = allShows.find(s => s.id === showId);
-            if (!show) return;
-            currentShowTitle = show.title;
-
-            // Update sidebar highlights
-            document.querySelectorAll('.show-item').forEach(el => {
-                el.classList.toggle('active', el.dataset.showId === showId);
-            });
-
-            // Filter episodes
-            const showEpisodes = allEpisodes.filter(ep => ep.show_title === show.title);
-            renderEpisodeList(showEpisodes, show);
-
-            // Highlight table row
-            document.querySelectorAll('#collectionBody tr').forEach(row => {
-                row.classList.toggle('highlight-row', row.dataset.title === show.title);
-            });
-        }
-
-        function renderEpisodeList(episodes, show) {
-            if (!episodes.length) {
-                episodeListContainer.innerHTML = `<div class="empty-episodes">No episodes for ${esc(show.title)}</div>`;
-                episodeCountBadge.textContent = '0';
-                return;
-            }
-            episodeCountBadge.textContent = episodes.length;
-            episodeListContainer.innerHTML = episodes.map(ep => `
-                <div class="episode-item ${ep.status ? 'done' : ''}">
-                    <span class="episode-date">${esc(ep.air_date || '—')}</span>
-                    <span class="episode-title">${esc(ep.episode_name)}</span>
-                    <div class="episode-actions">
-                        <button class="toggle-btn" onclick="toggleEpisode('${ep.id}')" title="Toggle status">
-                            ${ep.status ? '✅' : '⬜'}
-                        </button>
-                        <button class="delete-btn" onclick="deleteEpisode('${ep.id}')" title="Delete episode">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </div>
-                </div>
+            showButtons.innerHTML = allShows.map(show => `
+                <button class="sidebar-btn" data-show-id="${show.id}" onclick="switchView('show', '${show.id}')">
+                    <i class="fa-solid fa-tv"></i>
+                    <span class="btn-label">${esc(show.title)}</span>
+                </button>
             `).join('');
         }
 
-        function renderCollectionTable() {
-            if (!allShows.length) {
-                collectionBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>`;
-                return;
+        // ─── SWITCH VIEW ─────────────────────────────────────────────
+        function switchView(view, showId) {
+            currentView = view;
+
+            // Update sidebar buttons
+            document.querySelectorAll('.sidebar-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (view === 'main' && btn.dataset.view === 'main') {
+                    btn.classList.add('active');
+                } else if (view === 'show' && btn.dataset.showId === showId) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (view === 'main') {
+                currentShowId = null;
+                showHeader.style.display = 'none';
+                progressBarContainer.style.display = 'none';
+                progressText.style.display = 'none';
+                tableTitle.textContent = 'TITLES';
+                tableBadge.textContent = 'read-only';
+                renderMainView();
+            } else if (view === 'show' && showId) {
+                currentShowId = showId;
+                const show = allShows.find(s => s.id === showId);
+                if (show) {
+                    showHeader.style.display = 'flex';
+                    showHeaderTitle.textContent = show.title;
+                    showHeaderTotal.textContent = show.total_episodes || 0;
+                    showHeaderAvailable.textContent = show.available_episodes || 0;
+                    showHeaderUntil.textContent = show.available_until || '—';
+                    renderShowView(show);
+                }
             }
-            collectionBody.innerHTML = allShows.map(item => {
-                const badgeClass = item.available_episodes > 10 ? 'badge-avail' : (item.available_episodes > 0 ? 'badge-limited' : 'badge-low');
-                const dot = item.available_episodes > 10 ? 'green' : (item.available_episodes > 0 ? 'yellow' : 'red');
-                const isActive = currentShowId === item.id;
-                return `
-                    <tr data-title="${esc(item.title)}" class="${isActive ? 'highlight-row' : ''}">
-                        <td class="font-bold">${esc(item.title)}</td>
-                        <td class="text-center font-semibold">${item.total_episodes || 0}</td>
-                        <td class="text-center"><span class="status-badge ${badgeClass}">${item.available_episodes > 10 ? 'Active' : (item.available_episodes > 0 ? 'Limited' : 'Low')}</span></td>
-                        <td class="text-center font-bold">${item.available_episodes || 0}</td>
-                        <td class="text-center"><span class="indicator-dot ${dot}"></span></td>
-                        <td class="text-right text-slate-500 font-medium">${item.available_until || '—'}</td>
-                    </tr>
-                `;
-            }).join('');
         }
 
-        function renderSchedule() {
-            const satItems = weekendData.filter(w => w.day === 'Saturday');
-            const sunItems = weekendData.filter(w => w.day === 'Sunday');
+        // ─── RENDER MAIN VIEW ─────────────────────────────────────────
+        function renderMainView() {
+            // Stats
+            const totalShows = allShows.length;
+            let nextExpire = '—';
+            allShows.forEach(item => {
+                if (item.available_until && (nextExpire === '—' || item.available_until < nextExpire)) {
+                    nextExpire = item.available_until;
+                }
+            });
+            $('statTotalShows').textContent = totalShows;
+            $('statNextExpire').textContent = formatDate(nextExpire);
+            $('statStatus').textContent = '✅ Live';
+
+            // Table
+            tableHead.innerHTML = `
+                <tr>
+                    <th>Title</th>
+                    <th class="text-center">Total</th>
+                    <th class="text-center">Available</th>
+                    <th class="text-right">Available Until</th>
+                </tr>
+            `;
+            if (!allShows.length) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>`;
+            } else {
+                tableBody.innerHTML = allShows.map(item => {
+                    const dot = item.available_episodes > 10 ? 'green' : (item.available_episodes > 0 ? 'yellow' :
+                        'red');
+                    const badge = item.available_episodes > 10 ? 'badge-avail' : (item.available_episodes > 0 ?
+                        'badge-limited' : 'badge-low');
+                    const statusText = item.available_episodes > 10 ? 'Active' : (item.available_episodes > 0 ?
+                        'Limited' : 'Low');
+                    return `
+                        <tr>
+                            <td class="font-bold">${esc(item.title)}</td>
+                            <td class="text-center font-semibold">${item.total_episodes || 0}</td>
+                            <td class="text-center"><span class="status-badge ${badge}">${item.available_episodes || 0}</span></td>
+                            <td class="text-right text-slate-500 font-medium">${item.available_until || '—'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Schedule
+            renderSchedule(weekendData);
+
+            // Turnovers
+            renderTurnovers(turnoverData);
+
+            // Calendar
+            renderCalendar(allEpisodes);
+        }
+
+        // ─── RENDER SHOW VIEW ─────────────────────────────────────────
+        function renderShowView(show) {
+            // Stats stay the same (total shows, next expire, status)
+            const totalShows = allShows.length;
+            let nextExpire = '—';
+            allShows.forEach(item => {
+                if (item.available_until && (nextExpire === '—' || item.available_until < nextExpire)) {
+                    nextExpire = item.available_until;
+                }
+            });
+            $('statTotalShows').textContent = totalShows;
+            $('statNextExpire').textContent = formatDate(nextExpire);
+            $('statStatus').textContent = '✅ Live';
+
+            // Show header
+            showHeader.style.display = 'flex';
+            showHeaderTitle.textContent = show.title;
+            showHeaderTotal.textContent = show.total_episodes || 0;
+            showHeaderAvailable.textContent = show.available_episodes || 0;
+            showHeaderUntil.textContent = show.available_until || '—';
+
+            // Filter episodes for this show
+            const showEpisodes = allEpisodes.filter(ep => ep.show_title === show.title);
+            const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done' || ep.status === 'true')
+            .length;
+            const total = show.total_episodes || showEpisodes.length || 1;
+            const percent = Math.round((done / total) * 100);
+
+            // Table - Episodes
+            tableTitle.textContent = 'EPISODES';
+            tableBadge.textContent = `${done}/${total}`;
+            progressText.style.display = 'inline';
+            progressText.textContent = `${done}/${total} (${percent}%)`;
+
+            tableHead.innerHTML = `
+                <tr>
+                    <th>Date</th>
+                    <th>Episode</th>
+                    <th class="text-center">Status</th>
+                </tr>
+            `;
+
+            if (!showEpisodes.length) {
+                tableBody.innerHTML =
+                `<tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">No episodes for this show.</td></tr>`;
+            } else {
+                tableBody.innerHTML = showEpisodes.map(ep => {
+                    const badge = getStatusBadge(ep.status);
+                    const statusText = getStatusText(ep.status);
+                    return `
+                        <tr>
+                            <td class="font-medium">${esc(ep.air_date || '—')}</td>
+                            <td>${esc(ep.episode_name)}</td>
+                            <td class="text-center"><span class="status-badge ${badge}">${statusText}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Progress Bar
+            progressBarContainer.style.display = 'block';
+            progressFill.style.width = `${percent}%`;
+
+            // Filter schedule for this show
+            const showSchedule = weekendData.filter(w => w.title && w.title.toLowerCase().includes(show.title.toLowerCase()));
+            renderSchedule(showSchedule);
+
+            // Filter turnovers for this show
+            const showTurnovers = turnoverData.filter(t => t.title && t.title.toLowerCase().includes(show.title.toLowerCase()));
+            renderTurnovers(showTurnovers);
+
+            // Filter calendar for this show
+            renderCalendar(showEpisodes);
+        }
+
+        // ─── RENDER SCHEDULE ──────────────────────────────────────────
+        function renderSchedule(data) {
+            const satItems = data.filter(w => w.day === 'Saturday');
+            const sunItems = data.filter(w => w.day === 'Sunday');
+
             scheduleSat.innerHTML = satItems.length ? satItems.map(item =>
                 `<div class="schedule-day"><span class="time">${esc(item.time_slot)}</span><span class="title">${esc(item.title)}</span></div>`
-            ).join('') : '<div class="schedule-day"><span class="time">—</span><span class="title">No Saturday items</span></div>';
+            ).join('') : '<div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div>';
+
             scheduleSun.innerHTML = sunItems.length ? sunItems.map(item =>
                 `<div class="schedule-day"><span class="time">${esc(item.time_slot)}</span><span class="title">${esc(item.title)}</span></div>`
-            ).join('') : '<div class="schedule-day"><span class="time">—</span><span class="title">No Sunday items</span></div>';
+            ).join('') : '<div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div>';
         }
 
-        function renderTurnovers() {
-            if (!turnoverData.length) {
-                turnoversContainer.innerHTML = `<div class="turnover-item"><span class="turnover-title">No turnovers</span></div>`;
+        // ─── RENDER TURNOVERS ─────────────────────────────────────────
+        function renderTurnovers(data) {
+            if (!data.length) {
+                turnoversContainer.innerHTML =
+                `<div class="turnover-item"><span class="turnover-title">No turnovers</span></div>`;
                 return;
             }
-            turnoversContainer.innerHTML = turnoverData.map(item => `
+            turnoversContainer.innerHTML = data.map(item => `
                 <div class="turnover-item">
                     <span class="turnover-title">${esc(item.title)}</span>
                     <span class="turnover-dates">${esc(item.start_date || '—')} → ${esc(item.end_date || '—')}</span>
-                    <span class="turnover-notes">${esc(item.notes || '')}</span>
+                    ${item.notes ? `<span class="turnover-notes">${esc(item.notes)}</span>` : ''}
                 </div>
             `).join('');
         }
 
-        function renderCalendar() {
+        // ─── RENDER CALENDAR ──────────────────────────────────────────
+        function renderCalendar(episodes) {
             const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             const today = new Date();
             const startOfWeek = new Date(today);
@@ -1492,7 +1438,7 @@
                 const date = new Date(startOfWeek);
                 date.setDate(startOfWeek.getDate() + idx);
                 const dateStr = date.toISOString().split('T')[0];
-                const dayEvents = allEpisodes.filter(e => e.air_date === dateStr);
+                const dayEvents = episodes.filter(e => e.air_date === dateStr);
                 return `
                     <div class="calendar-day">
                         <div class="day-header"><span>${day.substring(0,3)}</span><span class="day-num">${date.getDate()}</span></div>
@@ -1505,52 +1451,15 @@
             }).join('');
         }
 
-        // ─── EPISODE ACTIONS ──────────────────────────────────────────
-        async function toggleEpisode(episodeId) {
-            if (!supabase) return;
-            const episode = allEpisodes.find(ep => ep.id === episodeId);
-            if (!episode) return;
-            await supabase.from('classic_episodes').update({ status: !episode.status }).eq('id', episodeId);
-            await fetchAllData();
-            if (currentShowId) selectShow(currentShowId);
-        }
-
-        async function deleteEpisode(episodeId) {
-            if (!supabase || !confirm('Delete this episode?')) return;
-            await supabase.from('classic_episodes').delete().eq('id', episodeId);
-            await fetchAllData();
-            if (currentShowId) selectShow(currentShowId);
-        }
-
-        // ─── ADD EPISODE ──────────────────────────────────────────────
-        function openAddEpisodeModal() {
-            if (!currentShowId) { alert('Please select a show first.'); return; }
-            $('addEpisodeModal').classList.add('open');
-        }
-
-        function closeAddEpisodeModal() {
-            $('addEpisodeModal').classList.remove('open');
-            $('addEpisodeForm').reset();
-        }
-
-        async function handleAddEpisode(e) {
-            e.preventDefault();
-            if (!supabase || !currentShowId) return;
-            const date = $('episodeDate').value;
-            const name = $('episodeName').value;
-            await supabase.from('classic_episodes').insert({
-                air_date: date,
-                episode_name: name,
-                show_title: currentShowTitle,
-                status: false
-            });
-            closeAddEpisodeModal();
-            await fetchAllData();
-            if (currentShowId) selectShow(currentShowId);
+        // ─── RENDER ALL (for initial load) ────────────────────────────
+        function renderAll() {
+            // Just render main view by default
+            renderMainView();
         }
 
         // ─── IMPORT EXCEL ─────────────────────────────────────────────
         function openImportModal() { $('importModal').classList.add('open'); }
+
         function closeImportModal() { $('importModal').classList.remove('open'); }
 
         function handleFileImport(event) {
@@ -1574,7 +1483,6 @@
             const result = { titles: [], weekend: [], turnovers: [], episodes: [] };
             const sheetNames = workbook.SheetNames;
 
-            // Find NO TOUCH sheet
             const mainSheetName = sheetNames.find(name => name.includes('NO TOUCH'));
             if (mainSheetName) {
                 const sheet = workbook.Sheets[mainSheetName];
@@ -1585,9 +1493,12 @@
                     if (!row || row.length === 0) continue;
                     const firstCell = String(row[0] || '').trim().toUpperCase();
                     if (firstCell.includes('CLASSICS COLLECTION')) { currentSection = 'titles'; continue; }
-                    if (firstCell.includes('SCHEDULE') || firstCell.includes('SATURDAY')) { currentSection = 'schedule'; continue; }
-                    if (firstCell.includes('TURNOVERS') || firstCell.includes('TURN0VERS')) { currentSection = 'turnovers'; continue; }
-                    if (firstCell.includes('TITLES') || firstCell.includes('TOTAL') || firstCell.includes('AVAILABLE') || firstCell.includes('DATE') || firstCell.includes('NOTES')) continue;
+                    if (firstCell.includes('SCHEDULE') || firstCell.includes('SATURDAY')) { currentSection =
+                        'schedule'; continue; }
+                    if (firstCell.includes('TURNOVERS') || firstCell.includes('TURN0VERS')) { currentSection =
+                        'turnovers'; continue; }
+                    if (firstCell.includes('TITLES') || firstCell.includes('TOTAL') || firstCell.includes('AVAILABLE') ||
+                        firstCell.includes('DATE') || firstCell.includes('NOTES')) continue;
                     if (row.every(c => c === undefined || String(c).trim() === '')) continue;
 
                     if (currentSection === 'titles') {
@@ -1596,19 +1507,22 @@
                         const available = parseInt(row[3]) || parseInt(row[2]) || 0;
                         const until = String(row[5] || row[4] || '').trim();
                         if (title && !title.includes('=') && !title.includes('CLASSICS')) {
-                            result.titles.push({ title, total, available, until, status: available > 0 ? 'Active' : 'Expiring' });
+                            result.titles.push({ title, total, available, until, status: available > 0 ? 'Active' :
+                                    'Expiring' });
                         }
                     }
                     if (currentSection === 'schedule') {
                         const day = String(row[0] || '').trim().toLowerCase();
                         const timeTitle = String(row[1] || row[2] || '').trim();
-                        if (day && timeTitle && !day.includes('schedule') && !day.includes('saturday') && !day.includes('sunday')) {
+                        if (day && timeTitle && !day.includes('schedule') && !day.includes('saturday') && !day
+                            .includes('sunday')) {
                             let dayType = day.includes('sat') ? 'Saturday' : (day.includes('sun') ? 'Sunday' : null);
                             if (dayType && timeTitle) {
                                 let timeSlot = '';
                                 const timeMatch = timeTitle.match(/(\d{1,2}:\d{2}[AP]M\s*-\s*\d{1,2}:\d{2}[AP]M)/i);
                                 if (timeMatch) timeSlot = timeMatch[0];
-                                result.weekend.push({ day: dayType, time_slot: timeSlot || timeTitle, title: timeTitle.replace(timeSlot, '').trim() || timeTitle });
+                                result.weekend.push({ day: dayType, time_slot: timeSlot || timeTitle, title: timeTitle
+                                        .replace(timeSlot, '').trim() || timeTitle });
                             }
                         }
                     }
@@ -1618,14 +1532,17 @@
                         const end = String(row[2] || '').trim();
                         const notes = String(row[3] || '').trim();
                         if (title && !title.includes('TITLES') && !title.includes('TURNOVERS')) {
-                            result.turnovers.push({ title, start_date: start || null, end_date: end || null, notes: notes || '' });
+                            result.turnovers.push({ title, start_date: start || null, end_date: end || null,
+                                notes: notes || '' });
                         }
                     }
                 }
             }
 
             // Individual show sheets
-            const showSheetNames = ['POPEYE CLASSIC', 'CHARLIE CHAPLIN', 'JOHNNY STACCATO', 'WHATS MY LINE', "WHAT'S MY LINE"];
+            const showSheetNames = ['POPEYE CLASSIC', 'CHARLIE CHAPLIN', 'JOHNNY STACCATO', 'WHATS MY LINE',
+                "WHAT'S MY LINE"
+            ];
             const showNameMap = {
                 'POPEYE CLASSIC': 'POPEYE CLASSIC',
                 'CHARLIE CHAPLIN': 'CHARLIE CHAPLIN',
@@ -1648,11 +1565,13 @@
                     const date = String(row[0] || '').trim();
                     const episode = String(row[1] || '').trim();
                     const status = String(row[2] || '').trim().toUpperCase();
-                    if (date && episode && !date.includes('DATE') && !date.includes('TOTAL') && !episode.includes('EPISODE') && !episode.includes('TOTAL')) {
+                    if (date && episode && !date.includes('DATE') && !date.includes('TOTAL') && !episode.includes(
+                        'EPISODE') && !episode.includes('TOTAL')) {
                         let finalStatus = false;
                         if (status === 'TRUE' || row[2] === true || row[2] === 'TRUE') finalStatus = true;
                         if (status === 'FALSE' || row[2] === false || row[2] === 'FALSE') finalStatus = false;
-                        result.episodes.push({ air_date: date, episode_name: episode, show_title: showTitle, status: finalStatus });
+                        result.episodes.push({ air_date: date, episode_name: episode, show_title: showTitle,
+                            status: finalStatus });
                     }
                 }
             });
@@ -1673,9 +1592,11 @@
             const episodeCounts = {};
             data.episodes.forEach(ep => { episodeCounts[ep.show_title] = (episodeCounts[ep.show_title] || 0) + 1; });
             data.titles.slice(0, 10).forEach(t => {
-                html += `<tr><td><strong>${esc(t.title)}</strong></td><td>${t.total}</td><td>${t.available}</td><td>${episodeCounts[t.title] || 0}</td></tr>`;
+                html +=
+                    `<tr><td><strong>${esc(t.title)}</strong></td><td>${t.total}</td><td>${t.available}</td><td>${episodeCounts[t.title] || 0}</td></tr>`;
             });
-            if (data.titles.length > 10) html += `<tr><td colspan="4" class="text-center text-slate-400 text-xs">+ ${data.titles.length - 10} more</td></tr>`;
+            if (data.titles.length > 10) html +=
+                `<tr><td colspan="4" class="text-center text-slate-400 text-xs">+ ${data.titles.length - 10} more</td></tr>`;
             html += `</tbody></table>`;
             $('importPreviewTable').innerHTML = html;
             $('importStatus').textContent = `✅ ${data.titles.length} titles, ${data.episodes.length} episodes ready`;
@@ -1688,7 +1609,6 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
             try {
                 const data = importedData;
-                // Titles
                 for (const title of data.titles) {
                     await supabase.from('classic_titles').upsert({
                         title: title.title,
@@ -1698,24 +1618,26 @@
                         available_until: title.until || null
                     }, { onConflict: 'title' });
                 }
-                // Weekend
-                await supabase.from('classic_weekend_schedule').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                await supabase.from('classic_weekend_schedule').delete().neq('id',
+                    '00000000-0000-0000-0000-000000000000');
                 for (const item of data.weekend) {
-                    await supabase.from('classic_weekend_schedule').insert({ day: item.day, time_slot: item.time_slot || '', title: item.title || '' });
+                    await supabase.from('classic_weekend_schedule').insert({ day: item.day, time_slot: item.time_slot ||
+                            '', title: item.title || '' });
                 }
-                // Turnovers
                 await supabase.from('classic_turnovers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 for (const item of data.turnovers) {
-                    await supabase.from('classic_turnovers').insert({ title: item.title || '', start_date: item.start_date || null, end_date: item.end_date || null, notes: item.notes || '' });
+                    await supabase.from('classic_turnovers').insert({ title: item.title || '', start_date: item
+                            .start_date || null, end_date: item.end_date || null, notes: item.notes || '' });
                 }
-                // Episodes
                 await supabase.from('classic_episodes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 for (const ep of data.episodes) {
-                    await supabase.from('classic_episodes').insert({ air_date: ep.air_date || null, episode_name: ep.episode_name || '', show_title: ep.show_title || '', status: ep.status || false });
+                    await supabase.from('classic_episodes').insert({ air_date: ep.air_date || null, episode_name: ep
+                            .episode_name || '', show_title: ep.show_title || '', status: ep.status || false });
                 }
                 $('importStatus').textContent = '✅ Sync complete!';
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Done!';
-                setTimeout(() => { closeImportModal(); fetchAllData(); }, 1000);
+                setTimeout(() => { closeImportModal();
+                    fetchAllData(); }, 1000);
             } catch (err) {
                 $('importStatus').textContent = '❌ Error: ' + err.message;
                 btn.disabled = false;
