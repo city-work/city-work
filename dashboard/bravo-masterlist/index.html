@@ -12,6 +12,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -19,13 +20,7 @@
                 extend: {
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
                     colors: {
-                        brand: { 
-                            bg: '#F8FAFC', 
-                            surface: '#FFFFFF', 
-                            dark: '#0F172A', 
-                            accent: '#4F46E5',
-                            accentLight: '#EEF2FF',
-                        }
+                        brand: { bg: '#F8FAFC', surface: '#FFFFFF', dark: '#0F172A', accent: '#4F46E5' }
                     }
                 }
             }
@@ -33,6 +28,8 @@
     </script>
 
     <style>
+        /* ─── All styles (same as before) ─── */
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
@@ -130,12 +127,7 @@
             align-items: center;
             gap: 0.4rem;
         }
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         .status-dot.green { background: #22c55e; }
         .status-dot.amber { background: #eab308; animation: pulse 1.5s ease-in-out infinite; }
         .status-dot.red { background: #ef4444; }
@@ -155,11 +147,102 @@
             gap: 0.4rem;
             cursor: pointer;
         }
-        .btn-signout:hover {
-            background: #fee2e2;
-            border-color: #ef4444;
-            transform: scale(1.02);
+        .btn-signout:hover { background: #fee2e2; border-color: #ef4444; transform: scale(1.02); }
+
+        .btn-import {
+            background: #0f172a;
+            color: white;
+            border: none;
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
         }
+        .btn-import:hover { background: #1e293b; transform: scale(1.02); }
+
+        .modal-overlay-import {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-overlay-import.open { display: flex; }
+        .modal-card-import {
+            background: white;
+            border-radius: 1.5rem;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
+        }
+        .modal-card-import .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .modal-card-import .modal-header h2 { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
+        .modal-card-import .modal-header .close-btn { color: #94a3b8; cursor: pointer; transition: color 0.2s; }
+        .modal-card-import .modal-header .close-btn:hover { color: #ef4444; }
+        .modal-card-import .modal-body { max-height: 60vh; overflow-y: auto; }
+
+        .import-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin: 0.75rem 0;
+        }
+        .import-summary-item {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 0.4rem;
+            text-align: center;
+        }
+        .import-summary-item .number { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+        .import-summary-item .label { font-size: 0.5rem; text-transform: uppercase; color: #64748b; font-weight: 600; }
+
+        .preview-table-wrap {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin: 0.5rem 0;
+        }
+        .preview-table-wrap table { width: 100%; font-size: 0.65rem; border-collapse: collapse; }
+        .preview-table-wrap th { background: #f8fafc; padding: 0.25rem 0.5rem; text-align: left; font-weight: 600; font-size: 0.55rem; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #e5e7eb; position: sticky; top: 0; }
+        .preview-table-wrap td { padding: 0.25rem 0.5rem; border-bottom: 1px solid #f1f5f9; }
+
+        .btn-sync {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 0.35rem 1rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-sync:hover { background: #4338CA; transform: scale(1.02); }
+        .btn-sync:disabled { opacity: 0.5; cursor: not-allowed; }
 
         #loadingSpinner {
             display: none;
@@ -184,8 +267,7 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .table-row-hover:hover { background: #f8fafc; }
-        
-        /* ─── LEFT RAIL FULL MENU ─── */
+
         .left-rail-full {
             width: 200px;
             background: white;
@@ -306,53 +388,50 @@
             color: #0f172a;
             vertical-align: middle;
         }
-        .priority-groups-table tr:last-child td {
-            border-bottom: none;
+        .priority-groups-table tr:last-child td { border-bottom: none; }
+        .priority-groups-table tr:hover td { background: #f8fafc; }
+
+        .year-section {
+            margin-bottom: 0.5rem;
         }
-        .priority-groups-table tr:hover td {
-            background: #f8fafc;
+        .year-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: background 0.15s;
         }
+        .year-header:hover { background: #f8fafc; }
+        .year-content {
+            padding: 0.75rem 1rem 0.75rem 1rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 0.75rem 0.75rem;
+        }
+        .year-content.hidden { display: none; }
+
+        .toggle-icon { transition: transform 0.2s ease; }
+        .toggle-icon.rotate { transform: rotate(180deg); }
 
         @media (max-width: 768px) {
-            .left-rail-full {
-                width: 56px;
-                padding: 0.75rem 0.4rem;
-            }
-            .left-rail-full .brand h2,
-            .left-rail-full .brand .badge,
-            .left-rail-full .nav-item span,
-            .left-rail-full .nav-stat span,
-            .left-rail-full .sidebar-label,
-            .left-rail-full .nav-stat .stat-value {
-                display: none;
-            }
-            .left-rail-full .nav-item {
-                justify-content: center;
-                padding: 0.5rem;
-            }
-            .left-rail-full .nav-stat {
-                justify-content: center;
-                padding: 0.3rem 0.5rem;
-            }
-            .left-rail-full .nav-stat .stat-value {
-                display: none;
-            }
-            .left-rail-full .brand {
-                padding: 0 0.2rem 0.5rem 0.2rem;
-                justify-content: center;
-            }
-            .left-rail-full .brand .icon-box {
-                width: 28px;
-                height: 28px;
-                font-size: 0.7rem;
-            }
+            .left-rail-full { width: 56px; padding: 0.75rem 0.4rem; }
+            .left-rail-full .brand h2, .left-rail-full .brand .badge, .left-rail-full .nav-item span, .left-rail-full .nav-stat span, .left-rail-full .sidebar-label, .left-rail-full .nav-stat .stat-value { display: none; }
+            .left-rail-full .nav-item { justify-content: center; padding: 0.5rem; }
+            .left-rail-full .nav-stat { justify-content: center; padding: 0.3rem 0.5rem; }
+            .left-rail-full .nav-stat .stat-value { display: none; }
+            .left-rail-full .brand { padding: 0 0.2rem 0.5rem 0.2rem; justify-content: center; }
+            .left-rail-full .brand .icon-box { width: 28px; height: 28px; font-size: 0.7rem; }
         }
     </style>
 </head>
 
 <body class="h-screen w-screen bg-[#F1F5F9] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden text-slate-800 antialiased font-sans">
 
-    <!-- ─── LOADING SPINNER ─── -->
     <div id="loadingSpinner">
         <div class="spinner"></div>
         <p class="text-sm font-medium text-slate-600">Loading Bravo Masterlist...</p>
@@ -360,17 +439,14 @@
 
 <div class="bg-white w-full max-w-[1440px] h-full max-h-[920px] rounded-3xl shadow-2xl flex border border-slate-200/80 overflow-hidden relative">
 
-    <!-- ═══ LEFT RAIL (FULL MENU) ═══ -->
+    <!-- LEFT RAIL -->
     <aside class="left-rail-full custom-scrollbar">
-
-        <!-- Brand -->
         <div class="brand">
             <div class="icon-box"><i class="fa-solid fa-box-archive"></i></div>
             <h2>Archive<span style="color:#4F46E5;">Hub</span></h2>
             <span class="badge">Bravo</span>
         </div>
 
-        <!-- Menu -->
         <div class="sidebar-label">Menu</div>
         <div class="space-y-1">
             <div onclick="switchView('masterlist')" class="nav-item nav-item-active" id="nav-masterlist">
@@ -383,44 +459,28 @@
             </div>
         </div>
 
-        <!-- Divider -->
         <hr class="sidebar-divider" />
 
-        <!-- Stats -->
         <div class="sidebar-label">Stats</div>
         <div class="space-y-0.5">
-            <div class="nav-stat">
-                <span><i class="fa-solid fa-list text-sm w-5 text-center text-indigo-500"></i> Segments</span>
-                <span class="stat-value" id="stat-total">—</span>
-            </div>
-            <div class="nav-stat">
-                <span><i class="fa-solid fa-music text-sm w-5 text-center text-emerald-500"></i> Songs</span>
-                <span class="stat-value songs" id="stat-songs">—</span>
-            </div>
-            <div class="nav-stat">
-                <span><i class="fa-solid fa-microphone text-sm w-5 text-center text-slate-500"></i> SPEL</span>
-                <span class="stat-value spel" id="stat-spel">—</span>
-            </div>
-            <div class="nav-stat">
-                <span><i class="fa-solid fa-calendar-day text-sm w-5 text-center text-blue-500"></i> Events</span>
-                <span class="stat-value events" id="stat-events">—</span>
-            </div>
+            <div class="nav-stat"><span><i class="fa-solid fa-list text-sm w-5 text-center text-indigo-500"></i> Segments</span><span class="stat-value" id="stat-total">—</span></div>
+            <div class="nav-stat"><span><i class="fa-solid fa-music text-sm w-5 text-center text-emerald-500"></i> Songs</span><span class="stat-value songs" id="stat-songs">—</span></div>
+            <div class="nav-stat"><span><i class="fa-solid fa-microphone text-sm w-5 text-center text-slate-500"></i> SPEL</span><span class="stat-value spel" id="stat-spel">—</span></div>
+            <div class="nav-stat"><span><i class="fa-solid fa-calendar-day text-sm w-5 text-center text-blue-500"></i> Events</span><span class="stat-value events" id="stat-events">—</span></div>
         </div>
 
-        <!-- Divider -->
         <hr class="sidebar-divider" />
 
-        <!-- Sign Out -->
         <div class="nav-item" onclick="logoutUser()" style="color:#ef4444; cursor:pointer; margin-top:auto;">
             <i class="fa-solid fa-sign-out-alt text-sm w-5 text-center" style="color:#ef4444;"></i>
             <span>Sign Out</span>
         </div>
     </aside>
 
-    <!-- ═══ MAIN CONTENT ═══ -->
+    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col h-full overflow-hidden relative bg-[#F8FAFC]">
 
-        <!-- ─── HEADER ─── -->
+        <!-- HEADER -->
         <header class="px-6 sm:px-8 py-4 bg-white/90 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between shrink-0 z-10">
             <div class="flex items-center space-x-3">
                 <span class="text-sm font-medium text-slate-500" id="userInfo">Checking session...</span>
@@ -429,6 +489,7 @@
                 </span>
             </div>
             <div class="flex items-center space-x-3">
+                <button onclick="openImportModal()" class="btn-import"><i class="fa-solid fa-file-import"></i> Import</button>
                 <button onclick="refreshData()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition flex items-center justify-center" title="Refresh">
                     <i class="fa-solid fa-rotate-right text-xs" id="refresh-icon"></i>
                 </button>
@@ -436,31 +497,21 @@
             </div>
         </header>
 
-        <!-- ─── CONTENT ─── -->
+        <!-- CONTENT -->
         <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
 
-            <!-- ═══ MASTERLIST VIEW ═══ -->
             <div id="masterlist-view">
                 <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">📋 Bravo Masterlist</h2>
-                        <p class="text-xs text-slate-500 mt-0.5" id="masterlistInfo">All entries organized by date.</p>
+                        <p class="text-xs text-slate-500 mt-0.5" id="masterlistInfo">All entries from Masterlist sheet, grouped by year.</p>
                     </div>
-                    <!-- ─── FILTER BUTTONS ─── -->
                     <div class="flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200/80 shadow-sm">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Filter:</span>
-                        <div onclick="filterPriority('all')" class="priority-filter priority-filter-active text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="all" style="background: #f1f5f9; color: #475569; font-weight:600;">
-                            All
-                        </div>
-                        <div onclick="filterPriority('A')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="A" style="background: #fee2e2; color: #991b1b; font-weight:600;">
-                            🔴 A
-                        </div>
-                        <div onclick="filterPriority('B')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="B" style="background: #fef3c7; color: #92400e; font-weight:600;">
-                            🟡 B
-                        </div>
-                        <div onclick="filterPriority('C')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="C" style="background: #dbeafe; color: #1e40af; font-weight:600;">
-                            🔵 C
-                        </div>
+                        <div onclick="filterPriority('all')" class="priority-filter priority-filter-active text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="all" style="background: #f1f5f9; color: #475569; font-weight:600;">All</div>
+                        <div onclick="filterPriority('A')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="A" style="background: #fee2e2; color: #991b1b; font-weight:600;">🔴 A</div>
+                        <div onclick="filterPriority('B')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="B" style="background: #fef3c7; color: #92400e; font-weight:600;">🟡 B</div>
+                        <div onclick="filterPriority('C')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="C" style="background: #dbeafe; color: #1e40af; font-weight:600;">🔵 C</div>
                     </div>
                 </div>
                 <div id="masterlist-content">
@@ -468,28 +519,18 @@
                 </div>
             </div>
 
-            <!-- ═══ PRIORITY VIEW ═══ -->
             <div id="priority-view" class="hidden">
                 <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">🏷️ Priority Groups</h2>
-                        <p class="text-xs text-slate-500 mt-0.5" id="priorityInfo">Entries grouped by priority level.</p>
+                        <p class="text-xs text-slate-500 mt-0.5" id="priorityInfo">Entries from Prioritization sheet, grouped by priority.</p>
                     </div>
-                    <!-- ─── FILTER BUTTONS ─── -->
                     <div class="flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200/80 shadow-sm">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Filter:</span>
-                        <div onclick="filterPriority('all')" class="priority-filter priority-filter-active text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="all" style="background: #f1f5f9; color: #475569; font-weight:600;">
-                            All
-                        </div>
-                        <div onclick="filterPriority('A')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="A" style="background: #fee2e2; color: #991b1b; font-weight:600;">
-                            🔴 A
-                        </div>
-                        <div onclick="filterPriority('B')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="B" style="background: #fef3c7; color: #92400e; font-weight:600;">
-                            🟡 B
-                        </div>
-                        <div onclick="filterPriority('C')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="C" style="background: #dbeafe; color: #1e40af; font-weight:600;">
-                            🔵 C
-                        </div>
+                        <div onclick="filterPriority('all')" class="priority-filter priority-filter-active text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="all" style="background: #f1f5f9; color: #475569; font-weight:600;">All</div>
+                        <div onclick="filterPriority('A')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="A" style="background: #fee2e2; color: #991b1b; font-weight:600;">🔴 A</div>
+                        <div onclick="filterPriority('B')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="B" style="background: #fef3c7; color: #92400e; font-weight:600;">🟡 B</div>
+                        <div onclick="filterPriority('C')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="C" style="background: #dbeafe; color: #1e40af; font-weight:600;">🔵 C</div>
                     </div>
                 </div>
                 <div id="priority-content">
@@ -501,7 +542,7 @@
     </div>
 </div>
 
-<!-- ═══ MODAL ═══ -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
     <div class="modal-card">
         <div class="flex items-center justify-between border-b border-slate-200 pb-3">
@@ -516,9 +557,34 @@
     </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!--  JAVASCRIPT                                                    -->
-<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- IMPORT MODAL -->
+<div id="import-modal" class="modal-overlay-import">
+    <div class="modal-card-import">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-file-import text-[#4F46E5] mr-2"></i>Import Excel & Sync</h2>
+            <button onclick="closeImportModal()" class="close-btn"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-indigo-400 transition cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
+                <i class="fa-solid fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
+                <p class="text-sm font-semibold text-slate-600">Click to select Excel file</p>
+                <p class="text-xs text-slate-400 mt-1">Supports .xlsx, .xls, .csv</p>
+                <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileImport(event)" />
+            </div>
+
+            <div id="importPreview" class="mt-4 hidden">
+                <div class="import-summary-grid" id="importSummary"></div>
+                <div class="preview-table-wrap" id="importPreviewTable"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem;">
+                    <span id="importStatus" class="text-xs text-slate-500">Ready to sync</span>
+                    <button class="btn-sync" onclick="syncToSupabase()"><i class="fa-solid fa-cloud-upload-alt"></i> Sync to Supabase</button>
+                </div>
+            </div>
+            <div id="importError" class="text-xs text-rose-500 mt-2 hidden"></div>
+        </div>
+    </div>
+</div>
+
 <script>
 (function() {
     'use strict';
@@ -557,13 +623,11 @@
     const refreshIcon = $('refresh-icon');
 
     // ─── STATE ──────────────────────────────────────────────────────
-    let allEntries = [];
-    let allDates = [];
-    let dateDataMap = {};
+    let masterlistData = [];
+    let priorityData = [];
     let currentPriority = 'all';
     let currentView = 'masterlist';
-    let userRole = 'user';
-    let userEmail = 'Unknown';
+    let importedData = null;
 
     // ─── HELPERS ──────────────────────────────────────────────────
     function setStatus(text, type) {
@@ -587,24 +651,43 @@
         } catch { return dateStr; }
     }
 
+    function parseDate(dateStr) {
+        if (!dateStr) return null;
+        const cleaned = dateStr.trim();
+        // "February 5, 2019"
+        const match = cleaned.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
+        if (match) {
+            const monthMap = { 'january':0, 'february':1, 'march':2, 'april':3, 'may':4, 'june':5, 'july':6, 'august':7, 'september':8, 'october':9, 'november':10, 'december':11 };
+            const month = monthMap[match[1].toLowerCase()];
+            if (month !== undefined) {
+                const day = parseInt(match[2]);
+                const year = parseInt(match[3]);
+                return `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            }
+        }
+        // "2/5/2019"
+        const parts = cleaned.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (parts) {
+            const month = parseInt(parts[1]);
+            const day = parseInt(parts[2]);
+            const year = parseInt(parts[3]);
+            return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        }
+        // "2019-02-05"
+        const parts2 = cleaned.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (parts2) {
+            return `${parts2[1]}-${parts2[2]}-${parts2[3]}`;
+        }
+        return null;
+    }
+
     function getPriorityClass(p) {
         const map = { 'A': 'priority-a', 'B': 'priority-b', 'C': 'priority-c' };
         return map[p] || '';
     }
-
     function getPriorityLabel(p) {
         const map = { 'A': '🔴 A', 'B': '🟡 B', 'C': '🔵 C' };
         return map[p] || p || '—';
-    }
-
-    function getTypeBadge(type) {
-        const map = { 'song': 'badge-song', 'spel': 'badge-spel', 'intro': 'badge-intro', 'outro': 'badge-outro', 'commercial': 'badge-commercial' };
-        return map[type] || 'badge-spel';
-    }
-
-    function getTypeLabel(type) {
-        const map = { 'song': '🎵 Song', 'spel': '⏸️ SPEL', 'intro': '▶️ Intro', 'outro': '⏹️ Outro', 'commercial': '📺 Commercial' };
-        return map[type] || type || '—';
     }
 
     // ─── AUTH ──────────────────────────────────────────────────────
@@ -623,7 +706,6 @@
             const { data, error } = await supabaseClient.auth.getSession();
             if (error) throw error;
             const session = data?.session;
-
             if (!session || !session.user) {
                 setStatus('🔓 Not logged in', 'error');
                 userInfo.textContent = 'Please log in';
@@ -632,48 +714,12 @@
                 return;
             }
 
-            userEmail = session.user.email;
-
-            let role = 'user';
-            try {
-                const { data: profile, error: profileError } = await supabaseClient
-                    .from('profiles')
-                    .select('role')
-                    .eq('id', session.user.id)
-                    .maybeSingle();
-
-                if (!profileError && profile?.role) {
-                    role = profile.role;
-                } else if (!profile) {
-                    await supabaseClient.from('profiles').insert({
-                        id: session.user.id,
-                        email: session.user.email,
-                        role: 'user'
-                    });
-                    console.log('Created missing profile');
-                }
-            } catch (e) {
-                console.warn('Profile fetch error:', e.message);
-            }
-
-            userRole = role;
-            const roleDisplay = role === 'admin' ? '👑 Admin' : '👤 User';
-            setStatus(`✅ ${roleDisplay}`, 'ok');
-            userInfo.textContent = `Logged in as ${roleDisplay} · ${userEmail}`;
-
-            localStorage.setItem('archivehub_user', JSON.stringify({
-                id: session.user.id,
-                email: session.user.email,
-                role: role,
-                session: session
-            }));
-
+            userInfo.textContent = `Logged in as ${session.user.email}`;
+            setStatus('✅ Connected', 'ok');
             await fetchAllData();
-
         } catch (err) {
             console.error('Session error:', err);
             setStatus('❌ Connection error', 'error');
-            userInfo.textContent = 'Error connecting to Supabase';
         } finally {
             loadingSpinner.style.display = 'none';
         }
@@ -684,43 +730,34 @@
         if (!supabaseClient) return;
 
         try {
-            // Fetch masterlist with joined prioritization data
-            const { data, error } = await supabaseClient
+            // Fetch masterlist
+            const { data: master, error: mError } = await supabaseClient
                 .from(MASTERLIST_TABLE)
+                .select('*')
+                .order('event_date', { ascending: true });
+            if (mError) throw mError;
+            masterlistData = master || [];
+
+            // Fetch prioritization with join to masterlist
+            const { data: priority, error: pError } = await supabaseClient
+                .from(PRIORITIZATION_TABLE)
                 .select(`
                     *,
-                    bravo_prioritization (
-                        categorization,
-                        notes,
-                        priority
-                    )
+                    bravo_masterlist!left ( title, artist, event_date )
                 `)
-                .order('event_date', { ascending: true });
+                .order('categorization');
+            if (pError) throw pError;
+            priorityData = priority || [];
 
-            if (error) throw error;
-
-            allEntries = data || [];
-
-            // Group by date
-            const grouped = {};
-            allEntries.forEach(row => {
-                const date = row.event_date;
-                if (!date) return;
-                if (!grouped[date]) grouped[date] = [];
-                grouped[date].push(row);
-            });
-
-            allDates = Object.keys(grouped).sort();
-            dateDataMap = grouped;
-
-            // Stats
-            const totalSegments = allEntries.length;
-            const songs = allEntries.filter(r => r.type === 'song').length;
-            const spels = allEntries.filter(r => r.type === 'spel').length;
+            // Stats (from masterlist)
+            const totalSegments = masterlistData.length;
+            // We don't have type, so we can't count songs/spel – we'll just show totals
             statTotal.textContent = totalSegments;
-            statSongs.textContent = songs;
-            statSpel.textContent = spels;
-            statEvents.textContent = allDates.length;
+            statSongs.textContent = '—';
+            statSpel.textContent = '—';
+            // Count unique dates
+            const dates = new Set(masterlistData.map(r => r.event_date));
+            statEvents.textContent = dates.size;
 
             renderMasterlist();
             renderPriorityGroups();
@@ -734,57 +771,61 @@
 
     // ─── RENDER MASTERLIST ──────────────────────────────────────
     function renderMasterlist() {
-        let filteredDates = allDates;
+        let filteredData = masterlistData;
 
+        // Filter by priority if not 'all' – need to check if any linked prioritization matches
         if (currentPriority !== 'all') {
-            filteredDates = allDates.filter(date => {
-                const entries = dateDataMap[date] || [];
-                return entries.some(e => e.bravo_prioritization && e.bravo_prioritization.priority === currentPriority);
-            });
+            // Get IDs of masterlist entries that have a prioritization with that priority
+            const matchingIds = priorityData
+                .filter(p => p.priority === currentPriority)
+                .map(p => p.masterlist_id)
+                .filter(id => id !== null);
+            filteredData = masterlistData.filter(entry => matchingIds.includes(entry.id));
         }
 
-        if (!filteredDates.length) {
+        if (!filteredData.length) {
             masterlistContent.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries found${currentPriority !== 'all' ? ' with priority ' + currentPriority : ''}</div>`;
             return;
         }
 
-        // Group by Year → Month → Date
+        // Group by year → month → date
         const yearMap = {};
-        filteredDates.forEach(date => {
-            const entries = dateDataMap[date] || [];
-            const d = new Date(date + 'T00:00:00');
+        filteredData.forEach(entry => {
+            const d = new Date(entry.event_date + 'T00:00:00');
             const year = d.getFullYear();
             const month = d.getMonth();
             const day = d.getDate();
-            
             if (!yearMap[year]) yearMap[year] = {};
             if (!yearMap[year][month]) yearMap[year][month] = {};
             if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
-            yearMap[year][month][day] = entries;
+            yearMap[year][month][day].push(entry);
         });
 
-        const sortedYears = Object.keys(yearMap).sort((a, b) => b - a);
+        const sortedYears = Object.keys(yearMap).sort((a,b) => b - a);
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        
+
         let html = '';
         sortedYears.forEach(year => {
             const months = yearMap[year];
-            const sortedMonths = Object.keys(months).sort((a, b) => b - a);
-            
+            const sortedMonths = Object.keys(months).sort((a,b) => b - a);
+            const totalInYear = Object.values(months).reduce((sum, days) => sum + Object.values(days).reduce((s, entries) => s + entries.length, 0), 0);
+
             html += `
-                <div class="year-section mb-4">
-                    <div class="flex items-center gap-3 mb-3">
-                        <h3 class="text-lg font-extrabold text-slate-700">📁 ${year}</h3>
-                        <span class="text-xs text-slate-400 bg-slate-100 px-3 py-0.5 rounded-full">${Object.values(months).reduce((sum, days) => sum + Object.values(days).reduce((s, entries) => s + entries.length, 0), 0)} entries</span>
+                <div class="year-section">
+                    <div class="year-header" onclick="toggleYear('year-${year}')">
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg font-extrabold text-slate-700">📁 ${year}</span>
+                            <span class="text-xs text-slate-400 bg-slate-100 px-3 py-0.5 rounded-full">${totalInYear} entries</span>
+                        </div>
+                        <span class="toggle-icon" id="icon-year-${year}"><i class="fa-solid fa-chevron-down"></i></span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-4">
+                    <div id="year-${year}" class="year-content hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             `;
-            
             sortedMonths.forEach(month => {
                 const days = months[month];
-                const sortedDays = Object.keys(days).sort((a, b) => b - a);
+                const sortedDays = Object.keys(days).sort((a,b) => b - a);
                 const totalInMonth = Object.values(days).reduce((sum, entries) => sum + entries.length, 0);
-                
                 html += `
                     <div class="month-section col-span-1">
                         <div class="flex items-center gap-2 mb-2">
@@ -793,30 +834,16 @@
                         </div>
                         <div class="space-y-2 ml-3">
                 `;
-                
                 sortedDays.forEach(day => {
                     const entries = days[day];
                     const dateObj = new Date(parseInt(year), parseInt(month), parseInt(day));
                     const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                     const dateKey = `${year}-${String(parseInt(month)+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-                    
-                    // Get priority badges
-                    const priorities = [...new Set(entries.map(e => e.bravo_prioritization?.priority).filter(Boolean))];
-                    const priorityBadges = priorities.map(p => `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getPriorityClass(p)}">${getPriorityLabel(p)}</span>`).join('');
-                    
-                    // Get type badges
-                    const types = [...new Set(entries.map(e => e.type).filter(Boolean))];
-                    const typeBadges = types.map(t => `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${getTypeBadge(t)}">${t}</span>`).join('');
-                    
                     html += `
                         <div class="date-card-compact" onclick="openModal('${dateKey}')">
                             <div class="flex items-center justify-between">
                                 <span class="font-semibold text-sm text-slate-700">📅 ${dateStr}</span>
                                 <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${entries.length}</span>
-                            </div>
-                            <div class="flex flex-wrap gap-1 mt-1">
-                                ${priorityBadges}
-                                ${typeBadges}
                             </div>
                             <div class="text-[10px] text-slate-400 mt-1 truncate">
                                 ${entries.slice(0, 3).map(e => esc(e.title)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
@@ -824,14 +851,13 @@
                         </div>
                     `;
                 });
-                
                 html += `
                         </div>
                     </div>
                 `;
             });
-            
             html += `
+                        </div>
                     </div>
                 </div>
             `;
@@ -842,17 +868,26 @@
 
     // ─── RENDER PRIORITY GROUPS ──────────────────────────────────
     function renderPriorityGroups() {
-        let filteredEntries = allEntries;
+        let filtered = priorityData;
+
         if (currentPriority !== 'all') {
-            filteredEntries = allEntries.filter(e => e.bravo_prioritization && e.bravo_prioritization.priority === currentPriority);
+            filtered = priorityData.filter(p => p.priority === currentPriority);
         }
 
-        const groups = { 'A': [], 'B': [], 'C': [] };
-        filteredEntries.forEach(row => {
-            const p = row.bravo_prioritization?.priority || 'C';
-            if (groups[p]) groups[p].push(row);
+        if (!filtered.length) {
+            priorityContent.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No priority entries found${currentPriority !== 'all' ? ' with priority ' + currentPriority : ''}</div>`;
+            return;
+        }
+
+        // Group by priority (categorization)
+        const groups = {};
+        filtered.forEach(row => {
+            const cat = row.categorization || 'C';
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(row);
         });
 
+        const priorityOrder = ['A', 'B', 'C'];
         const priorityLabels = {
             'A': '🔴 A – Top Priority',
             'B': '🟡 B – Mid Priority',
@@ -861,11 +896,10 @@
 
         let html = '';
         let hasEntries = false;
-        
-        ['A', 'B', 'C'].forEach(p => {
+
+        priorityOrder.forEach(p => {
             const entries = groups[p] || [];
             if (entries.length) hasEntries = true;
-            
             if (!entries.length) {
                 html += `
                     <div class="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm">
@@ -895,22 +929,23 @@
                                     <th>Date</th>
                                     <th>Title</th>
                                     <th>Artist</th>
-                                    <th class="text-center">Type</th>
-                                    <th class="text-center">Notes</th>
+                                    <th>Categorization</th>
+                                    <th>Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${entries.map(row => `
-                                    <tr class="table-row-hover fade-in">
-                                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.event_date ? formatDate(row.event_date) : '—'}</td>
-                                        <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.title)}</td>
-                                        <td class="py-2 px-3 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
-                                        <td class="py-2 px-3 text-center"><span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${getTypeBadge(row.type)}">${getTypeLabel(row.type)}</span></td>
-                                        <td class="py-2 px-3 text-center">
-                                            ${row.bravo_prioritization?.notes ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.bravo_prioritization.notes)}</span>` : '—'}
-                                        </td>
-                                    </tr>
-                                `).join('')}
+                                ${entries.map(row => {
+                                    const master = row.bravo_masterlist || {};
+                                    return `
+                                        <tr class="table-row-hover fade-in">
+                                            <td class="py-2 px-3 text-slate-400 text-[11px]">${master.event_date ? formatDate(master.event_date) : '—'}</td>
+                                            <td class="py-2 px-3 text-slate-700 font-medium">${esc(master.title || '—')}</td>
+                                            <td class="py-2 px-3 text-slate-500">${esc(master.artist || '—')}</td>
+                                            <td class="py-2 px-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${getPriorityClass(row.categorization)}">${esc(row.categorization || '—')}</span></td>
+                                            <td class="py-2 px-3 text-slate-500">${esc(row.notes || '—')}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
                             </tbody>
                         </table>
                     </div>
@@ -931,9 +966,7 @@
 
     // ─── MODAL ──────────────────────────────────────────────────
     window.openModal = function(dateKey) {
-        const entries = dateDataMap[dateKey] || [];
-        modalTitle.textContent = `📋 ${formatDate(dateKey)}`;
-
+        const entries = masterlistData.filter(e => e.event_date === dateKey);
         if (!entries.length) {
             modalBody.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>`;
         } else {
@@ -945,45 +978,34 @@
                                 <th class="w-12 text-center">#</th>
                                 <th>Title</th>
                                 <th>Artist</th>
-                                <th class="text-center">Type</th>
-                                <th class="text-center">Priority</th>
-                                <th class="text-center">Notes</th>
                             </tr>
                         </thead>
                         <tbody>
             `;
-
             entries.forEach((row, idx) => {
-                const priority = row.bravo_prioritization?.priority || 'C';
-                const notes = row.bravo_prioritization?.notes || '';
                 tableHtml += `
                     <tr class="table-row-hover fade-in">
-                        <td class="py-2 px-3 text-slate-400 font-mono text-[11px] text-center">${idx + 1}</td>
+                        <td class="py-2 px-3 text-slate-400 font-mono text-[11px] text-center">${idx+1}</td>
                         <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.title)}</td>
-                        <td class="py-2 px-3 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
-                        <td class="py-2 px-3 text-center"><span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${getTypeBadge(row.type)}">${getTypeLabel(row.type)}</span></td>
-                        <td class="py-2 px-3 text-center"><span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full ${getPriorityClass(priority)}">${getPriorityLabel(priority)}</span></td>
-                        <td class="py-2 px-3 text-center">${notes ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(notes)}</span>` : '—'}</td>
+                        <td class="py-2 px-3 text-slate-500">${esc(row.artist || '—')}</td>
                     </tr>
                 `;
             });
-
             tableHtml += '</tbody></table></div>';
             modalBody.innerHTML = tableHtml;
         }
-
+        modalTitle.textContent = `📋 ${formatDate(dateKey)}`;
         modalOverlay.classList.add('open');
     };
 
     window.closeModal = function() {
         modalOverlay.classList.remove('open');
     };
-
     modalOverlay.addEventListener('click', function(e) {
         if (e.target === this) closeModal();
     });
 
-    // ─── PRIORITY FILTER ──────────────────────────────────────────
+    // ─── FILTER ──────────────────────────────────────────────────
     window.filterPriority = function(priority) {
         currentPriority = priority;
         document.querySelectorAll('.priority-filter').forEach(el => {
@@ -1000,11 +1022,10 @@
         }
     };
 
-    // ─── VIEW SWITCHING ──────────────────────────────────────────
+    // ─── VIEW SWITCH ──────────────────────────────────────────
     window.switchView = function(view) {
         currentView = view;
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('nav-item-active'));
-
         if (view === 'masterlist') {
             document.getElementById('nav-masterlist').classList.add('nav-item-active');
             document.getElementById('masterlist-view').classList.remove('hidden');
@@ -1018,6 +1039,14 @@
         }
     };
 
+    window.toggleYear = function(yearId) {
+        const content = document.getElementById(yearId);
+        const icon = document.getElementById('icon-' + yearId);
+        if (!content) return;
+        content.classList.toggle('hidden');
+        if (icon) icon.classList.toggle('rotate');
+    };
+
     // ─── REFRESH ──────────────────────────────────────────────────
     window.refreshData = function() {
         if (refreshIcon) refreshIcon.classList.add('fa-spin');
@@ -1028,17 +1057,240 @@
 
     // ─── LOGOUT ────────────────────────────────────────────────────
     window.logoutUser = async function() {
-        try {
-            if (supabaseClient) await supabaseClient.auth.signOut();
-        } catch (_) {}
+        try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
         localStorage.removeItem('archivehub_user');
         window.location.href = '../../index.html';
     };
 
-    // ─── KEYBOARD SHORTCUTS ──────────────────────────────────────
+    // ─── KEYBOARD ──────────────────────────────────────────────
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeModal();
     });
+
+    // ─── IMPORT EXCEL ─────────────────────────────────────────────
+    window.openImportModal = function() {
+        $('import-modal').classList.add('open');
+        $('importPreview').style.display = 'none';
+        $('importError').style.display = 'none';
+        $('excelFileInput').value = '';
+        importedData = null;
+    };
+    window.closeImportModal = function() { $('import-modal').classList.remove('open'); };
+
+    window.handleFileImport = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                parseExcelForImport(workbook);
+            } catch (err) {
+                $('importError').textContent = 'Error: ' + err.message;
+                $('importError').style.display = 'block';
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    };
+
+    function parseExcelForImport(workbook) {
+        const result = { masterlist: [], prioritization: [] };
+        const sheetNames = workbook.SheetNames;
+
+        // Find Masterlist sheet (TITLE, ARTIST, DATE)
+        let masterSheet = null;
+        for (const name of sheetNames) {
+            const sheet = workbook.Sheets[name];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            if (json.length > 0) {
+                const headerRow = json[0];
+                if (headerRow && 
+                    headerRow.some(c => String(c || '').toUpperCase().includes('TITLE')) &&
+                    headerRow.some(c => String(c || '').toUpperCase().includes('ARTIST')) &&
+                    headerRow.some(c => String(c || '').toUpperCase().includes('DATE'))) {
+                    masterSheet = { name, data: json };
+                    break;
+                }
+            }
+        }
+
+        // Find Prioritization sheet (CATEGORIZATION, NOTES)
+        let prioritySheet = null;
+        for (const name of sheetNames) {
+            if (name === masterSheet?.name) continue;
+            const sheet = workbook.Sheets[name];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            if (json.length > 0) {
+                const headerRow = json[0];
+                if (headerRow && 
+                    headerRow.some(c => String(c || '').toUpperCase().includes('CATEGORIZATION')) &&
+                    headerRow.some(c => String(c || '').toUpperCase().includes('NOTES'))) {
+                    prioritySheet = { name, data: json };
+                    break;
+                }
+            }
+        }
+
+        // Parse Masterlist
+        if (masterSheet) {
+            const parsed = parseSheet(masterSheet.data, 'masterlist');
+            result.masterlist = parsed;
+        }
+
+        // Parse Prioritization
+        if (prioritySheet) {
+            const parsed = parseSheet(prioritySheet.data, 'prioritization');
+            result.prioritization = parsed;
+        }
+
+        importedData = result;
+        showImportPreview(result);
+    }
+
+    function parseSheet(json, type) {
+        const headerRow = json[0];
+        if (!headerRow) return [];
+        const headers = headerRow.map(h => String(h || '').trim().toUpperCase());
+        const titleIdx = headers.findIndex(h => h.includes('TITLE'));
+        const artistIdx = headers.findIndex(h => h.includes('ARTIST'));
+        const dateIdx = headers.findIndex(h => h.includes('DATE'));
+        const catIdx = headers.findIndex(h => h.includes('CATEGORIZATION'));
+        const notesIdx = headers.findIndex(h => h.includes('NOTES'));
+
+        const result = [];
+        for (let i = 1; i < json.length; i++) {
+            const row = json[i];
+            if (!row || row.length === 0) continue;
+            const title = String(row[titleIdx] || '').trim();
+            const artist = String(row[artistIdx] || '').trim();
+            const dateRaw = String(row[dateIdx] || '').trim();
+            if (!title || !dateRaw) continue;
+            const parsedDate = parseDate(dateRaw);
+            if (!parsedDate) continue;
+
+            const entry = { title, artist: artist || null, date: parsedDate };
+            if (type === 'prioritization') {
+                const cat = String(row[catIdx] || '').trim();
+                const notes = String(row[notesIdx] || '').trim();
+                entry.categorization = cat || null;
+                entry.notes = notes || null;
+                // Extract priority from categorization if it's A/B/C, else null
+                const upper = (cat || '').toUpperCase();
+                if (['A','B','C'].includes(upper)) entry.priority = upper;
+                else entry.priority = null;
+            }
+            result.push(entry);
+        }
+        return result;
+    }
+
+    function showImportPreview(data) {
+        $('importPreview').style.display = 'block';
+        const totalMaster = data.masterlist.length;
+        const totalPriority = data.prioritization.length;
+        $('importSummary').innerHTML = `
+            <div class="import-summary-item"><div class="number">${totalMaster}</div><div class="label">Masterlist</div></div>
+            <div class="import-summary-item"><div class="number">${totalPriority}</div><div class="label">Prioritization</div></div>
+        `;
+
+        // Preview table: show first 10 of both
+        let html = `<table><thead><tr><th>Sheet</th><th>Date</th><th>Title</th><th>Artist</th></tr></thead><tbody>`;
+        data.masterlist.slice(0, 10).forEach(e => {
+            html += `<tr><td><span class="text-[10px] font-bold text-indigo-600">M</span></td><td>${esc(e.date)}</td><td>${esc(e.title)}</td><td>${esc(e.artist || '—')}</td></tr>`;
+        });
+        data.prioritization.slice(0, 10).forEach(e => {
+            html += `<tr><td><span class="text-[10px] font-bold text-amber-600">P</span></td><td>${esc(e.date)}</td><td>${esc(e.title)}</td><td>${esc(e.artist || '—')}</td></tr>`;
+        });
+        if (data.masterlist.length > 10 || data.prioritization.length > 10) {
+            html += `<tr><td colspan="4" class="text-center text-slate-400 text-xs">+ more entries</td></tr>`;
+        }
+        html += `</tbody></table>`;
+        $('importPreviewTable').innerHTML = html;
+        $('importStatus').textContent = `✅ ${totalMaster} master, ${totalPriority} priority entries ready`;
+    }
+
+    // ─── SYNC TO SUPABASE ─────────────────────────────────────────
+    window.syncToSupabase = async function() {
+        if (!importedData) { alert('No data to sync.'); return; }
+        if (!supabaseClient) { alert('Supabase client not available.'); return; }
+
+        const btn = document.querySelector('.btn-sync');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
+        $('importStatus').textContent = '⏳ Syncing...';
+
+        try {
+            const data = importedData;
+            let insertedMaster = 0, insertedPriority = 0;
+
+            // 1. Insert Masterlist
+            for (const entry of data.masterlist) {
+                const { data: inserted, error } = await supabaseClient
+                    .from(MASTERLIST_TABLE)
+                    .insert({
+                        title: entry.title,
+                        artist: entry.artist,
+                        event_date: entry.date
+                    })
+                    .select('id')
+                    .single();
+                if (error) {
+                    console.error('Master insert error:', error);
+                    continue;
+                }
+                insertedMaster++;
+                // Store the ID in a map for later matching (if needed)
+                // For priority entries, we'll match by title+artist+date after all inserts
+            }
+
+            // We need to match priority entries by title+artist+date
+            // First, fetch all masterlist IDs after insertion
+            const { data: allMaster, error: fetchError } = await supabaseClient
+                .from(MASTERLIST_TABLE)
+                .select('id, title, artist, event_date');
+            if (fetchError) throw fetchError;
+
+            const masterMap = {};
+            allMaster.forEach(m => {
+                const key = `${m.title}|${m.artist || ''}|${m.event_date}`;
+                masterMap[key] = m.id;
+            });
+
+            // 2. Insert Prioritization
+            for (const entry of data.prioritization) {
+                const key = `${entry.title}|${entry.artist || ''}|${entry.date}`;
+                const masterId = masterMap[key] || null;
+
+                const { error } = await supabaseClient
+                    .from(PRIORITIZATION_TABLE)
+                    .insert({
+                        masterlist_id: masterId,
+                        categorization: entry.categorization,
+                        notes: entry.notes,
+                        priority: entry.priority
+                    });
+                if (error) {
+                    console.error('Priority insert error:', error);
+                    continue;
+                }
+                insertedPriority++;
+            }
+
+            $('importStatus').textContent = `✅ Synced ${insertedMaster} master, ${insertedPriority} priority entries`;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
+            setTimeout(() => {
+                closeImportModal();
+                fetchAllData();
+            }, 1000);
+
+        } catch (err) {
+            console.error('Sync error:', err);
+            $('importStatus').textContent = '❌ Error: ' + err.message;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-cloud-upload-alt"></i> Sync to Supabase';
+        }
+    };
 
     // ─── INIT ──────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function() {
@@ -1054,7 +1306,7 @@
         }
     });
 
-    console.log('📋 Bravo Masterlist – Separated Tables (Masterlist + Prioritization)');
+    console.log('📋 Bravo Masterlist – Two tables, two views');
 })();
 </script>
 
