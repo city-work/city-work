@@ -1,513 +1,648 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ArchiveHub - Enterprise Knowledge Platform</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArchiveHub Dashboard</title>
 
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="../config.js?v=2"></script>
-  <script>
-    tailwind.config = {
-      safelist: [
-        { pattern: /bg-(slate|blue|emerald|purple|cyan|amber|red|orange|yellow|green|teal|indigo|rose)-(50|100|500|600)/, variants: ['hover', 'group-hover'] },
-        { pattern: /text-(slate|blue|emerald|purple|cyan|amber|red|orange|yellow|green|teal|indigo|rose)-(400|500|600|700)/, variants: ['hover', 'group-hover'] },
-        { pattern: /border-(slate|blue|emerald|purple|cyan|amber|red|orange|yellow|green|teal|indigo|rose)-(200|400|500)/, variants: ['hover'] }
-      ],
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-          colors: {
-            brand: { bg: '#F5F5F7', surface: '#FFFFFF', dark: '#0F172A', accent: '#2563EB' }
-          }
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: { brand: { accent: '#2563EB' } }
+                }
+            }
         }
-      }
-    }
-  </script>
+    </script>
 
-  <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
-    .archive-card.hidden-card { display: none !important; }
-    .nav-link-active { background: #EFF6FF; color: #2563EB; border-color: #2563EB; }
-    .role-badge-admin { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
-    .role-badge-user { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-    .error-banner { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 1rem; border-radius: 1rem; margin-bottom: 1rem; }
+    <style>
+        /* ─── STATUS BAR ─── */
+        .status-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .status-error { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .status-waiting { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+        .status-hidden { display: none; }
 
-    /* Auth Lock */
-    #authLock {
-      position: fixed;
-      inset: 0;
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(4px);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 1rem;
-      transition: opacity 0.3s ease;
-    }
-    #authLock.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .lock-spinner {
-      width: 48px;
-      height: 48px;
-      border: 4px solid #e2e8f0;
-      border-top-color: #2563EB;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+        /* ─── CARDS ─── */
+        .archive-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .archive-card:hover {
+            border-color: #2563EB;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+            transform: translateY(-2px);
+        }
+
+        /* ─── SPINNER ─── */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #2563EB;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ─── SCROLLBAR ─── */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+
+        /* ─── SMOOTH FADE ─── */
+        .fade-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
-<body class="h-screen w-screen bg-[#E5E7EB] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden text-slate-800 antialiased font-sans">
 
-  <!-- ═══ AUTH LOCK ═══ -->
-  <div id="authLock">
-    <div class="lock-spinner"></div>
-    <p class="text-sm font-medium text-slate-600">Verifying access...</p>
-  </div>
+<body class="min-h-screen w-screen bg-[#F1F5F9] flex items-center justify-center p-4 text-slate-800 antialiased font-sans">
 
-<div class="bg-brand-bg w-full max-w-[1440px] h-full max-h-[920px] rounded-[28px] shadow-2xl flex border border-slate-300/80 overflow-hidden relative">
+    <div class="bg-white w-full max-w-[1400px] h-full max-h-[900px] rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden">
 
-  <!-- ─── LEFT RAIL ─── -->
-  <aside class="w-16 sm:w-20 bg-brand-surface border-r border-slate-200 flex flex-col items-center justify-between py-6 shrink-0 z-20">
-    <div class="flex flex-col items-center space-y-5 w-full">
-      <a href="../index.html" class="w-10 h-10 rounded-xl bg-brand-dark flex items-center justify-center text-white mb-2 shadow-md">
-        <i class="fa-solid fa-box-archive text-lg text-brand-accent"></i>
-      </a>
-      <nav class="flex flex-col items-center space-y-3 w-full px-2" id="navRail">
-        <!-- Rendered instantly -->
-      </nav>
-    </div>
-    <div class="flex flex-col items-center space-y-3 w-full px-2">
-      <button id="logoutBtn" class="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
-        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
-      </button>
-    </div>
-  </aside>
-
-  <!-- ─── MAIN CONTENT ─── -->
-  <div class="flex-1 flex flex-col h-full overflow-hidden relative">
-
-    <header class="px-6 sm:px-8 py-4 bg-brand-surface/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between shrink-0 gap-4 z-10">
-      <div class="flex items-center space-x-3">
-        <a href="../index.html" class="text-xl font-bold tracking-tight text-brand-dark" id="logoText">Archive<span class="text-brand-accent">Hub</span></a>
-        <span class="text-slate-300">/</span>
-        <span class="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full border border-slate-200">Main Dashboard</span>
-        <span id="roleBadge" class="text-[10px] font-bold px-2.5 py-1 rounded-full role-badge-user hidden">👤 User</span>
-      </div>
-
-      <div class="flex items-center space-x-3 sm:space-x-4">
-        <div class="relative hidden sm:block">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
-          <input id="globalSearchInput" type="text" placeholder="Search archives..." class="bg-slate-100/80 text-xs font-medium text-slate-800 pl-9 pr-12 py-2 rounded-full border border-slate-200 focus:outline-none focus:border-brand-accent focus:bg-white w-48 lg:w-64 transition" />
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 bg-slate-200/60 px-1.5 py-0.5 rounded">⌘K</span>
-        </div>
-      </div>
-    </header>
-
-    <main class="flex-1 overflow-y-auto px-6 sm:px-8 py-6 custom-scrollbar space-y-6" id="mainContent">
-
-      <!-- Error Banner -->
-      <div id="errorBanner" class="error-banner hidden">
-        <div class="flex items-center gap-3">
-          <i class="fa-solid fa-circle-exclamation text-rose-500 text-lg"></i>
-          <div>
-            <p class="font-bold text-sm">Something went wrong</p>
-            <p id="errorMessage" class="text-xs text-rose-700"></p>
-          </div>
-          <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="ml-auto text-rose-500 hover:text-rose-700">✕</button>
-        </div>
-      </div>
-
-      <!-- Admin Panel -->
-      <div id="adminPanel" class="hidden bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg">
-            <i class="fa-solid fa-users-cog"></i>
-          </div>
-          <div>
-            <p class="text-sm font-bold text-indigo-900">Admin Panel</p>
-            <p class="text-xs text-indigo-700">Manage users, roles, and system settings.</p>
-          </div>
-        </div>
-        <a href="./admin/index.html" class="text-xs font-semibold px-4 py-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm">Go to Admin →</a>
-      </div>
-
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Archive Directory</h1>
-          <p class="text-xs text-slate-500 font-medium mt-0.5">Direct links to masterlists, schedules, and operations archives.</p>
-        </div>
-        <div class="flex items-center gap-2 flex-wrap" id="tagFilters">
-          <!-- Rendered instantly -->
-        </div>
-      </div>
-
-      <!-- ─── SUBFOLDER GRID ─── -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="archiveGrid">
-        <!-- Rendered instantly -->
-      </div>
-
-      <div class="mt-6 pt-4 border-t border-slate-200">
-        <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-chart-simple text-brand-accent"></i> System Metrics</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="metricsGrid">
-          <!-- Rendered instantly -->
-        </div>
-      </div>
-
-      <div class="mt-4 pt-4 border-t border-slate-200">
-        <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-folder-open text-brand-accent"></i> Active Vaults</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="vaultsGrid">
-          <!-- Rendered instantly -->
-        </div>
-      </div>
-
-      <div class="mt-4 pt-4 border-t border-slate-200">
-        <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-rss text-brand-accent"></i> Activity Feed</h2>
-        <div class="space-y-3" id="feedContainer">
-          <!-- Rendered instantly -->
-        </div>
-      </div>
-
-    </main>
-  </div>
-</div>
-
-<script>
-(function() {
-  'use strict';
-
-  console.log('🚀 Dashboard script starting...');
-
-  // ─── DOM REFS ──────────────────────────────────────────────────
-  const $ = id => document.getElementById(id);
-  const errorBanner = $('errorBanner');
-  const errorMessage = $('errorMessage');
-  const authLock = $('authLock');
-
-  function showError(msg) {
-    errorMessage.textContent = msg;
-    errorBanner.classList.remove('hidden');
-    console.error('❌', msg);
-  }
-
-  // ─── CONFIG ─────────────────────────────────────────────────────
-  let SUPABASE_URL, SUPABASE_ANON_KEY;
-  try {
-    if (typeof design === 'undefined') {
-      throw new Error('design object not found – config.js may not have loaded.');
-    }
-    if (!design.supabase || !design.supabase.url || !design.supabase.anonKey) {
-      throw new Error('design.supabase missing credentials.');
-    }
-    SUPABASE_URL = design.supabase.url;
-    SUPABASE_ANON_KEY = design.supabase.anonKey;
-    console.log('✅ Config loaded:', SUPABASE_URL);
-  } catch (e) {
-    showError('Configuration error: ' + e.message);
-    authLock.classList.add('hidden'); // hide lock so user can see error
-    tryRenderStatic();
-    return;
-  }
-
-  // ─── SUPABASE ──────────────────────────────────────────────────
-  let supabase;
-  try {
-    if (typeof window.supabase === 'undefined' || typeof window.supabase.createClient !== 'function') {
-      throw new Error('Supabase library not loaded.');
-    }
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Supabase client created');
-  } catch (e) {
-    showError('Supabase error: ' + e.message);
-    authLock.classList.add('hidden');
-    tryRenderStatic();
-    return;
-  }
-
-  // ─── RENDER STATIC CONTENT ──────────────────────────────────────
-  function tryRenderStatic() {
-    try {
-      renderStaticContent();
-      console.log('✅ Static content rendered');
-    } catch (e) {
-      showError('Failed to render content: ' + e.message);
-    }
-  }
-
-  function renderStaticContent() {
-    if (typeof design === 'undefined') {
-      console.warn('design not available – skipping static render');
-      return;
-    }
-
-    // Logo
-    const logoEl = $('logoText');
-    if (logoEl && design.header?.logoText) {
-      const parts = design.header.logoText.split(/(hub)/i);
-      logoEl.innerHTML = parts.length > 1 ? parts[0] + '<span class="text-brand-accent">' + parts[1] + '</span>' : design.header.logoText;
-    }
-
-    // Nav Rail
-    const navRail = $('navRail');
-    if (navRail && design.header?.navLinks) {
-      const iconMap = {
-        'Vaults': 'folder', 'Tools': 'wrench', 'Learn': 'graduation-cap',
-        'Virtual Sandbox': 'flask', 'Public Drive': 'cloud', 'Analytics': 'chart-line'
-      };
-      navRail.innerHTML = design.header.navLinks.map(link => {
-        const active = link.active ? 'nav-link-active border border-brand-accent' : '';
-        return `<button class="w-10 h-10 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition flex items-center justify-center relative group ${active}" aria-label="${link.label}" title="${link.label}">
-          <i class="fa-solid fa-${iconMap[link.label] || 'circle'} text-base"></i>
-        </button>`;
-      }).join('');
-    }
-
-    // Tags
-    const tagFilters = $('tagFilters');
-    if (tagFilters && design.tags) {
-      tagFilters.innerHTML = design.tags.map(tag =>
-        `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-200 bg-white/60 text-slate-600 shadow-sm cursor-pointer hover:bg-${tag.color}-50 hover:border-${tag.color}-400 transition" data-tag="${tag.label}">${tag.label}</span>`
-      ).join('');
-    }
-
-    // Archive Cards
-    const archiveGrid = $('archiveGrid');
-    if (archiveGrid && design.archiveModules) {
-      archiveGrid.innerHTML = design.archiveModules.map(item =>
-        `<a href="./${item.folder}/index.html" class="archive-card bg-white hover:border-${item.color}-500 rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition group flex flex-col justify-between" data-search="${item.title} ${item.desc} ${item.folder}">
-          <div>
-            <div class="w-10 h-10 rounded-xl bg-${item.color}-50 text-${item.color}-600 flex items-center justify-center mb-3 group-hover:bg-${item.color}-600 group-hover:text-white transition">
-              <i class="fa-solid ${item.icon} text-lg"></i>
+        <!-- ═══ HEADER ═══ -->
+        <header class="px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0 bg-white">
+            <div class="flex items-center gap-3">
+                <span class="text-xl font-extrabold text-slate-900">Archive<span class="text-brand-accent">Hub</span></span>
+                <span class="text-xs font-semibold bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Dashboard</span>
+                <span id="statusBadge" class="text-xs font-medium px-3 py-1 rounded-full border status-waiting">
+                    <span class="spinner mr-1 align-middle"></span> Connecting...
+                </span>
             </div>
-            <h3 class="text-sm font-bold text-slate-900 group-hover:text-${item.color}-600 transition">${item.title}</h3>
-            <p class="text-xs text-slate-500 mt-1">${item.desc}</p>
-          </div>
-          <div class="mt-4 flex items-center text-xs font-semibold text-${item.color}-600">
-            <span>Open Page</span>
-            <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
-          </div>
-        </a>`
-      ).join('');
-    }
-
-    // Metrics
-    const metricsGrid = $('metricsGrid');
-    if (metricsGrid && design.metrics) {
-      const m = design.metrics;
-      const items = [
-        { label: 'Storage', value: `${m.storage.used} / ${m.storage.total}`, sub: `Free: ${m.storage.free}`, icon: 'fa-hard-drive', color: 'blue' },
-        { label: 'Files', value: m.files.count, sub: m.files.change, icon: 'fa-file', color: 'emerald' },
-        { label: 'Vaults', value: m.vaults.count, sub: m.vaults.change, icon: 'fa-folder', color: 'purple' },
-        { label: 'Encryption', value: m.encryption.status, sub: m.encryption.badge, icon: 'fa-shield', color: 'cyan' }
-      ];
-      metricsGrid.innerHTML = items.map(item =>
-        `<div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-start gap-3">
-          <div class="w-8 h-8 rounded-lg bg-${item.color}-50 text-${item.color}-600 flex items-center justify-center text-sm shrink-0">
-            <i class="fa-solid ${item.icon}"></i>
-          </div>
-          <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${item.label}</p>
-            <p class="text-sm font-bold text-slate-900">${item.value}</p>
-            <p class="text-[10px] text-slate-500">${item.sub}</p>
-          </div>
-        </div>`
-      ).join('');
-    }
-
-    // Vaults
-    const vaultsGrid = $('vaultsGrid');
-    if (vaultsGrid && design.vaults) {
-      const colorMap = { cyan: 'cyan', yellow: 'amber', purple: 'purple' };
-      vaultsGrid.innerHTML = design.vaults.map(v =>
-        `<div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition">
-          <div class="flex items-center justify-between">
-            <h4 class="text-sm font-bold text-slate-900">${v.name}</h4>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-${colorMap[v.tagColor] || 'slate'}-100 text-${colorMap[v.tagColor] || 'slate'}-700">${v.tag}</span>
-          </div>
-          <p class="text-xs text-slate-500 mt-1">${v.size} · ${v.files}</p>
-        </div>`
-      ).join('');
-    }
-
-    // Feed
-    const feedContainer = $('feedContainer');
-    if (feedContainer && design.feed) {
-      feedContainer.innerHTML = design.feed.map(item =>
-        `<div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-brand-accent/10 text-brand-accent flex items-center justify-center text-xs font-bold">${item.avatar}</div>
-            <div class="flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-sm font-bold text-slate-900">${item.author}</span>
-                <span class="text-[10px] text-slate-400">${item.time}</span>
-              </div>
-              <p class="text-xs text-slate-600 mt-0.5">${item.message}</p>
-              ${item.snapshot ? `<div class="mt-2 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 text-xs">
-                <span class="font-bold text-brand-accent">${item.snapshot}</span>
-                <span class="text-slate-500 ml-2">${item.snapshotDetail}</span>
-              </div>` : ''}
-              <div class="flex items-center gap-4 mt-2 text-[10px] text-slate-400">
-                <span><i class="fa-regular fa-heart"></i> ${item.likes}</span>
-                <span><i class="fa-regular fa-comment"></i> ${item.comments}</span>
-                <span><i class="fa-regular fa-eye"></i> ${item.views}</span>
-              </div>
+            <div class="flex items-center gap-3">
+                <button onclick="retryAll()" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Retry
+                </button>
+                <button id="logoutBtn" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 transition">
+                    <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Logout
+                </button>
             </div>
-          </div>
-        </div>`
-      ).join('');
-    }
-  }
+        </header>
 
-  // ─── SESSION CHECK WITH LOCK ────────────────────────────────────
-  let userRole = 'user';
+        <!-- ═══ MAIN BODY ═══ -->
+        <div class="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
 
-  async function checkSession() {
-    // Lock is visible by default from HTML
-    try {
-      console.log('🔐 Checking session...');
-      const { data, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      const session = data?.session;
-      if (!session || !session.user) {
-        console.warn('No session – redirecting to login');
-        localStorage.removeItem('archivehub_user');
-        window.location.href = '../index.html';
-        return;
-      }
+            <!-- ─── STATUS MESSAGES ─── -->
+            <div id="messageArea"></div>
 
-      // Fetch profile (but we already rendered content)
-      let role = 'user';
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        if (!profileError && profile?.role) {
-          role = profile.role;
-        } else if (!profile) {
-          // Create profile if missing
-          await supabase.from('profiles').insert({
-            id: session.user.id,
-            email: session.user.email,
-            role: 'user'
-          });
-        }
-      } catch (e) {
-        console.warn('Profile fetch failed, using default role:', e);
-      }
+            <!-- ─── ADMIN PANEL ─── -->
+            <div id="adminPanel" class="hidden bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-users-cog"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-indigo-900">Admin Panel</p>
+                        <p class="text-xs text-indigo-700">Manage users, roles, and settings.</p>
+                    </div>
+                </div>
+                <a href="#" class="text-xs font-semibold px-4 py-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm">Go to Admin →</a>
+            </div>
 
-      userRole = role;
-      const userData = {
-        id: session.user.id,
-        email: session.user.email,
-        role: role,
-        session: session
-      };
-      localStorage.setItem('archivehub_user', JSON.stringify(userData));
+            <!-- ─── WELCOME ─── -->
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-900">📦 Archive Directory</h1>
+                <p class="text-xs text-slate-500 mt-0.5" id="userInfo">Loading user info...</p>
+            </div>
 
-      // Update UI
-      const badge = $('roleBadge');
-      const adminPanel = $('adminPanel');
-      if (badge) {
-        badge.textContent = role === 'admin' ? '👑 Admin' : '👤 User';
-        badge.className = `text-[10px] font-bold px-2.5 py-1 rounded-full ${role === 'admin' ? 'role-badge-admin' : 'role-badge-user'}`;
-        badge.classList.remove('hidden');
-      }
-      if (adminPanel) {
-        adminPanel.classList.toggle('hidden', role !== 'admin');
-      }
+            <!-- ─── GRID ─── -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="archiveGrid">
+                <div class="col-span-full text-center text-slate-400 text-sm py-8">
+                    <span class="spinner mr-2 align-middle"></span> Loading modules...
+                </div>
+            </div>
 
-      console.log('✅ Session verified:', session.user.email, 'role:', role);
+            <!-- ─── METRICS ─── -->
+            <div class="mt-6 pt-4 border-t border-slate-200">
+                <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-chart-simple text-brand-accent"></i> System Metrics</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="metricsGrid">
+                    <div class="col-span-full text-center text-slate-400 text-sm py-4">Loading metrics...</div>
+                </div>
+            </div>
 
-      // Hide lock – successful auth
-      authLock.classList.add('hidden');
+            <!-- ─── VAULTS ─── -->
+            <div class="mt-4 pt-4 border-t border-slate-200">
+                <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-folder-open text-brand-accent"></i> Active Vaults</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="vaultsGrid">
+                    <div class="col-span-full text-center text-slate-400 text-sm py-4">Loading vaults...</div>
+                </div>
+            </div>
 
-    } catch (err) {
-      console.error('Session error:', err);
-      // If there's a network error, don't redirect immediately – show error and let user retry
-      showError('Session check failed: ' + err.message + ' – you may need to reload.');
-      // Hide lock so user can see error and maybe refresh
-      authLock.classList.add('hidden');
-    }
-  }
+            <!-- ─── FEED ─── -->
+            <div class="mt-4 pt-4 border-t border-slate-200">
+                <h2 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-rss text-brand-accent"></i> Activity Feed</h2>
+                <div class="space-y-3" id="feedContainer">
+                    <div class="text-center text-slate-400 text-sm py-4">Loading feed...</div>
+                </div>
+            </div>
 
-  // ─── SEARCH ──────────────────────────────────────────────────────
-  let searchTimeout;
-  function filterArchives(query) {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const cards = document.querySelectorAll('.archive-card');
-      const q = query.toLowerCase().trim();
-      cards.forEach(card => {
-        const searchData = card.dataset.search?.toLowerCase() || '';
-        card.classList.toggle('hidden-card', q && !searchData.includes(q));
-      });
-    }, 300);
-  }
+        </div>
+    </div>
 
-  // ─── LOGOUT ──────────────────────────────────────────────────────
-  async function logoutUser() {
-    try {
-      if (supabase) await supabase.auth.signOut();
-    } catch (_) {}
-    localStorage.removeItem('archivehub_user');
-    window.location.href = '../index.html';
-  }
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        //  BULLETPROOF DASHBOARD – Works even if everything breaks
+        // ═══════════════════════════════════════════════════════════════════
 
-  // ─── INIT ────────────────────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('📄 DOM ready – rendering content...');
+        (function() {
+            'use strict';
 
-    // 1. Render static content (always happens)
-    tryRenderStatic();
+            console.log('🚀 [DASHBOARD] Starting...');
 
-    // 2. Attach search listener
-    const searchInput = $('globalSearchInput');
-    if (searchInput) {
-      searchInput.addEventListener('input', e => filterArchives(e.target.value));
-    }
+            // ─── DOM REFS ──────────────────────────────────────────────────
+            const $ = id => document.getElementById(id);
+            const statusBadge = $('statusBadge');
+            const messageArea = $('messageArea');
+            const archiveGrid = $('archiveGrid');
+            const metricsGrid = $('metricsGrid');
+            const vaultsGrid = $('vaultsGrid');
+            const feedContainer = $('feedContainer');
+            const userInfo = $('userInfo');
+            const adminPanel = $('adminPanel');
+            const logoutBtn = $('logoutBtn');
 
-    // 3. Attach logout
-    const logoutBtn = $('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', logoutUser);
-    }
+            // ─── CONFIGURATION ────────────────────────────────────────────
+            // Try to read from config.js, fallback to hardcoded values
+            let SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
+            let SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
 
-    // 4. Check session (non-blocking, but lock prevents clicks)
-    if (supabase) {
-      // Small delay to let content paint, but lock stays visible
-      setTimeout(() => {
-        checkSession();
-      }, 50);
-    } else {
-      showError('Supabase client not available – please refresh.');
-      authLock.classList.add('hidden'); // hide lock so user can see error
-    }
+            let CONFIG_LOADED = false;
+            let designData = null;
 
-    console.log('✅ Dashboard initialised – content visible, session check in progress.');
-  });
+            // Try to load from config.js
+            try {
+                if (typeof design !== 'undefined' && design && design.supabase) {
+                    if (design.supabase.url && design.supabase.url !== '<YOUR_SUPABASE_URL>') {
+                        SUPABASE_URL = design.supabase.url;
+                    }
+                    if (design.supabase.anonKey && design.supabase.anonKey !== '<YOUR_ANON_KEY>') {
+                        SUPABASE_ANON_KEY = design.supabase.anonKey;
+                    }
+                    designData = design;
+                    CONFIG_LOADED = true;
+                    console.log('✅ [CONFIG] Loaded from config.js');
+                } else {
+                    console.warn('⚠️ [CONFIG] config.js not found or invalid – using fallback');
+                }
+            } catch (e) {
+                console.warn('⚠️ [CONFIG] Error loading config.js:', e.message);
+            }
 
-})();
-</script>
+            // ─── SUPABASE CLIENT ──────────────────────────────────────────
+            let supabase = null;
+            try {
+                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('✅ [SUPABASE] Client created');
+                } else {
+                    console.error('❌ [SUPABASE] Supabase library not loaded');
+                }
+            } catch (e) {
+                console.error('❌ [SUPABASE] Failed to create client:', e.message);
+            }
+
+            // ─── STATE ─────────────────────────────────────────────────────
+            let sessionValid = false;
+            let userRole = 'user';
+            let userEmail = 'Unknown';
+
+            // ─── HELPER: Set Status ──────────────────────────────────────
+            function setStatus(text, type) {
+                statusBadge.className = 'text-xs font-medium px-3 py-1 rounded-full border';
+                statusBadge.innerHTML = text;
+                if (type === 'ok') {
+                    statusBadge.classList.add('status-ok');
+                } else if (type === 'error') {
+                    statusBadge.classList.add('status-error');
+                } else {
+                    statusBadge.classList.add('status-waiting');
+                }
+            }
+
+            function showMessage(text, type) {
+                const colors = {
+                    info: 'bg-blue-50 border-blue-200 text-blue-700',
+                    success: 'bg-green-50 border-green-200 text-green-700',
+                    error: 'bg-red-50 border-red-200 text-red-700',
+                    warning: 'bg-amber-50 border-amber-200 text-amber-700'
+                };
+                messageArea.innerHTML = `
+                    <div class="rounded-xl border px-4 py-3 text-sm ${colors[type] || colors.info} flex items-center justify-between fade-in">
+                        <span>${text}</span>
+                        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">✕</button>
+                    </div>
+                `;
+            }
+
+            // ─── RENDER: Static Content from designData ──────────────────
+            function renderStaticContent() {
+                console.log('📦 [RENDER] Static content...');
+
+                const data = designData;
+                if (!data) {
+                    // Fallback data
+                    const fallbackModules = [
+                        { folder: 'events-archive', title: 'Events Archive', desc: 'Special events and historical records.', color: 'blue',
+                            icon: 'fa-calendar-check' },
+                        { folder: 'lg-masterlist', title: 'LG Masterlist', desc: 'Complete database and operational roster.',
+                            color: 'emerald', icon: 'fa-list-check' },
+                        { folder: 'bravo-masterlist', title: 'Bravo Masterlist', desc: 'Roster and logs for Bravo operations.',
+                            color: 'indigo', icon: 'fa-clipboard-list' },
+                        { folder: 'tgirj-masterlist', title: 'TGIRJ Masterlist', desc: 'Master database records for TGIRJ.',
+                            color: 'purple', icon: 'fa-database' },
+                        { folder: 'daily-chores', title: 'Daily Chores', desc: 'Daily task checklists and maintenance.',
+                            color: 'amber', icon: 'fa-broom' },
+                        { folder: 'commercial', title: 'Commercial', desc: 'Commercial archives and advertisements.',
+                            color: 'teal', icon: 'fa-rectangle-ad' },
+                        { folder: 'cps', title: 'CPS', desc: 'CPS documents and compliance records.', color: 'cyan',
+                            icon: 'fa-shield-halved' },
+                        { folder: 'choice-concert-schedule', title: 'Choice Concert Schedule', desc: 'Concert lineups and schedules.',
+                            color: 'rose', icon: 'fa-music' },
+                        { folder: 'weekly-schedule', title: 'Weekly Schedule', desc: 'Weekly operational agendas.',
+                            color: 'sky', icon: 'fa-calendar-days' },
+                        { folder: 'classic-movie-schedules', title: 'Classic Movie Schedules', desc: 'Classic movie programming.',
+                            color: 'orange', icon: 'fa-film' }
+                    ];
+
+                    const fallbackMetrics = {
+                        storage: { total: '2,450 GB', used: '842 GB', free: '1,608 GB' },
+                        files: { count: '14,280', change: '+12.4%' },
+                        vaults: { count: '8 Active', change: '+2 new' },
+                        encryption: { status: '100% Secure', badge: 'Verified' }
+                    };
+
+                    const fallbackVaults = [
+                        { name: 'Financial Records', size: '124.5 GB', files: '3,410 Files', tag: 'PDFs', tagColor: 'cyan' },
+                        { name: 'Media Archives', size: '450.2 GB', files: '8,920 Files', tag: 'RAW/PNG', tagColor: 'yellow' },
+                        { name: 'Database Dumps', size: '267.4 GB', files: '1,950 Files', tag: 'SQL/JSON', tagColor: 'purple' }
+                    ];
+
+                    const fallbackFeed = [{
+                        author: 'System Bot',
+                        avatar: 'AH',
+                        time: 'Just now',
+                        message: 'Dashboard loaded with fallback data.',
+                        snapshot: 'FALLBACK MODE',
+                        snapshotDetail: 'config.js not found',
+                        likes: 0,
+                        comments: 0,
+                        views: 0
+                    }];
+
+                    renderModules(fallbackModules);
+                    renderMetrics(fallbackMetrics);
+                    renderVaults(fallbackVaults);
+                    renderFeed(fallbackFeed);
+                    return;
+                }
+
+                // ─── RENDER FROM designData ─────────────────────────────────
+                // Modules
+                if (data.archiveModules && Array.isArray(data.archiveModules)) {
+                    renderModules(data.archiveModules);
+                } else {
+                    archiveGrid.innerHTML =
+                        '<div class="col-span-full text-center text-amber-600 text-sm py-8">⚠️ No modules found in config</div>';
+                }
+
+                // Metrics
+                if (data.metrics) {
+                    renderMetrics(data.metrics);
+                } else {
+                    metricsGrid.innerHTML =
+                        '<div class="col-span-full text-center text-slate-400 text-sm py-4">No metrics data</div>';
+                }
+
+                // Vaults
+                if (data.vaults && Array.isArray(data.vaults)) {
+                    renderVaults(data.vaults);
+                } else {
+                    vaultsGrid.innerHTML =
+                        '<div class="col-span-full text-center text-slate-400 text-sm py-4">No vaults data</div>';
+                }
+
+                // Feed
+                if (data.feed && Array.isArray(data.feed)) {
+                    renderFeed(data.feed);
+                } else {
+                    feedContainer.innerHTML = '<div class="text-center text-slate-400 text-sm py-4">No feed data</div>';
+                }
+            }
+
+            // ─── RENDER HELPERS ──────────────────────────────────────────
+            function renderModules(modules) {
+                archiveGrid.innerHTML = modules.map(item => `
+                    <a href="./${item.folder}/index.html" class="archive-card fade-in" data-search="${item.title} ${item.desc}">
+                        <div>
+                            <div class="w-10 h-10 rounded-xl bg-${item.color}-50 text-${item.color}-600 flex items-center justify-center mb-3">
+                                <i class="fa-solid ${item.icon} text-lg"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-900">${item.title}</h3>
+                            <p class="text-xs text-slate-500 mt-1">${item.desc}</p>
+                        </div>
+                        <div class="mt-4 flex items-center text-xs font-semibold text-${item.color}-600">
+                            <span>Open</span>
+                            <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </a>
+                `).join('');
+            }
+
+            function renderMetrics(metrics) {
+                const items = [
+                    { label: 'Storage', value: `${metrics.storage.used} / ${metrics.storage.total}`, sub: `Free: ${metrics.storage.free}`,
+                        icon: 'fa-hard-drive', color: 'blue' },
+                    { label: 'Files', value: metrics.files.count, sub: metrics.files.change, icon: 'fa-file',
+                    color: 'emerald' },
+                    { label: 'Vaults', value: metrics.vaults.count, sub: metrics.vaults.change, icon: 'fa-folder',
+                        color: 'purple' },
+                    { label: 'Encryption', value: metrics.encryption.status, sub: metrics.encryption.badge,
+                        icon: 'fa-shield', color: 'cyan' }
+                ];
+                metricsGrid.innerHTML = items.map(item => `
+                    <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-${item.color}-50 text-${item.color}-600 flex items-center justify-center text-sm shrink-0">
+                            <i class="fa-solid ${item.icon}"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${item.label}</p>
+                            <p class="text-sm font-bold text-slate-900">${item.value}</p>
+                            <p class="text-[10px] text-slate-500">${item.sub}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function renderVaults(vaults) {
+                const colorMap = { cyan: 'cyan', yellow: 'amber', purple: 'purple' };
+                vaultsGrid.innerHTML = vaults.map(v => `
+                    <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-bold text-slate-900">${v.name}</h4>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-${colorMap[v.tagColor] || 'slate'}-100 text-${colorMap[v.tagColor] || 'slate'}-700">${v.tag}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">${v.size} · ${v.files}</p>
+                    </div>
+                `).join('');
+            }
+
+            function renderFeed(feed) {
+                feedContainer.innerHTML = feed.map(item => `
+                    <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-accent/10 text-brand-accent flex items-center justify-center text-xs font-bold">${item.avatar}</div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-sm font-bold text-slate-900">${item.author}</span>
+                                    <span class="text-[10px] text-slate-400">${item.time}</span>
+                                </div>
+                                <p class="text-xs text-slate-600 mt-0.5">${item.message}</p>
+                                ${item.snapshot ? `<div class="mt-2 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 text-xs">
+                                    <span class="font-bold text-brand-accent">${item.snapshot}</span>
+                                    <span class="text-slate-500 ml-2">${item.snapshotDetail}</span>
+                                </div>` : ''}
+                                <div class="flex items-center gap-4 mt-2 text-[10px] text-slate-400">
+                                    <span><i class="fa-regular fa-heart"></i> ${item.likes}</span>
+                                    <span><i class="fa-regular fa-comment"></i> ${item.comments}</span>
+                                    <span><i class="fa-regular fa-eye"></i> ${item.views}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // ─── AUTH: Check Session ──────────────────────────────────────
+            async function checkSession() {
+                if (!supabase) {
+                    setStatus('⚠️ No Supabase client', 'error');
+                    showMessage('Supabase client not available – check network or refresh.', 'error');
+                    return false;
+                }
+
+                setStatus('🔐 Connecting...', 'waiting');
+
+                try {
+                    console.log('🔐 [AUTH] Checking session...');
+
+                    const { data, error } = await supabase.auth.getSession();
+
+                    if (error) {
+                        console.error('❌ [AUTH] Session error:', error.message);
+                        throw error;
+                    }
+
+                    const session = data?.session;
+
+                    if (!session || !session.user) {
+                        console.warn('⚠️ [AUTH] No session – redirecting to login');
+                        setStatus('🔓 Not logged in', 'error');
+                        showMessage('You are not logged in. Redirecting...', 'warning');
+                        localStorage.removeItem('archivehub_user');
+                        setTimeout(() => { window.location.href = '../index.html'; }, 1500);
+                        return false;
+                    }
+
+                    // ─── We have a session! ─────────────────────────────────
+                    console.log('✅ [AUTH] Session found for:', session.user.email);
+                    userEmail = session.user.email;
+                    userInfo.textContent = `👤 ${userEmail}`;
+
+                    // ─── Fetch profile ──────────────────────────────────────
+                    let role = 'user';
+                    try {
+                        const { data: profile, error: profileError } = await supabase
+                            .from('profiles')
+                            .select('role')
+                            .eq('id', session.user.id)
+                            .maybeSingle();
+
+                        if (!profileError && profile?.role) {
+                            role = profile.role;
+                        } else if (!profile) {
+                            // Create profile if missing
+                            await supabase.from('profiles').insert({
+                                id: session.user.id,
+                                email: session.user.email,
+                                role: 'user'
+                            });
+                            console.log('✅ [AUTH] Created missing profile');
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ [AUTH] Profile fetch error:', e.message);
+                    }
+
+                    userRole = role;
+                    sessionValid = true;
+
+                    // ─── Save to localStorage ──────────────────────────────
+                    localStorage.setItem('archivehub_user', JSON.stringify({
+                        id: session.user.id,
+                        email: session.user.email,
+                        role: role,
+                        session: session
+                    }));
+
+                    // ─── Update UI ──────────────────────────────────────────
+                    setStatus(`✅ ${userEmail} (${role})`, 'ok');
+
+                    // Role badge in header
+                    const badge = document.querySelector('.status-badge');
+                    if (role === 'admin') {
+                        adminPanel.classList.remove('hidden');
+                        showMessage('👑 Welcome Admin! Full access granted.', 'success');
+                    } else {
+                        adminPanel.classList.add('hidden');
+                        showMessage('✅ Welcome back, ' + userEmail, 'success');
+                    }
+
+                    // Clear any previous error messages after 3s
+                    setTimeout(() => {
+                        const msgs = messageArea.querySelectorAll('.fade-in');
+                        msgs.forEach(el => {
+                            setTimeout(() => { el.style.opacity = '0';
+                                setTimeout(() => el.remove(), 300); }, 3000);
+                        });
+                    }, 3000);
+
+                    console.log('✅ [AUTH] Session valid – dashboard ready');
+                    return true;
+
+                } catch (err) {
+                    console.error('❌ [AUTH] Fatal error:', err.message);
+                    setStatus('❌ Connection error', 'error');
+                    showMessage('Failed to connect: ' + err.message + ' – click Retry', 'error');
+                    return false;
+                }
+            }
+
+            // ─── LOGOUT ────────────────────────────────────────────────────
+            async function logoutUser() {
+                try {
+                    if (supabase) await supabase.auth.signOut();
+                } catch (_) {}
+                localStorage.removeItem('archivehub_user');
+                window.location.href = '../index.html';
+            }
+
+            // ─── RETRY ─────────────────────────────────────────────────────
+            window.retryAll = function() {
+                console.log('🔄 [RETRY] Reloading...');
+                location.reload();
+            };
+
+            // ─── SEARCH (basic) ──────────────────────────────────────────
+            let searchTimeout;
+            window.filterArchives = function(query) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const cards = document.querySelectorAll('.archive-card');
+                    const q = query.toLowerCase().trim();
+                    cards.forEach(card => {
+                        const data = card.dataset.search?.toLowerCase() || '';
+                        card.style.display = (q && !data.includes(q)) ? 'none' : 'flex';
+                    });
+                }, 300);
+            };
+
+            // Attach search listener
+            document.addEventListener('DOMContentLoaded', function() {
+                const searchInput = document.querySelector('input[placeholder*="Search"]');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        window.filterArchives(this.value);
+                    });
+                }
+            });
+
+            // ─── ADD SEARCH BAR TO HEADER ──────────────────────────────
+            // Inject search input into header
+            document.addEventListener('DOMContentLoaded', function() {
+                const headerRight = document.querySelector('header .flex.items-center.gap-3');
+                if (headerRight) {
+                    const searchHtml = `
+                        <div class="relative hidden sm:block">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
+                            <input type="text" placeholder="Search archives..." 
+                                class="bg-slate-100 text-xs font-medium text-slate-800 pl-8 pr-3 py-1.5 rounded-full border border-slate-200 focus:outline-none focus:border-brand-accent focus:bg-white w-40 lg:w-56 transition">
+                        </div>
+                    `;
+                    headerRight.insertAdjacentHTML('afterbegin', searchHtml);
+
+                    // Reattach search listener
+                    const newSearch = headerRight.querySelector('input[type="text"]');
+                    if (newSearch) {
+                        newSearch.addEventListener('input', function() {
+                            window.filterArchives(this.value);
+                        });
+                    }
+                }
+            });
+
+            // ─── LOGOUT BUTTON ────────────────────────────────────────────
+            logoutBtn.addEventListener('click', logoutUser);
+
+            // ─── KEYBOARD SHORTCUTS ──────────────────────────────────────
+            document.addEventListener('keydown', function(e) {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault();
+                    const search = document.querySelector('input[type="text"]');
+                    if (search) { search.focus();
+                        search.select(); }
+                }
+                if (e.key === 'Escape') {
+                    const search = document.querySelector('input[type="text"]');
+                    if (search) search.blur();
+                }
+            });
+
+            // ─── INIT ──────────────────────────────────────────────────────
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('📄 [DOM] Ready – rendering static content...');
+
+                // 1. Render static content immediately (no waiting)
+                renderStaticContent();
+
+                // 2. Check session (non-blocking)
+                setTimeout(() => {
+                    checkSession();
+                }, 100);
+
+                console.log('✅ [INIT] Dashboard ready');
+            });
+
+            // ─── HANDLE CONFIG.JS LOAD FAILURE ──────────────────────────
+            // If config.js didn't load, we already used fallback
+            if (!CONFIG_LOADED) {
+                showMessage('ℹ️ Using fallback data – config.js not found. To fix, create config.js in the root folder.', 'warning');
+            }
+
+            console.log('🚀 [DASHBOARD] Ready – status:', CONFIG_LOADED ? 'config loaded' : 'fallback mode');
+
+        })();
+    </script>
 
 </body>
 </html>
