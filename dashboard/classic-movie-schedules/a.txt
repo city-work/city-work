@@ -1,1 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Classic Collection · ArchiveHub</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        brand: { bg: '#F8FAFC', surface: '#FFFFFF', dark: '#0F172A', accent: '#2563EB' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ─── SCROLLBAR ─── */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        /* ─── SPINNER ─── */
+        #loadingSpinner {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        #loadingSpinner .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #2563EB;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── STATUS BADGE ─── */
+        .status-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .status-error { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .status-waiting { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+
+        .role-badge-admin { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+        .role-badge-user { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+        /* ─── CARDS ─── */
+        .stat-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+        .stat-card:hover {
+            border-color: #94a3b8;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .section-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .section-card .section-header {
+            padding: 0.75rem 1.25rem;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-card .section-header i { color: #2563EB; }
+
+        /* ─── TABLES ─── */
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            padding: 0 4px 4px 4px;
+        }
+        .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .table-wrap th {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            font-weight: 600;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #64748b;
+            border-bottom: 2px solid #e2e8f0;
+            background: #fafafa;
+        }
+        .table-wrap td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+            vertical-align: middle;
+        }
+        .table-wrap tr:last-child td { border-bottom: none; }
+        .table-wrap tr:hover td { background: #f8fafc; }
+
+        /* ─── BADGES ─── */
+        .badge-avail { background: #dcfce7; color: #166534; }
+        .badge-limited { background: #fef9c3; color: #854d0e; }
+        .badge-low { background: #fee2e2; color: #991b1b; }
+
+        .indicator-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .indicator-dot.green { background: #22c55e; }
+        .indicator-dot.yellow { background: #eab308; }
+        .indicator-dot.red { background: #ef4444; }
+
+        /* ─── CALENDAR ─── */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.75rem;
+        }
+        @media (max-width: 1024px) { .calendar-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 640px) { .calendar-grid { grid-template-columns: repeat(1, 1fr); } }
+
+        .calendar-day-card {
+            min-height: 80px;
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .calendar-day-card:hover { border-color: #94a3b8; }
+        .calendar-day-card .day-header {
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            font-weight: 700;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #475569;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .calendar-day-card .day-body { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; }
+        .calendar-day-card .day-body .slot {
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: #1e293b;
+            background: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            line-height: 1.3;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ─── BUTTONS ─── */
+        .btn-add {
+            background: #0f172a;
+            color: white;
+            border: none;
+            padding: 0.25rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .btn-add:hover { background: #1e293b; transform: scale(1.02); }
+
+        .action-btn {
+            cursor: pointer;
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+        .action-btn:hover { color: #ef4444; }
+
+        /* ─── EDITABLE ─── */
+        [contenteditable="true"]:hover {
+            background-color: #f1f5f9;
+            outline: 1px dashed #cbd5e1;
+            border-radius: 4px;
+        }
+        [contenteditable="true"]:focus {
+            background-color: #ffffff;
+            outline: 2px solid #2563eb;
+            border-radius: 4px;
+        }
+
+        /* ─── NAV LINK ACTIVE ─── */
+        .nav-link-active {
+            background: #EFF6FF;
+            color: #2563EB;
+            border-color: #2563EB;
+        }
+
+        /* ─── FADE IN ─── */
+        .fade-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* ─── NOTE CHIP ─── */
+        .note-chip {
+            background: #f1f5f9;
+            padding: 0.1rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.65rem;
+            color: #475569;
+            display: inline-block;
+            max-width: 100%;
+            line-height: 1.4;
+        }
+        .status-badge {
+            padding: 0.1rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .nav-item {
+            padding: 0.6rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.15s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .nav-item:hover { background: #f1f5f9; color: #0f172a; }
+        .nav-item-active { background: #eef2ff; color: #4F46E5; }
+    </style>
+</head>
+
+<body class="h-screen w-screen bg-[#F1F5F9] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden text-slate-800 antialiased font-sans">
+
+    <!-- ─── LOADING SPINNER ─── -->
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+        <p class="text-sm font-medium text-slate-600">Loading Classic Collection...</p>
+    </div>
+
+<div class="bg-white w-full max-w-[1440px] h-full max-h-[920px] rounded-3xl shadow-2xl flex border border-slate-200/80 overflow-hidden relative">
+
+    <!-- ─── LEFT RAIL (White theme) ─── -->
+    <aside class="w-16 sm:w-20 bg-white border-r border-slate-200/80 flex flex-col items-center justify-between py-6 shrink-0 z-20">
+        <div class="flex flex-col items-center space-y-5 w-full">
+            <a href="../index.html" class="w-10 h-10 rounded-xl bg-[#0F172A] flex items-center justify-center text-white mb-2 shadow-md hover:scale-105 transition">
+                <i class="fa-solid fa-box-archive text-lg text-[#2563EB]"></i>
+            </a>
+            <a href="../index.html" class="w-10 h-10 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition flex items-center justify-center" title="Back to Dashboard">
+                <i class="fa-solid fa-arrow-left text-base"></i>
+            </a>
+            <span class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold border border-blue-100 mt-1" title="Classic Collection">
+                <i class="fa-solid fa-film"></i>
+            </span>
+        </div>
+        <div class="flex flex-col items-center space-y-3 w-full px-2">
+            <button id="logoutBtn" class="w-10 h-10 rounded-xl text-rose-400 hover:bg-rose-50 transition flex items-center justify-center" title="Sign Out">
+                <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ─── MAIN CONTENT ─── -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative bg-[#F8FAFC]">
+
+        <!-- ─── HEADER ─── -->
+        <header class="px-6 sm:px-8 py-4 bg-white/90 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between shrink-0 z-10 flex-wrap gap-2">
+            <div class="flex items-center space-x-3 flex-wrap min-w-0">
+                <a href="../index.html" class="text-lg font-extrabold tracking-tight text-[#0F172A] whitespace-nowrap">
+                    Archive<span class="text-[#2563EB]">Hub</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-[11px] font-semibold bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-100 whitespace-nowrap">Classic Collection</span>
+                <span id="statusBadge" class="text-[10px] font-medium px-2.5 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1 whitespace-nowrap">
+                    <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Checking...
+                </span>
+            </div>
+            <div class="flex items-center space-x-2 flex-wrap">
+                <button onclick="refreshData()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition flex items-center justify-center" title="Refresh">
+                    <i class="fa-solid fa-rotate-right text-xs" id="refresh-icon"></i>
+                </button>
+                <button id="logoutBtnHeader" class="text-xs font-semibold px-3 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 transition shadow-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i> <span class="hidden xs:inline">Sign Out</span>
+                </button>
+                <a href="../index.html" class="text-xs font-semibold px-3 py-1.5 rounded-full bg-[#0F172A] text-white hover:bg-slate-800 transition shadow-sm">Main Hub</a>
+            </div>
+        </header>
+
+        <!-- ─── BODY ─── -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar space-y-4 sm:space-y-5">
+
+            <!-- ─── STATUS BAR ─── -->
+            <div class="flex items-center justify-between text-xs text-slate-400 -mt-1">
+                <span id="sync-label"><i class="fa-regular fa-circle-check text-emerald-500 mr-1"></i> Connected to Supabase</span>
+                <span id="row-count-label" class="font-mono">Loading...</span>
+            </div>
+
+            <!-- ─── METRICS ─── -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div class="stat-card flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Titles</p>
+                        <h3 class="text-2xl font-black text-slate-900 mt-0.5" id="stat-total-shows">0</h3>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center text-lg border border-blue-100"><i class="fa-solid fa-film"></i></div>
+                </div>
+                <div class="stat-card flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Available Episodes</p>
+                        <h3 class="text-2xl font-black text-slate-900 mt-0.5" id="stat-avail-episodes">0</h3>
+                        <p class="text-[10px] text-slate-500 font-medium mt-0.5" id="stat-total-episodes">Out of 0 Total</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg border border-indigo-100"><i class="fa-solid fa-circle-play"></i></div>
+                </div>
+                <div class="stat-card flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Next Expiration</p>
+                        <h3 class="text-sm font-bold text-slate-900 mt-0.5 truncate max-w-[120px]" id="stat-next-expire">—</h3>
+                        <p class="text-[10px] text-amber-600 font-semibold mt-0.5 truncate max-w-[120px]" id="stat-next-expire-title">—</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg border border-amber-100"><i class="fa-regular fa-clock"></i></div>
+                </div>
+                <div class="stat-card flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</p>
+                        <h3 class="text-sm font-bold text-emerald-600 mt-0.5" id="stat-sheet-status">Ready</h3>
+                        <p class="text-[10px] text-slate-500 font-medium mt-0.5">Supabase Live</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg border border-emerald-100"><i class="fa-solid fa-signal"></i></div>
+                </div>
+            </div>
+
+            <!-- ─── COLLECTION & WEEKEND ─── -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+
+                <!-- Collection Table (2/3) -->
+                <div class="lg:col-span-2 section-card flex flex-col">
+                    <div class="section-header">
+                        <i class="fa-solid fa-list"></i> Classics Collection
+                        <span class="ml-auto text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">click cell to edit</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Titles</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Available</th>
+                                    <th class="text-center">Indicator</th>
+                                    <th class="text-right">Available Until</th>
+                                    <th class="text-center" style="width:30px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="collection-body">
+                                <tr><td colspan="7" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-4 py-2.5 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+                        <button id="addTitleBtn" class="btn-add">➕ Add Title</button>
+                    </div>
+                </div>
+
+                <!-- Weekend Schedule (1/3) -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <i class="fa-regular fa-calendar"></i> Weekend Schedule
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-star text-amber-400 text-[10px]"></i> Saturday</span>
+                                <button onclick="addScheduleItem('Saturday')" class="text-[10px] text-blue-600 hover:underline font-semibold">+ Add</button>
+                            </div>
+                            <div id="schedule-sat" class="space-y-1.5"></div>
+                        </div>
+                        <div class="border-t border-slate-100 pt-3">
+                            <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-star text-amber-400 text-[10px]"></i> Sunday</span>
+                                <button onclick="addScheduleItem('Sunday')" class="text-[10px] text-blue-600 hover:underline font-semibold">+ Add</button>
+                            </div>
+                            <div id="schedule-sun" class="space-y-1.5"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ─── TURNOVERS ─── -->
+            <div class="section-card flex flex-col w-full">
+                <div class="section-header">
+                    <i class="fa-regular fa-note-sticky"></i> Turnovers
+                    <span class="ml-auto text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">full visible list</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:28%;">Titles</th>
+                                <th style="width:20%;">Start Date</th>
+                                <th style="width:20%;">End Date</th>
+                                <th style="width:27%;">Notes</th>
+                                <th class="text-center" style="width:5%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="turnovers-body">
+                            <tr><td colspan="5" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-4 py-2.5 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <button id="addTurnoverBtn" class="btn-add">➕ Add Turnover</button>
+                    <span class="text-[10px] text-slate-400 font-mono" id="turnover-row-count">0 rows</span>
+                </div>
+            </div>
+
+            <!-- ─── CALENDAR ─── -->
+            <div class="section-card w-full">
+                <div class="section-header">
+                    <i class="fa-regular fa-calendar-circle-plus"></i> Weekly Calendar
+                    <span class="ml-auto text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">click to edit</span>
+                </div>
+                <div class="p-4">
+                    <div class="calendar-grid" id="calendar-grid"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // ─── SUPABASE CONFIG ──────────────────────────────────────────────
+    const SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
+
+    let supabase = null;
+    try {
+        if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            console.warn('Supabase library not loaded');
+        }
+    } catch (e) {
+        console.warn('Failed to create Supabase client:', e.message);
+    }
+
+    // ─── DOM REFS ──────────────────────────────────────────────────────
+    const $ = id => document.getElementById(id);
+    const statusBadge = $('statusBadge');
+    const syncLabel = $('sync-label');
+    const loadingSpinner = $('loadingSpinner');
+    const logoutBtn = $('logoutBtn');
+    const logoutBtnHeader = $('logoutBtnHeader');
+    const refreshIcon = $('refresh-icon');
+    const statTotalShows = $('stat-total-shows');
+    const statAvailEpisodes = $('stat-avail-episodes');
+    const statTotalEpisodes = $('stat-total-episodes');
+    const statNextExpire = $('stat-next-expire');
+    const statNextExpireTitle = $('stat-next-expire-title');
+    const statSheetStatus = $('stat-sheet-status');
+    const collectionBody = $('collection-body');
+    const scheduleSat = $('schedule-sat');
+    const scheduleSun = $('schedule-sun');
+    const turnoversBody = $('turnovers-body');
+    const calendarGrid = $('calendar-grid');
+    const rowCountLabel = $('row-count-label');
+    const turnoverRowCount = $('turnover-row-count');
+
+    // ─── STATE ─────────────────────────────────────────────────────────
+    let userRole = 'user';
+    let userEmail = 'Unknown';
+    let titleData = [];
+    let weekendData = [];
+    let turnoverData = [];
+    let calendarData = [];
+    let editingInProgress = false;
+
+    // ─── HELPERS ──────────────────────────────────────────────────────
+    function setStatus(text, type) {
+        const colors = {
+            ok: 'bg-green-50 text-green-700 border-green-200',
+            error: 'bg-red-50 text-red-700 border-red-200',
+            warning: 'bg-amber-50 text-amber-700 border-amber-200',
+            info: 'bg-blue-50 text-blue-700 border-blue-200'
+        };
+        const dots = {
+            ok: 'bg-green-400',
+            error: 'bg-red-400',
+            warning: 'bg-amber-400',
+            info: 'bg-blue-400'
+        };
+        statusBadge.className = `text-[10px] font-medium px-2.5 py-0.5 rounded-full border flex items-center gap-1 whitespace-nowrap ${colors[type] || colors.info}`;
+        statusBadge.innerHTML = `<span class="inline-block w-2 h-2 rounded-full ${dots[type] || 'bg-blue-400'}"></span> ${text}`;
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr || dateStr === '—') return '—';
+        try {
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } catch { return dateStr; }
+    }
+
+    function esc(s) {
+        if (s == null || s === '') return '—';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getStatusBadgeClass(status) {
+        const s = (status || '').toLowerCase();
+        if (s === 'available' || s === 'active') return 'badge-avail';
+        if (s === 'limited' || s === 'expiring') return 'badge-limited';
+        return 'badge-low';
+    }
+
+    function getIndicatorDot(status) {
+        const s = (status || '').toLowerCase();
+        if (s === 'available' || s === 'active') return 'green';
+        if (s === 'limited' || s === 'expiring') return 'yellow';
+        return 'red';
+    }
+
+    // ─── AUTH ──────────────────────────────────────────────────────────
+    async function checkSession() {
+        loadingSpinner.style.display = 'flex';
+        setStatus('Checking...', 'info');
+
+        if (!supabase) {
+            setStatus('⚠️ No Supabase', 'error');
+            loadingSpinner.style.display = 'none';
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase.auth.getSession();
+            if (error) throw error;
+            const session = data?.session;
+
+            if (!session || !session.user) {
+                setStatus('🔓 Not logged in', 'error');
+                loadingSpinner.style.display = 'none';
+                setTimeout(() => { window.location.href = '../../index.html'; }, 1500);
+                return;
+            }
+
+            userEmail = session.user.email;
+            let role = 'user';
+            try {
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+                if (!profileError && profile?.role) role = profile.role;
+                else if (!profile) {
+                    await supabase.from('profiles').insert({ id: session.user.id, email: session.user.email, role: 'user' });
+                }
+            } catch (e) { console.warn('Profile fetch error:', e.message); }
+
+            userRole = role;
+            const roleDisplay = role === 'admin' ? '👑 Admin' : '👤 User';
+            setStatus(`✅ ${roleDisplay}`, 'ok');
+
+            localStorage.setItem('archivehub_user', JSON.stringify({
+                id: session.user.id,
+                email: session.user.email,
+                role: role,
+                session: session
+            }));
+
+            await fetchAllData();
+
+        } catch (err) {
+            console.error('Session error:', err);
+            setStatus('❌ Connection error', 'error');
+        } finally {
+            loadingSpinner.style.display = 'none';
+        }
+    }
+
+    // ─── FETCH DATA ──────────────────────────────────────────────────
+    async function fetchAllData() {
+        if (!supabase) return;
+
+        try {
+            const [titlesRes, weekendRes, turnoversRes, calendarRes] = await Promise.all([
+                supabase.from('classic_titles').select('*').order('title'),
+                supabase.from('classic_weekend_schedule').select('*').order('day', { ascending: false }),
+                supabase.from('classic_turnovers').select('*').order('start_date'),
+                supabase.from('classic_episodes').select('*').order('air_date')
+            ]);
+
+            if (titlesRes.error) throw titlesRes.error;
+            if (weekendRes.error) throw weekendRes.error;
+            if (turnoversRes.error) throw turnoversRes.error;
+            if (calendarRes.error) throw calendarRes.error;
+
+            titleData = titlesRes.data || [];
+            weekendData = weekendRes.data || [];
+            turnoverData = turnoversRes.data || [];
+            calendarData = calendarRes.data || [];
+
+            renderAll();
+
+        } catch (err) {
+            console.error('Fetch error:', err);
+            setStatus('⚠️ Error loading', 'error');
+            syncLabel.textContent = '⚠️ Error loading data';
+        }
+    }
+
+    // ─── RENDER ALL ──────────────────────────────────────────────────
+    function renderAll() {
+        renderMetrics();
+        renderCollection();
+        renderSchedule();
+        renderTurnovers();
+        renderCalendar();
+        syncLabel.textContent = `✅ ${titleData.length} titles · ${calendarData.length} episodes from Supabase`;
+        rowCountLabel.textContent = `${titleData.length} titles`;
+    }
+
+    function renderMetrics() {
+        const totalShows = titleData.length;
+        let availEpisodes = 0;
+        let totalEpisodes = 0;
+        let nextExpire = '—';
+        let nextExpireTitle = '—';
+
+        titleData.forEach(item => {
+            availEpisodes += parseInt(item.available_episodes) || 0;
+            totalEpisodes += parseInt(item.total_episodes) || 0;
+            if (item.available_until && (nextExpire === '—' || item.available_until < nextExpire)) {
+                nextExpire = item.available_until;
+                nextExpireTitle = item.title;
+            }
+        });
+
+        statTotalShows.textContent = totalShows;
+        statAvailEpisodes.textContent = availEpisodes;
+        statTotalEpisodes.textContent = `Out of ${totalEpisodes} Total`;
+        statNextExpire.textContent = formatDate(nextExpire);
+        statNextExpireTitle.textContent = nextExpireTitle;
+        statSheetStatus.textContent = totalShows > 0 ? '✅ Live' : '—';
+    }
+
+    function renderCollection() {
+        if (!titleData.length) {
+            collectionBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 text-sm italic">No titles yet. Click "Add Title" to create one.</td></tr>`;
+            return;
+        }
+
+        collectionBody.innerHTML = titleData.map((item) => {
+            const badgeClass = getStatusBadgeClass(item.status);
+            const dot = getIndicatorDot(item.status);
+            return `
+                <tr class="fade-in">
+                    <td class="font-bold text-slate-800 editable-cell" contenteditable="true" data-field="title" data-id="${item.id}">${esc(item.title)}</td>
+                    <td class="text-center font-semibold editable-cell" contenteditable="true" data-field="total_episodes" data-id="${item.id}">${item.total_episodes || 0}</td>
+                    <td class="text-center"><span class="status-badge ${badgeClass} editable-cell" contenteditable="true" data-field="status" data-id="${item.id}">${esc(item.status || 'Low')}</span></td>
+                    <td class="text-center font-bold text-slate-700 editable-cell" contenteditable="true" data-field="available_episodes" data-id="${item.id}">${item.available_episodes || 0}</td>
+                    <td class="text-center"><span class="indicator-dot ${dot}"></span></td>
+                    <td class="text-right text-slate-500 font-medium editable-cell" contenteditable="true" data-field="available_until" data-id="${item.id}">${item.available_until || '—'}</td>
+                    <td class="text-center"><i class="fa-solid fa-trash action-btn text-xs" onclick="deleteTitle('${item.id}')"></i></td>
+                </tr>
+            `;
+        }).join('');
+
+        attachCellEvents('collection-body', 'classic_titles');
+    }
+
+    function renderSchedule() {
+        const satItems = weekendData.filter(w => w.day === 'Saturday');
+        const sunItems = weekendData.filter(w => w.day === 'Sunday');
+
+        scheduleSat.innerHTML = satItems.length
+            ? satItems.map((item) => `
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-700 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                    <span class="editable-cell flex-1" contenteditable="true" data-schedule-id="${item.id}" data-field="time_slot">${esc(item.time_slot)} – ${esc(item.title)}</span>
+                    <i class="fa-solid fa-xmark action-btn text-xs ml-2" onclick="deleteScheduleItem('${item.id}')"></i>
+                </div>
+            `).join('')
+            : '<div class="text-xs text-slate-400 italic">No Saturday items</div>';
+
+        scheduleSun.innerHTML = sunItems.length
+            ? sunItems.map((item) => `
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-700 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                    <span class="editable-cell flex-1" contenteditable="true" data-schedule-id="${item.id}" data-field="time_slot">${esc(item.time_slot)} – ${esc(item.title)}</span>
+                    <i class="fa-solid fa-xmark action-btn text-xs ml-2" onclick="deleteScheduleItem('${item.id}')"></i>
+                </div>
+            `).join('')
+            : '<div class="text-xs text-slate-400 italic">No Sunday items</div>';
+
+        attachScheduleEvents();
+    }
+
+    function renderTurnovers() {
+        if (!turnoverData.length) {
+            turnoversBody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400 text-sm italic">No turnover entries. Click "Add Turnover" to create one.</td></tr>`;
+            turnoverRowCount.textContent = '0 rows';
+            return;
+        }
+
+        turnoversBody.innerHTML = turnoverData.map((item) => `
+            <tr class="fade-in">
+                <td class="font-bold text-slate-800 editable-cell" contenteditable="true" data-tfield="title" data-tid="${item.id}">${esc(item.title)}</td>
+                <td class="text-slate-500 font-medium editable-cell" contenteditable="true" data-tfield="start_date" data-tid="${item.id}">${item.start_date || '—'}</td>
+                <td class="text-slate-500 font-medium editable-cell" contenteditable="true" data-tfield="end_date" data-tid="${item.id}">${item.end_date || '—'}</td>
+                <td><span class="note-chip editable-cell" contenteditable="true" data-tfield="notes" data-tid="${item.id}">${esc(item.notes || '')}</span></td>
+                <td class="text-center"><i class="fa-solid fa-trash action-btn text-xs" onclick="deleteTurnover('${item.id}')"></i></td>
+            </tr>
+        `).join('');
+
+        turnoverRowCount.textContent = `${turnoverData.length} rows`;
+        attachTurnoverEvents();
+    }
+
+    function renderCalendar() {
+        const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const today = new Date();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+
+        calendarGrid.innerHTML = daysOfWeek.map((day, idx) => {
+            const date = new Date(startOfWeek);
+            date.setDate(startOfWeek.getDate() + idx);
+            const dateStr = date.toISOString().split('T')[0];
+            const dayEvents = calendarData.filter(e => e.air_date === dateStr);
+
+            return `
+                <div class="calendar-day-card">
+                    <div class="day-header">
+                        <span>${day}</span>
+                        <span class="text-[10px] text-slate-400">${date.getDate()}</span>
+                    </div>
+                    <div class="day-body">
+                        ${dayEvents.map(e => `
+                            <div class="slot flex items-center justify-between">
+                                <span class="editable-cell" contenteditable="true" data-cal-id="${e.id}" data-field="episode_name">${esc(e.episode_name || e.show_title || 'Event')}</span>
+                                <i class="fa-solid fa-xmark action-btn text-[10px]" onclick="deleteCalendarItem('${e.id}')"></i>
+                            </div>
+                        `).join('')}
+                        <button onclick="addCalendarItem('${dateStr}')" class="text-[10px] text-blue-600 hover:underline font-semibold text-left">+ Add</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        attachCalendarEvents();
+    }
+
+    // ─── CELL EDITING ────────────────────────────────────────────────
+    function attachCellEvents(tableId, tableName) {
+        const cells = document.querySelectorAll(`#${tableId} [contenteditable="true"]`);
+        cells.forEach(cell => {
+            cell.removeEventListener('blur', handleCellBlur);
+            cell.addEventListener('blur', handleCellBlur);
+        });
+    }
+
+    function handleCellBlur() {
+        const id = this.getAttribute('data-id');
+        const field = this.getAttribute('data-field');
+        if (!id || !field) return;
+        const value = this.innerText.trim();
+        updateSupabaseCell('classic_titles', id, field, value);
+    }
+
+    function attachScheduleEvents() {
+        const cells = document.querySelectorAll('[data-schedule-id]');
+        cells.forEach(cell => {
+            cell.removeEventListener('blur', handleScheduleBlur);
+            cell.addEventListener('blur', handleScheduleBlur);
+        });
+    }
+
+    function handleScheduleBlur() {
+        const id = this.getAttribute('data-schedule-id');
+        const value = this.innerText.trim();
+        const parts = value.split(' – ');
+        const timeSlot = parts[0] || '';
+        const title = parts[1] || '';
+        if (timeSlot) updateSupabaseCell('classic_weekend_schedule', id, 'time_slot', timeSlot);
+        if (title) updateSupabaseCell('classic_weekend_schedule', id, 'title', title);
+    }
+
+    function attachTurnoverEvents() {
+        const cells = document.querySelectorAll('[data-tfield]');
+        cells.forEach(cell => {
+            cell.removeEventListener('blur', handleTurnoverBlur);
+            cell.addEventListener('blur', handleTurnoverBlur);
+        });
+    }
+
+    function handleTurnoverBlur() {
+        const id = this.getAttribute('data-tid');
+        const field = this.getAttribute('data-tfield');
+        if (!id || !field) return;
+        const value = this.innerText.trim();
+        updateSupabaseCell('classic_turnovers', id, field, value);
+    }
+
+    function attachCalendarEvents() {
+        const cells = document.querySelectorAll('[data-cal-id]');
+        cells.forEach(cell => {
+            cell.removeEventListener('blur', handleCalendarBlur);
+            cell.addEventListener('blur', handleCalendarBlur);
+        });
+    }
+
+    function handleCalendarBlur() {
+        const id = this.getAttribute('data-cal-id');
+        const field = this.getAttribute('data-field');
+        if (!id || !field) return;
+        const value = this.innerText.trim();
+        updateSupabaseCell('classic_episodes', id, field, value);
+    }
+
+    async function updateSupabaseCell(table, id, field, value) {
+        if (!supabase || editingInProgress) return;
+        editingInProgress = true;
+        try {
+            const { error } = await supabase
+                .from(table)
+                .update({ [field]: value, updated_at: new Date().toISOString() })
+                .eq('id', id);
+            if (error) throw error;
+            console.log(`✅ Updated ${table}.${field} = ${value}`);
+        } catch (err) {
+            console.error('Update error:', err);
+            setStatus('⚠️ Save failed', 'error');
+        } finally {
+            editingInProgress = false;
+        }
+    }
+
+    // ─── ADD / DELETE ─────────────────────────────────────────────────
+    window.addTitle = async function() {
+        if (!supabase) return;
+        const newTitle = {
+            title: 'New Title',
+            total_episodes: 0,
+            available_episodes: 0,
+            status: 'Active',
+            available_until: null
+        };
+        const { data, error } = await supabase.from('classic_titles').insert(newTitle).select();
+        if (error) { console.error(error); return; }
+        if (data) titleData.push(data[0]);
+        renderAll();
+    };
+
+    window.deleteTitle = async function(id) {
+        if (!supabase || !confirm('Delete this title?')) return;
+        const { error } = await supabase.from('classic_titles').delete().eq('id', id);
+        if (error) { console.error(error); return; }
+        titleData = titleData.filter(t => t.id !== id);
+        renderAll();
+    };
+
+    window.addScheduleItem = async function(day) {
+        if (!supabase) return;
+        const newItem = {
+            day: day,
+            time_slot: 'New Time',
+            title: 'New Show'
+        };
+        const { data, error } = await supabase.from('classic_weekend_schedule').insert(newItem).select();
+        if (error) { console.error(error); return; }
+        if (data) weekendData.push(data[0]);
+        renderSchedule();
+    };
+
+    window.deleteScheduleItem = async function(id) {
+        if (!supabase) return;
+        const { error } = await supabase.from('classic_weekend_schedule').delete().eq('id', id);
+        if (error) { console.error(error); return; }
+        weekendData = weekendData.filter(w => w.id !== id);
+        renderSchedule();
+    };
+
+    window.addTurnover = async function() {
+        if (!supabase) return;
+        const newItem = {
+            title: 'New Turnover',
+            start_date: null,
+            end_date: null,
+            notes: ''
+        };
+        const { data, error } = await supabase.from('classic_turnovers').insert(newItem).select();
+        if (error) { console.error(error); return; }
+        if (data) turnoverData.push(data[0]);
+        renderTurnovers();
+    };
+
+    window.deleteTurnover = async function(id) {
+        if (!supabase) return;
+        const { error } = await supabase.from('classic_turnovers').delete().eq('id', id);
+        if (error) { console.error(error); return; }
+        turnoverData = turnoverData.filter(t => t.id !== id);
+        renderTurnovers();
+    };
+
+    window.addCalendarItem = async function(date) {
+        if (!supabase) return;
+        const newItem = {
+            air_date: date,
+            episode_name: 'New Event',
+            show_title: 'Classic Movie',
+            status: false
+        };
+        const { data, error } = await supabase.from('classic_episodes').insert(newItem).select();
+        if (error) { console.error(error); return; }
+        if (data) calendarData.push(data[0]);
+        renderCalendar();
+    };
+
+    window.deleteCalendarItem = async function(id) {
+        if (!supabase) return;
+        const { error } = await supabase.from('classic_episodes').delete().eq('id', id);
+        if (error) { console.error(error); return; }
+        calendarData = calendarData.filter(c => c.id !== id);
+        renderCalendar();
+    };
+
+    // ─── REFRESH ──────────────────────────────────────────────────────
+    window.refreshData = function() {
+        if (refreshIcon) refreshIcon.classList.add('fa-spin');
+        fetchAllData().finally(() => {
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+        });
+    };
+
+    // ─── LOGOUT ──────────────────────────────────────────────────────
+    async function logoutUser() {
+        try { if (supabase) await supabase.auth.signOut(); } catch (_) {}
+        localStorage.removeItem('archivehub_user');
+        window.location.href = '../../index.html';
+    }
+
+    // ─── ATTACH EVENTS ──────────────────────────────────────────────
+    document.getElementById('addTitleBtn').addEventListener('click', window.addTitle);
+    document.getElementById('addTurnoverBtn').addEventListener('click', window.addTurnover);
+    if (logoutBtn) logoutBtn.addEventListener('click', logoutUser);
+    if (logoutBtnHeader) logoutBtnHeader.addEventListener('click', logoutUser);
+
+    // ─── INIT ────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+        loadingSpinner.style.display = 'flex';
+        if (supabase) {
+            checkSession();
+        } else {
+            setStatus('⚠️ No Supabase', 'error');
+            loadingSpinner.style.display = 'none';
+        }
+    });
+
+    console.log('📽️ Classic Collection – Dashboard theme + Supabase');
+})();
+</script>
+
+</body>
+</html>
