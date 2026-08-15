@@ -56,6 +56,26 @@
         .nav-item:hover { background: #f1f5f9; color: #0f172a; }
         .nav-item-active { background: #eef2ff; color: #4F46E5; }
 
+        .nav-stat {
+            padding: 0.4rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            cursor: default;
+        }
+        .nav-stat .stat-value {
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .nav-stat .stat-value.songs { color: #059669; }
+        .nav-stat .stat-value.spel { color: #475569; }
+        .nav-stat .stat-value.events { color: #2563eb; }
+
         .date-card {
             padding: 1rem 1.25rem;
             background: white;
@@ -74,8 +94,8 @@
         }
 
         .priority-filter {
-            padding: 0.3rem 0.75rem;
-            border-radius: 0.5rem;
+            padding: 0.3rem 0.9rem;
+            border-radius: 0.6rem;
             font-size: 0.75rem;
             font-weight: 700;
             cursor: pointer;
@@ -85,7 +105,8 @@
         .priority-filter:hover { transform: scale(1.05); }
         .priority-filter-active {
             border-color: #4F46E5;
-            background: #eef2ff;
+            background: #eef2ff !important;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
         }
 
         .priority-a { background: #fee2e2; color: #991b1b; }
@@ -200,6 +221,123 @@
             border-color: #ef4444;
             transform: scale(1.02);
         }
+
+        /* ─── YEAR/MONTH/DATE LAYOUT ─── */
+        .year-section {
+            margin-bottom: 0.5rem;
+        }
+        .month-section {
+            margin-bottom: 0.25rem;
+        }
+        .date-card-compact {
+            padding: 0.6rem 0.75rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.6rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .date-card-compact:hover {
+            border-color: #4F46E5;
+            box-shadow: 0 2px 8px -4px rgba(79, 70, 229, 0.12);
+            transform: translateX(4px);
+        }
+
+        .sidebar-divider {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 0.5rem 0;
+        }
+
+        .sidebar-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.25rem 1rem;
+        }
+
+        /* ─── LEFT RAIL (Full Menu) ─── */
+        .left-rail-full {
+            width: 200px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 1.25rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .left-rail-full .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0 0.5rem 0.75rem 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0.5rem;
+        }
+        .left-rail-full .brand .icon-box {
+            width: 32px;
+            height: 32px;
+            background: #0f172a;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .left-rail-full .brand h2 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .left-rail-full .brand .badge {
+            font-size: 0.45rem;
+            background: #eef2ff;
+            color: #4F46E5;
+            padding: 0.1rem 0.4rem;
+            border-radius: 999px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        @media (max-width: 768px) {
+            .left-rail-full {
+                width: 56px;
+                padding: 0.75rem 0.4rem;
+            }
+            .left-rail-full .brand h2,
+            .left-rail-full .brand .badge,
+            .left-rail-full .nav-item span,
+            .left-rail-full .nav-stat span,
+            .left-rail-full .sidebar-label,
+            .left-rail-full .nav-stat .stat-value {
+                display: none;
+            }
+            .left-rail-full .nav-item {
+                justify-content: center;
+                padding: 0.5rem;
+            }
+            .left-rail-full .nav-stat {
+                justify-content: center;
+                padding: 0.3rem 0.5rem;
+            }
+            .left-rail-full .nav-stat .stat-value {
+                display: none;
+            }
+            .left-rail-full .brand {
+                padding: 0 0.2rem 0.5rem 0.2rem;
+                justify-content: center;
+            }
+            .left-rail-full .brand .icon-box {
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
+            }
+        }
     </style>
 </head>
 
@@ -213,23 +351,60 @@
 
 <div class="bg-white w-full max-w-[1440px] h-full max-h-[920px] rounded-3xl shadow-2xl flex border border-slate-200/80 overflow-hidden relative">
 
-    <!-- ═══ LEFT RAIL ═══ -->
-    <aside class="w-16 sm:w-20 bg-white border-r border-slate-200/80 flex flex-col items-center justify-between py-6 shrink-0 z-20">
-        <div class="flex flex-col items-center space-y-5 w-full">
-            <a href="../index.html" class="w-10 h-10 rounded-xl bg-[#0F172A] flex items-center justify-center text-white mb-2 shadow-md hover:scale-105 transition">
-                <i class="fa-solid fa-box-archive text-lg text-[#4F46E5]"></i>
-            </a>
-            <a href="../index.html" class="w-10 h-10 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition flex items-center justify-center" title="Back to Dashboard">
-                <i class="fa-solid fa-arrow-left text-base"></i>
-            </a>
-            <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold border border-indigo-100 mt-1" title="Bravo Masterlist">
-                <i class="fa-solid fa-clipboard-list"></i>
-            </span>
+    <!-- ═══ LEFT RAIL (FULL MENU) ═══ -->
+    <aside class="left-rail-full custom-scrollbar">
+
+        <!-- Brand -->
+        <div class="brand">
+            <div class="icon-box"><i class="fa-solid fa-box-archive"></i></div>
+            <h2>Archive<span style="color:#4F46E5;">Hub</span></h2>
+            <span class="badge">Bravo</span>
         </div>
-        <div class="flex flex-col items-center space-y-3 w-full px-2">
-            <button id="logoutBtn" class="w-10 h-10 rounded-xl text-rose-400 hover:bg-rose-50 transition flex items-center justify-center" title="Sign Out">
-                <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
-            </button>
+
+        <!-- Menu -->
+        <div class="sidebar-label">Menu</div>
+        <div class="space-y-1">
+            <div onclick="switchView('masterlist')" class="nav-item nav-item-active" id="nav-masterlist">
+                <i class="fa-solid fa-list-check text-sm w-5 text-center"></i>
+                <span>Masterlist</span>
+            </div>
+            <div onclick="switchView('priority')" class="nav-item" id="nav-priority">
+                <i class="fa-solid fa-flag text-sm w-5 text-center"></i>
+                <span>Priority</span>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider" />
+
+        <!-- Stats -->
+        <div class="sidebar-label">Stats</div>
+        <div class="space-y-0.5">
+            <div class="nav-stat">
+                <span><i class="fa-solid fa-list text-sm w-5 text-center text-indigo-500"></i> Segments</span>
+                <span class="stat-value" id="stat-total">—</span>
+            </div>
+            <div class="nav-stat">
+                <span><i class="fa-solid fa-music text-sm w-5 text-center text-emerald-500"></i> Songs</span>
+                <span class="stat-value songs" id="stat-songs">—</span>
+            </div>
+            <div class="nav-stat">
+                <span><i class="fa-solid fa-microphone text-sm w-5 text-center text-slate-500"></i> SPEL</span>
+                <span class="stat-value spel" id="stat-spel">—</span>
+            </div>
+            <div class="nav-stat">
+                <span><i class="fa-solid fa-calendar-day text-sm w-5 text-center text-blue-500"></i> Events</span>
+                <span class="stat-value events" id="stat-events">—</span>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider" />
+
+        <!-- Sign Out -->
+        <div class="nav-item" onclick="logoutUser()" style="color:#ef4444; cursor:pointer; margin-top:auto;">
+            <i class="fa-solid fa-sign-out-alt text-sm w-5 text-center" style="color:#ef4444;"></i>
+            <span>Sign Out</span>
         </div>
     </aside>
 
@@ -239,11 +414,7 @@
         <!-- ─── HEADER ─── -->
         <header class="px-6 sm:px-8 py-4 bg-white/90 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between shrink-0 z-10">
             <div class="flex items-center space-x-3">
-                <a href="../index.html" class="text-lg font-extrabold tracking-tight text-[#0F172A]">
-                    Archive<span class="text-[#4F46E5]">Hub</span>
-                </a>
-                <span class="text-slate-300">/</span>
-                <span class="text-[11px] font-semibold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-100">Bravo Masterlist</span>
+                <span class="text-sm font-medium text-slate-500" id="userInfo">Checking session...</span>
                 <span id="statusBadge" class="status-badge-top status-waiting">
                     <span class="status-dot amber"></span> Connecting...
                 </span>
@@ -252,80 +423,50 @@
                 <button onclick="refreshData()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition flex items-center justify-center" title="Refresh">
                     <i class="fa-solid fa-rotate-right text-xs" id="refresh-icon"></i>
                 </button>
-                <button id="logoutBtnHeader" class="btn-signout">
-                    <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i> <span class="hidden xs:inline">Sign Out</span>
-                </button>
                 <a href="../index.html" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-[#0F172A] text-white hover:bg-slate-800 transition shadow-sm">Main Hub</a>
             </div>
         </header>
 
-        <!-- ─── BODY (Sidebar + Content) ─── -->
-        <div class="flex-1 flex overflow-hidden">
+        <!-- ─── CONTENT ─── -->
+        <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
 
-            <!-- ─── LEFT NAV ═══ -->
-            <nav class="w-48 sm:w-56 bg-white border-r border-slate-200/80 p-4 shrink-0 overflow-y-auto custom-scrollbar">
-                <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-2">Menu</h2>
-                <div class="space-y-1">
-                    <div onclick="switchView('masterlist')" class="nav-item nav-item-active" id="nav-masterlist">
-                        <i class="fa-solid fa-list-check text-sm w-5 text-center"></i>
-                        <span>Masterlist</span>
-                    </div>
-                    <div onclick="switchView('priority')" class="nav-item" id="nav-priority">
-                        <i class="fa-solid fa-flag text-sm w-5 text-center"></i>
-                        <span>Priority</span>
-                    </div>
+            <!-- ═══ MASTERLIST VIEW ═══ -->
+            <div id="masterlist-view">
+                <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">📋 Bravo Masterlist</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6" id="date-list">
+                    <div class="col-span-full text-center text-slate-400 text-sm py-8">⏳ Loading dates...</div>
                 </div>
+            </div>
 
-                <!-- Priority Filter -->
-                <div class="mt-4 pt-4 border-t border-slate-200/60">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Filter by Priority</p>
-                    <div class="flex flex-col space-y-1.5">
-                        <div onclick="filterPriority('all')" class="priority-filter priority-filter-active text-xs text-center" data-priority="all" style="background: #f1f5f9; color: #475569;">
+            <!-- ═══ PRIORITY VIEW ═══ -->
+            <div id="priority-view" class="hidden">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">🏷️ Priority Groups</h2>
+                        <p class="text-xs text-slate-500 mt-0.5" id="priorityInfo">Entries grouped by priority level.</p>
+                    </div>
+                    <!-- ─── FILTER BUTTONS ─── -->
+                    <div class="flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200/80 shadow-sm">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Filter:</span>
+                        <div onclick="filterPriority('all')" class="priority-filter priority-filter-active text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="all" style="background: #f1f5f9; color: #475569; font-weight:600;">
                             All
                         </div>
-                        <div onclick="filterPriority('A')" class="priority-filter text-xs text-center" data-priority="A" style="background: #fee2e2; color: #991b1b;">
-                            🔴 A – Top Priority
+                        <div onclick="filterPriority('A')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="A" style="background: #fee2e2; color: #991b1b; font-weight:600;">
+                            🔴 A
                         </div>
-                        <div onclick="filterPriority('B')" class="priority-filter text-xs text-center" data-priority="B" style="background: #fef3c7; color: #92400e;">
-                            🟡 B – Mid Priority
+                        <div onclick="filterPriority('B')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="B" style="background: #fef3c7; color: #92400e; font-weight:600;">
+                            🟡 B
                         </div>
-                        <div onclick="filterPriority('C')" class="priority-filter text-xs text-center" data-priority="C" style="background: #dbeafe; color: #1e40af;">
-                            🔵 C – Lower Priority
+                        <div onclick="filterPriority('C')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="C" style="background: #dbeafe; color: #1e40af; font-weight:600;">
+                            🔵 C
                         </div>
                     </div>
                 </div>
-
-                <!-- Stats -->
-                <div class="mt-6 pt-4 border-t border-slate-200/60 space-y-1 px-2">
-                    <div class="flex justify-between text-xs"><span class="text-slate-500">Segments</span><span class="font-bold" id="stat-total">—</span></div>
-                    <div class="flex justify-between text-xs"><span class="text-slate-500">Songs</span><span class="font-bold text-emerald-600" id="stat-songs">—</span></div>
-                    <div class="flex justify-between text-xs"><span class="text-slate-500">SPEL</span><span class="font-bold text-slate-700" id="stat-spel">—</span></div>
-                    <div class="flex justify-between text-xs"><span class="text-slate-500">Events</span><span class="font-bold text-blue-600" id="stat-events">—</span></div>
+                <div id="priority-groups" class="mt-4 space-y-4">
+                    <div class="text-center text-slate-400 text-sm py-8">⏳ Loading...</div>
                 </div>
-            </nav>
-
-            <!-- ─── RIGHT CONTENT ─── -->
-            <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
-
-                <!-- ═══ MASTERLIST VIEW ═══ -->
-                <div id="masterlist-view">
-                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">📋 Bravo Masterlist</h2>
-                    <p class="text-xs text-slate-500 mt-0.5" id="userInfo">Checking session...</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6" id="date-list">
-                        <div class="col-span-full text-center text-slate-400 text-sm py-8">⏳ Loading dates...</div>
-                    </div>
-                </div>
-
-                <!-- ═══ PRIORITY VIEW ═══ -->
-                <div id="priority-view" class="hidden">
-                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">🏷️ Priority Groups</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">Entries grouped by priority level.</p>
-                    <div id="priority-groups" class="mt-6 space-y-4">
-                        <div class="text-center text-slate-400 text-sm py-8">⏳ Loading...</div>
-                    </div>
-                </div>
-
             </div>
+
         </div>
     </div>
 </div>
@@ -355,7 +496,7 @@
     // ─── SUPABASE CONFIG (Embedded) ──────────────────────────────
     const SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
-    const TABLE_NAME = 'bravo_masterlist';   // <-- Table name
+    const TABLE_NAME = 'bravo_masterlist';
 
     let supabase = null;
     try {
@@ -381,9 +522,8 @@
     const statEvents = $('stat-events');
     const statusBadge = $('statusBadge');
     const userInfo = $('userInfo');
+    const priorityInfo = $('priorityInfo');
     const loadingSpinner = $('loadingSpinner');
-    const logoutBtn = $('logoutBtn');
-    const logoutBtnHeader = $('logoutBtnHeader');
     const refreshIcon = $('refresh-icon');
 
     // ─── STATE ─────────────────────────────────────────────────────
@@ -397,16 +537,8 @@
 
     // ─── HELPERS ──────────────────────────────────────────────────
     function setStatus(text, type) {
-        const colors = {
-            ok: 'status-ok',
-            error: 'status-error',
-            warning: 'status-waiting'
-        };
-        const dots = {
-            ok: 'green',
-            error: 'red',
-            warning: 'amber'
-        };
+        const colors = { ok: 'status-ok', error: 'status-error', warning: 'status-waiting' };
+        const dots = { ok: 'green', error: 'red', warning: 'amber' };
         statusBadge.className = `status-badge-top ${colors[type] || 'status-waiting'}`;
         statusBadge.innerHTML = `<span class="status-dot ${dots[type] || 'amber'}"></span> ${text}`;
     }
@@ -460,7 +592,6 @@
 
             userEmail = session.user.email;
 
-            // Fetch / create profile
             let role = 'user';
             try {
                 const { data: profile, error: profileError } = await supabase
@@ -487,6 +618,7 @@
             const roleDisplay = role === 'admin' ? '👑 Admin' : '👤 User';
             setStatus(`✅ ${roleDisplay}`, 'ok');
             userInfo.textContent = `Logged in as ${roleDisplay} · ${userEmail}`;
+            if (priorityInfo) priorityInfo.textContent = `Entries grouped by priority level. Logged in as ${roleDisplay}`;
 
             localStorage.setItem('archivehub_user', JSON.stringify({
                 id: session.user.id,
@@ -495,7 +627,6 @@
                 session: session
             }));
 
-            // ─── Now fetch data ──────────────────────────────────────
             await fetchAllData();
 
         } catch (err) {
@@ -553,43 +684,119 @@
         }
     }
 
-    // ─── RENDER MASTERLIST ──────────────────────────────────────
+    // ─── RENDER MASTERLIST (Year → Month → Date) ──────────────────
     function renderMasterlist() {
-        let filteredDates = allDates;
-
+        let filteredEntries = allEntries;
         if (currentPriority !== 'all') {
-            filteredDates = allDates.filter(date => {
-                const entries = dateDataMap[date] || [];
-                return entries.some(e => e.priority === currentPriority);
-            });
+            filteredEntries = allEntries.filter(e => e.priority === currentPriority);
         }
 
-        if (!filteredDates.length) {
-            dateList.innerHTML = `<div class="col-span-full text-center text-slate-400 text-sm py-8">No dates found${currentPriority !== 'all' ? ' with priority ' + currentPriority : ''}</div>`;
+        if (!filteredEntries.length) {
+            dateList.innerHTML = `<div class="col-span-full text-center text-slate-400 text-sm py-8">No entries found${currentPriority !== 'all' ? ' with priority ' + currentPriority : ''}</div>`;
             return;
         }
 
-        dateList.innerHTML = filteredDates.map(date => {
-            const entries = dateDataMap[date] || [];
-            const priorities = [...new Set(entries.map(e => e.priority).filter(Boolean))];
-            const priorityBadges = priorities.map(p => `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${getPriorityClass(p)}">${p}</span>`).join('');
+        // Group by Year → Month → Date
+        const yearMap = {};
+        filteredEntries.forEach(entry => {
+            const date = entry.event_date;
+            if (!date) return;
+            
+            const d = new Date(date + 'T00:00:00');
+            const year = d.getFullYear();
+            const month = d.getMonth();
+            const day = d.getDate();
+            
+            if (!yearMap[year]) yearMap[year] = {};
+            if (!yearMap[year][month]) yearMap[year][month] = {};
+            if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
+            yearMap[year][month][day].push(entry);
+        });
 
-            return `
-                <div class="date-card fade-in" onclick="openModal('${date}')">
-                    <div>
-                        <span class="font-semibold text-slate-800">${formatDate(date)}</span>
-                        <div class="flex gap-1 mt-1">${priorityBadges}</div>
+        const sortedYears = Object.keys(yearMap).sort((a, b) => b - a);
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        
+        let html = '';
+        sortedYears.forEach(year => {
+            const months = yearMap[year];
+            const sortedMonths = Object.keys(months).sort((a, b) => b - a);
+            
+            html += `
+                <div class="col-span-full year-section">
+                    <div class="flex items-center gap-3 mb-3 mt-2">
+                        <h3 class="text-lg font-extrabold text-slate-700">📁 ${year}</h3>
+                        <span class="text-xs text-slate-400 bg-slate-100 px-3 py-0.5 rounded-full">${filteredEntries.filter(e => new Date(e.event_date + 'T00:00:00').getFullYear() === parseInt(year)).length} entries</span>
                     </div>
-                    <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">${entries.length} entries</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-4">
+            `;
+            
+            sortedMonths.forEach(month => {
+                const days = months[month];
+                const sortedDays = Object.keys(days).sort((a, b) => b - a);
+                const totalInMonth = Object.values(days).reduce((sum, dayEntries) => sum + dayEntries.length, 0);
+                
+                html += `
+                    <div class="month-section col-span-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h4 class="text-sm font-bold text-indigo-600">📂 ${monthNames[parseInt(month)]}</h4>
+                            <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${totalInMonth} entries</span>
+                        </div>
+                        <div class="space-y-2 ml-3">
+                `;
+                
+                sortedDays.forEach(day => {
+                    const entries = days[day];
+                    const dateObj = new Date(parseInt(year), parseInt(month), parseInt(day));
+                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    const dateKey = `${year}-${String(parseInt(month)+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                    
+                    const priorities = [...new Set(entries.map(e => e.priority).filter(Boolean))];
+                    const priorityBadges = priorities.map(p => `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full ${getPriorityClass(p)}">${p}</span>`).join('');
+                    
+                    const types = [...new Set(entries.map(e => e.type).filter(Boolean))];
+                    const typeBadges = types.map(t => `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full badge-${t}">${t}</span>`).join('');
+                    
+                    html += `
+                        <div class="date-card-compact" onclick="openModal('${dateKey}')">
+                            <div class="flex items-center justify-between">
+                                <span class="font-semibold text-sm text-slate-700">📅 ${dateStr}</span>
+                                <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${entries.length}</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                ${priorityBadges}
+                                ${typeBadges}
+                            </div>
+                            <div class="text-[10px] text-slate-400 mt-1 truncate">
+                                ${entries.slice(0, 3).map(e => esc(e.name)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
                 </div>
             `;
-        }).join('');
+        });
+
+        dateList.innerHTML = html;
     }
 
     // ─── RENDER PRIORITY GROUPS ──────────────────────────────────
     function renderPriorityGroups() {
+        let filteredEntries = allEntries;
+        if (currentPriority !== 'all') {
+            filteredEntries = allEntries.filter(e => e.priority === currentPriority);
+        }
+
         const groups = { 'A': [], 'B': [], 'C': [] };
-        allEntries.forEach(row => {
+        filteredEntries.forEach(row => {
             const p = row.priority || 'C';
             if (groups[p]) groups[p].push(row);
         });
@@ -601,8 +808,12 @@
         };
 
         let html = '';
+        let hasEntries = false;
+        
         ['A', 'B', 'C'].forEach(p => {
             const entries = groups[p] || [];
+            if (entries.length) hasEntries = true;
+            
             if (!entries.length) {
                 html += `
                     <div class="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm">
@@ -652,13 +863,21 @@
             `;
         });
 
+        if (!hasEntries && currentPriority !== 'all') {
+            html = `
+                <div class="text-center text-slate-400 text-sm py-8">
+                    No entries found with priority ${currentPriority}
+                </div>
+            `;
+        }
+
         priorityGroups.innerHTML = html;
     }
 
     // ─── MODAL ──────────────────────────────────────────────────
-    window.openModal = function(date) {
-        const entries = dateDataMap[date] || [];
-        modalTitle.textContent = `📋 ${formatDate(date)}`;
+    window.openModal = function(dateKey) {
+        const entries = dateDataMap[dateKey] || [];
+        modalTitle.textContent = `📋 ${formatDate(dateKey)}`;
 
         if (!entries.length) {
             modalBody.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>`;
@@ -734,7 +953,6 @@
             }
         });
 
-        // Re-render current view
         if (currentView === 'masterlist') {
             renderMasterlist();
         } else {
@@ -769,17 +987,13 @@
     };
 
     // ─── LOGOUT ────────────────────────────────────────────────────
-    async function logoutUser() {
+    window.logoutUser = async function() {
         try {
             if (supabase) await supabase.auth.signOut();
         } catch (_) {}
         localStorage.removeItem('archivehub_user');
         window.location.href = '../../index.html';
-    }
-
-    // ─── ATTACH LOGOUT BUTTONS ──────────────────────────────────
-    if (logoutBtn) logoutBtn.addEventListener('click', logoutUser);
-    if (logoutBtnHeader) logoutBtnHeader.addEventListener('click', logoutUser);
+    };
 
     // ─── KEYBOARD SHORTCUTS ──────────────────────────────────────
     document.addEventListener('keydown', function(e) {
@@ -800,7 +1014,7 @@
         }
     });
 
-    console.log(`📋 Bravo Masterlist – Fixed with auth and embedded config`);
+    console.log('📋 Bravo Masterlist – Left Rail Full Menu');
 })();
 </script>
 
