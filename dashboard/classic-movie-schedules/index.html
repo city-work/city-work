@@ -1315,10 +1315,18 @@
             progressBarContainer.style.display = 'block';
             progressFill.style.width = `${percent}%`;
 
-            const showSchedule = weekendData.filter(w => w.title && w.title.toLowerCase().includes(show.title.toLowerCase()));
+            // ─── FIX: Exact match filtering for schedule ───
+            const showSchedule = weekendData.filter(w => {
+                if (!w.title) return false;
+                return w.title.toLowerCase() === show.title.toLowerCase();
+            });
             renderSchedule(showSchedule);
 
-            const showTurnovers = turnoverData.filter(t => t.title && t.title.toLowerCase().includes(show.title.toLowerCase()));
+            // ─── FIX: Exact match filtering for turnovers ───
+            const showTurnovers = turnoverData.filter(t => {
+                if (!t.title) return false;
+                return t.title.toLowerCase() === show.title.toLowerCase();
+            });
             renderTurnovers(showTurnovers);
 
             renderCalendar(showEpisodes);
