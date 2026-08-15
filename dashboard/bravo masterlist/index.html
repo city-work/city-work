@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bravo Masterlist · ArchiveHub</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        brand: { 
+                            bg: '#F8FAFC', 
+                            surface: '#FFFFFF', 
+                            dark: '#0F172A', 
+                            accent: '#4F46E5',
+                            accentLight: '#EEF2FF',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .fade-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        .nav-item {
+            padding: 0.6rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.15s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .nav-item:hover { background: #f1f5f9; color: #0f172a; }
+        .nav-item-active { background: #eef2ff; color: #4F46E5; }
+
+        .date-card {
+            padding: 1rem 1.25rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .date-card:hover {
+            border-color: #4F46E5;
+            box-shadow: 0 4px 12px -4px rgba(79, 70, 229, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .priority-filter {
+            padding: 0.3rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 2px solid transparent;
+        }
+        .priority-filter:hover { transform: scale(1.05); }
+        .priority-filter-active {
+            border-color: #4F46E5;
+            background: #eef2ff;
+        }
+
+        .priority-a { background: #fee2e2; color: #991b1b; }
+        .priority-b { background: #fef3c7; color: #92400e; }
+        .priority-c { background: #dbeafe; color: #1e40af; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 1.5rem;
+            max-width: 700px;
+            width: 95%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.25s ease;
+        }
+        .modal-overlay.open .modal-card {
+            transform: scale(1) translateY(0);
+        }
+        .modal-card::-webkit-scrollbar { width: 4px; }
+        .modal-card::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+
+        .badge-song { background: #d1fae5; color: #065f46; }
+        .badge-spel { background: #f1f5f9; color: #475569; }
+        .badge-intro { background: #dbeafe; color: #1e40af; }
+        .badge-outro { background: #fce4ec; color: #9a1b32; }
+        .badge-commercial { background: #fef3c7; color: #92400e; }
+
+        /* ─── LOADING SPINNER ─── */
+        #loadingSpinner {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        #loadingSpinner .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #4F46E5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── STATUS BADGE ─── */
+        .status-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .status-error { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .status-waiting { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+        .status-badge-top {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.2rem 0.7rem;
+            border-radius: 9999px;
+            border: 1px solid;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.green { background: #22c55e; }
+        .status-dot.amber { background: #eab308; animation: pulse 1.5s ease-in-out infinite; }
+        .status-dot.red { background: #ef4444; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .btn-signout {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            padding: 0.3rem 0.9rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+        }
+        .btn-signout:hover {
+            background: #fee2e2;
+            border-color: #ef4444;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+
+<body class="h-screen w-screen bg-[#F1F5F9] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden text-slate-800 antialiased font-sans">
+
+    <!-- ─── LOADING SPINNER ─── -->
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+        <p class="text-sm font-medium text-slate-600">Loading Bravo Masterlist...</p>
+    </div>
+
+<div class="bg-white w-full max-w-[1440px] h-full max-h-[920px] rounded-3xl shadow-2xl flex border border-slate-200/80 overflow-hidden relative">
+
+    <!-- ═══ LEFT RAIL ═══ -->
+    <aside class="w-16 sm:w-20 bg-white border-r border-slate-200/80 flex flex-col items-center justify-between py-6 shrink-0 z-20">
+        <div class="flex flex-col items-center space-y-5 w-full">
+            <a href="../index.html" class="w-10 h-10 rounded-xl bg-[#0F172A] flex items-center justify-center text-white mb-2 shadow-md hover:scale-105 transition">
+                <i class="fa-solid fa-box-archive text-lg text-[#4F46E5]"></i>
+            </a>
+            <a href="../index.html" class="w-10 h-10 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition flex items-center justify-center" title="Back to Dashboard">
+                <i class="fa-solid fa-arrow-left text-base"></i>
+            </a>
+            <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold border border-indigo-100 mt-1" title="Bravo Masterlist">
+                <i class="fa-solid fa-clipboard-list"></i>
+            </span>
+        </div>
+        <div class="flex flex-col items-center space-y-3 w-full px-2">
+            <button id="logoutBtn" class="w-10 h-10 rounded-xl text-rose-400 hover:bg-rose-50 transition flex items-center justify-center" title="Sign Out">
+                <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative bg-[#F8FAFC]">
+
+        <!-- ─── HEADER ─── -->
+        <header class="px-6 sm:px-8 py-4 bg-white/90 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between shrink-0 z-10">
+            <div class="flex items-center space-x-3">
+                <a href="../index.html" class="text-lg font-extrabold tracking-tight text-[#0F172A]">
+                    Archive<span class="text-[#4F46E5]">Hub</span>
+                </a>
+                <span class="text-slate-300">/</span>
+                <span class="text-[11px] font-semibold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-100">Bravo Masterlist</span>
+                <span id="statusBadge" class="status-badge-top status-waiting">
+                    <span class="status-dot amber"></span> Connecting...
+                </span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="refreshData()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition flex items-center justify-center" title="Refresh">
+                    <i class="fa-solid fa-rotate-right text-xs" id="refresh-icon"></i>
+                </button>
+                <button id="logoutBtnHeader" class="btn-signout">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i> <span class="hidden xs:inline">Sign Out</span>
+                </button>
+                <a href="../index.html" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-[#0F172A] text-white hover:bg-slate-800 transition shadow-sm">Main Hub</a>
+            </div>
+        </header>
+
+        <!-- ─── BODY (Sidebar + Content) ─── -->
+        <div class="flex-1 flex overflow-hidden">
+
+            <!-- ─── LEFT NAV ═══ -->
+            <nav class="w-48 sm:w-56 bg-white border-r border-slate-200/80 p-4 shrink-0 overflow-y-auto custom-scrollbar">
+                <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-2">Menu</h2>
+                <div class="space-y-1">
+                    <div onclick="switchView('masterlist')" class="nav-item nav-item-active" id="nav-masterlist">
+                        <i class="fa-solid fa-list-check text-sm w-5 text-center"></i>
+                        <span>Masterlist</span>
+                    </div>
+                    <div onclick="switchView('priority')" class="nav-item" id="nav-priority">
+                        <i class="fa-solid fa-flag text-sm w-5 text-center"></i>
+                        <span>Priority</span>
+                    </div>
+                </div>
+
+                <!-- Priority Filter -->
+                <div class="mt-4 pt-4 border-t border-slate-200/60">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Filter by Priority</p>
+                    <div class="flex flex-col space-y-1.5">
+                        <div onclick="filterPriority('all')" class="priority-filter priority-filter-active text-xs text-center" data-priority="all" style="background: #f1f5f9; color: #475569;">
+                            All
+                        </div>
+                        <div onclick="filterPriority('A')" class="priority-filter text-xs text-center" data-priority="A" style="background: #fee2e2; color: #991b1b;">
+                            🔴 A – Top Priority
+                        </div>
+                        <div onclick="filterPriority('B')" class="priority-filter text-xs text-center" data-priority="B" style="background: #fef3c7; color: #92400e;">
+                            🟡 B – Mid Priority
+                        </div>
+                        <div onclick="filterPriority('C')" class="priority-filter text-xs text-center" data-priority="C" style="background: #dbeafe; color: #1e40af;">
+                            🔵 C – Lower Priority
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="mt-6 pt-4 border-t border-slate-200/60 space-y-1 px-2">
+                    <div class="flex justify-between text-xs"><span class="text-slate-500">Segments</span><span class="font-bold" id="stat-total">—</span></div>
+                    <div class="flex justify-between text-xs"><span class="text-slate-500">Songs</span><span class="font-bold text-emerald-600" id="stat-songs">—</span></div>
+                    <div class="flex justify-between text-xs"><span class="text-slate-500">SPEL</span><span class="font-bold text-slate-700" id="stat-spel">—</span></div>
+                    <div class="flex justify-between text-xs"><span class="text-slate-500">Events</span><span class="font-bold text-blue-600" id="stat-events">—</span></div>
+                </div>
+            </nav>
+
+            <!-- ─── RIGHT CONTENT ─── -->
+            <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+
+                <!-- ═══ MASTERLIST VIEW ═══ -->
+                <div id="masterlist-view">
+                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">📋 Bravo Masterlist</h2>
+                    <p class="text-xs text-slate-500 mt-0.5" id="userInfo">Checking session...</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6" id="date-list">
+                        <div class="col-span-full text-center text-slate-400 text-sm py-8">⏳ Loading dates...</div>
+                    </div>
+                </div>
+
+                <!-- ═══ PRIORITY VIEW ═══ -->
+                <div id="priority-view" class="hidden">
+                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">🏷️ Priority Groups</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Entries grouped by priority level.</p>
+                    <div id="priority-groups" class="mt-6 space-y-4">
+                        <div class="text-center text-slate-400 text-sm py-8">⏳ Loading...</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal-card">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <h3 class="text-lg font-bold text-slate-900" id="modal-title">Entries</h3>
+            <button onclick="closeModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition flex items-center justify-center">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <div class="mt-4" id="modal-body">
+            <div class="text-center text-slate-400 text-sm py-8">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!--  JAVASCRIPT                                                    -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+    'use strict';
+
+    // ─── SUPABASE CONFIG (Embedded) ──────────────────────────────
+    const SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
+    const TABLE_NAME = 'bravo_masterlist';   // <-- Table name
+
+    let supabase = null;
+    try {
+        if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            console.warn('Supabase library not loaded');
+        }
+    } catch (e) {
+        console.warn('Failed to create Supabase client:', e.message);
+    }
+
+    // ─── DOM REFS ──────────────────────────────────────────────────
+    const $ = id => document.getElementById(id);
+    const dateList = $('date-list');
+    const priorityGroups = $('priority-groups');
+    const modalOverlay = $('modal-overlay');
+    const modalTitle = $('modal-title');
+    const modalBody = $('modal-body');
+    const statTotal = $('stat-total');
+    const statSongs = $('stat-songs');
+    const statSpel = $('stat-spel');
+    const statEvents = $('stat-events');
+    const statusBadge = $('statusBadge');
+    const userInfo = $('userInfo');
+    const loadingSpinner = $('loadingSpinner');
+    const logoutBtn = $('logoutBtn');
+    const logoutBtnHeader = $('logoutBtnHeader');
+    const refreshIcon = $('refresh-icon');
+
+    // ─── STATE ─────────────────────────────────────────────────────
+    let allEntries = [];
+    let allDates = [];
+    let dateDataMap = {};
+    let currentPriority = 'all';
+    let currentView = 'masterlist';
+    let userRole = 'user';
+    let userEmail = 'Unknown';
+
+    // ─── HELPERS ──────────────────────────────────────────────────
+    function setStatus(text, type) {
+        const colors = {
+            ok: 'status-ok',
+            error: 'status-error',
+            warning: 'status-waiting'
+        };
+        const dots = {
+            ok: 'green',
+            error: 'red',
+            warning: 'amber'
+        };
+        statusBadge.className = `status-badge-top ${colors[type] || 'status-waiting'}`;
+        statusBadge.innerHTML = `<span class="status-dot ${dots[type] || 'amber'}"></span> ${text}`;
+    }
+
+    function esc(s) {
+        if (s == null || s === '') return '—';
+        const m = { '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' };
+        return String(s).replace(/[&<>'"]/g, c => m[c] || c);
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function getPriorityLabel(p) {
+        const map = { 'A': '🔴 A – Top', 'B': '🟡 B – Mid', 'C': '🔵 C – Lower' };
+        return map[p] || p || '—';
+    }
+
+    function getPriorityClass(p) {
+        const map = { 'A': 'priority-a', 'B': 'priority-b', 'C': 'priority-c' };
+        return map[p] || '';
+    }
+
+    // ─── AUTH ──────────────────────────────────────────────────────
+    async function checkSession() {
+        loadingSpinner.style.display = 'flex';
+        setStatus('Checking...', 'warning');
+
+        if (!supabase) {
+            setStatus('⚠️ No Supabase', 'error');
+            userInfo.textContent = '⚠️ Supabase client missing';
+            loadingSpinner.style.display = 'none';
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase.auth.getSession();
+            if (error) throw error;
+            const session = data?.session;
+
+            if (!session || !session.user) {
+                setStatus('🔓 Not logged in', 'error');
+                userInfo.textContent = 'Please log in';
+                loadingSpinner.style.display = 'none';
+                setTimeout(() => { window.location.href = '../../index.html'; }, 1500);
+                return;
+            }
+
+            userEmail = session.user.email;
+
+            // Fetch / create profile
+            let role = 'user';
+            try {
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (!profileError && profile?.role) {
+                    role = profile.role;
+                } else if (!profile) {
+                    await supabase.from('profiles').insert({
+                        id: session.user.id,
+                        email: session.user.email,
+                        role: 'user'
+                    });
+                    console.log('Created missing profile');
+                }
+            } catch (e) {
+                console.warn('Profile fetch error:', e.message);
+            }
+
+            userRole = role;
+            const roleDisplay = role === 'admin' ? '👑 Admin' : '👤 User';
+            setStatus(`✅ ${roleDisplay}`, 'ok');
+            userInfo.textContent = `Logged in as ${roleDisplay} · ${userEmail}`;
+
+            localStorage.setItem('archivehub_user', JSON.stringify({
+                id: session.user.id,
+                email: session.user.email,
+                role: role,
+                session: session
+            }));
+
+            // ─── Now fetch data ──────────────────────────────────────
+            await fetchAllData();
+
+        } catch (err) {
+            console.error('Session error:', err);
+            setStatus('❌ Connection error', 'error');
+            userInfo.textContent = 'Error connecting to Supabase';
+        } finally {
+            loadingSpinner.style.display = 'none';
+        }
+    }
+
+    // ─── FETCH DATA ──────────────────────────────────────────────
+    async function fetchAllData() {
+        if (!supabase) return;
+
+        try {
+            const { data, error } = await supabase
+                .from(TABLE_NAME)
+                .select('*')
+                .neq('type', 'header')
+                .order('event_date', { ascending: true });
+
+            if (error) throw error;
+
+            allEntries = data || [];
+
+            // Group by date
+            const grouped = {};
+            allEntries.forEach(row => {
+                const date = row.event_date;
+                if (!date) return;
+                if (!grouped[date]) grouped[date] = [];
+                grouped[date].push(row);
+            });
+
+            allDates = Object.keys(grouped).sort();
+            dateDataMap = grouped;
+
+            // Stats
+            const totalSegments = allEntries.length;
+            const songs = allEntries.filter(r => r.type === 'song').length;
+            const spels = allEntries.filter(r => r.type === 'spel').length;
+            statTotal.textContent = totalSegments;
+            statSongs.textContent = songs;
+            statSpel.textContent = spels;
+            statEvents.textContent = allDates.length;
+
+            renderMasterlist();
+            renderPriorityGroups();
+
+        } catch (err) {
+            console.error('Fetch error:', err);
+            dateList.innerHTML = `<div class="col-span-full text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>`;
+            priorityGroups.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>`;
+        }
+    }
+
+    // ─── RENDER MASTERLIST ──────────────────────────────────────
+    function renderMasterlist() {
+        let filteredDates = allDates;
+
+        if (currentPriority !== 'all') {
+            filteredDates = allDates.filter(date => {
+                const entries = dateDataMap[date] || [];
+                return entries.some(e => e.priority === currentPriority);
+            });
+        }
+
+        if (!filteredDates.length) {
+            dateList.innerHTML = `<div class="col-span-full text-center text-slate-400 text-sm py-8">No dates found${currentPriority !== 'all' ? ' with priority ' + currentPriority : ''}</div>`;
+            return;
+        }
+
+        dateList.innerHTML = filteredDates.map(date => {
+            const entries = dateDataMap[date] || [];
+            const priorities = [...new Set(entries.map(e => e.priority).filter(Boolean))];
+            const priorityBadges = priorities.map(p => `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${getPriorityClass(p)}">${p}</span>`).join('');
+
+            return `
+                <div class="date-card fade-in" onclick="openModal('${date}')">
+                    <div>
+                        <span class="font-semibold text-slate-800">${formatDate(date)}</span>
+                        <div class="flex gap-1 mt-1">${priorityBadges}</div>
+                    </div>
+                    <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">${entries.length} entries</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ─── RENDER PRIORITY GROUPS ──────────────────────────────────
+    function renderPriorityGroups() {
+        const groups = { 'A': [], 'B': [], 'C': [] };
+        allEntries.forEach(row => {
+            const p = row.priority || 'C';
+            if (groups[p]) groups[p].push(row);
+        });
+
+        const priorityLabels = {
+            'A': '🔴 A – Top Priority',
+            'B': '🟡 B – Mid Priority',
+            'C': '🔵 C – Lower Priority'
+        };
+
+        let html = '';
+        ['A', 'B', 'C'].forEach(p => {
+            const entries = groups[p] || [];
+            if (!entries.length) {
+                html += `
+                    <div class="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-sm font-bold ${getPriorityClass(p)} px-2.5 py-0.5 rounded-full">${priorityLabels[p]}</span>
+                            <span class="text-xs text-slate-400">0 entries</span>
+                        </div>
+                        <p class="text-xs text-slate-400 text-center py-4">No entries with this priority</p>
+                    </div>
+                `;
+                return;
+            }
+
+            html += `
+                <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold ${getPriorityClass(p)} px-3 py-0.5 rounded-full">${priorityLabels[p]}</span>
+                            <span class="text-xs text-slate-400">${entries.length} entries</span>
+                        </div>
+                        <button onclick="filterPriority('${p}')" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">View all →</button>
+                    </div>
+                    <div class="overflow-x-auto max-h-[200px] overflow-y-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-white sticky top-0 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                                <tr>
+                                    <th class="py-2 px-4">Date</th>
+                                    <th class="py-2 px-4">Segment</th>
+                                    <th class="py-2 px-4">Artist</th>
+                                    <th class="py-2 px-4 text-center">Type</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                ${entries.slice(0, 10).map(row => `
+                                    <tr class="table-row-hover fade-in">
+                                        <td class="py-2 px-4 text-slate-400 text-[11px]">${row.event_date ? formatDate(row.event_date) : '—'}</td>
+                                        <td class="py-2 px-4 text-slate-700">${esc(row.name)}</td>
+                                        <td class="py-2 px-4 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
+                                        <td class="py-2 px-4 text-center"><span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full badge-${row.type || 'spel'}">${row.type || '—'}</span></td>
+                                    </tr>
+                                `).join('')}
+                                ${entries.length > 10 ? `<tr><td colspan="4" class="py-2 px-4 text-center text-slate-400 text-xs">+ ${entries.length - 10} more entries</td></tr>` : ''}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        });
+
+        priorityGroups.innerHTML = html;
+    }
+
+    // ─── MODAL ──────────────────────────────────────────────────
+    window.openModal = function(date) {
+        const entries = dateDataMap[date] || [];
+        modalTitle.textContent = `📋 ${formatDate(date)}`;
+
+        if (!entries.length) {
+            modalBody.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>`;
+        } else {
+            const badges = {
+                'song': 'badge-song',
+                'spel': 'badge-spel',
+                'intro': 'badge-intro',
+                'outro': 'badge-outro',
+                'commercial': 'badge-commercial'
+            };
+            const labels = {
+                'song': '🎵 Song',
+                'spel': '⏸️ SPEL',
+                'intro': '▶️ Intro',
+                'outro': '⏹️ Outro',
+                'commercial': '📺 Commercial'
+            };
+
+            let tableHtml = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                            <tr>
+                                <th class="py-2.5 px-3 w-12">#</th>
+                                <th class="py-2.5 px-3">Segment</th>
+                                <th class="py-2.5 px-3">Artist</th>
+                                <th class="py-2.5 px-3 text-center">Type</th>
+                                <th class="py-2.5 px-3 text-center">Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+            `;
+
+            entries.forEach((row, idx) => {
+                const badgeClass = badges[row.type] || 'badge-spel';
+                const label = labels[row.type] || row.type;
+                const priorityClass = getPriorityClass(row.priority);
+                const priorityLabel = getPriorityLabel(row.priority);
+                tableHtml += `
+                    <tr class="table-row-hover fade-in">
+                        <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px] text-center">${idx + 1}</td>
+                        <td class="py-2.5 px-3 text-slate-700">${esc(row.name)}</td>
+                        <td class="py-2.5 px-3 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
+                        <td class="py-2.5 px-3 text-center"><span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${badgeClass}">${label}</span></td>
+                        <td class="py-2.5 px-3 text-center"><span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full ${priorityClass}">${priorityLabel}</span></td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += '</tbody></table></div>';
+            modalBody.innerHTML = tableHtml;
+        }
+
+        modalOverlay.classList.add('open');
+    };
+
+    window.closeModal = function() {
+        modalOverlay.classList.remove('open');
+    };
+
+    modalOverlay.addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    // ─── PRIORITY FILTER ──────────────────────────────────────────
+    window.filterPriority = function(priority) {
+        currentPriority = priority;
+        document.querySelectorAll('.priority-filter').forEach(el => {
+            el.classList.remove('priority-filter-active');
+            if (el.dataset.priority === priority) {
+                el.classList.add('priority-filter-active');
+            }
+        });
+
+        // Re-render current view
+        if (currentView === 'masterlist') {
+            renderMasterlist();
+        } else {
+            renderPriorityGroups();
+        }
+    };
+
+    // ─── VIEW SWITCHING ──────────────────────────────────────────
+    window.switchView = function(view) {
+        currentView = view;
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('nav-item-active'));
+
+        if (view === 'masterlist') {
+            document.getElementById('nav-masterlist').classList.add('nav-item-active');
+            document.getElementById('masterlist-view').classList.remove('hidden');
+            document.getElementById('priority-view').classList.add('hidden');
+            renderMasterlist();
+        } else {
+            document.getElementById('nav-priority').classList.add('nav-item-active');
+            document.getElementById('priority-view').classList.remove('hidden');
+            document.getElementById('masterlist-view').classList.add('hidden');
+            renderPriorityGroups();
+        }
+    };
+
+    // ─── REFRESH ──────────────────────────────────────────────────
+    window.refreshData = function() {
+        if (refreshIcon) refreshIcon.classList.add('fa-spin');
+        fetchAllData().finally(() => {
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+        });
+    };
+
+    // ─── LOGOUT ────────────────────────────────────────────────────
+    async function logoutUser() {
+        try {
+            if (supabase) await supabase.auth.signOut();
+        } catch (_) {}
+        localStorage.removeItem('archivehub_user');
+        window.location.href = '../../index.html';
+    }
+
+    // ─── ATTACH LOGOUT BUTTONS ──────────────────────────────────
+    if (logoutBtn) logoutBtn.addEventListener('click', logoutUser);
+    if (logoutBtnHeader) logoutBtnHeader.addEventListener('click', logoutUser);
+
+    // ─── KEYBOARD SHORTCUTS ──────────────────────────────────────
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    // ─── INIT ──────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+        loadingSpinner.style.display = 'flex';
+        if (supabase) {
+            checkSession();
+        } else {
+            setStatus('⚠️ No Supabase', 'error');
+            userInfo.textContent = '⚠️ Supabase client not available';
+            loadingSpinner.style.display = 'none';
+            dateList.innerHTML = `<div class="col-span-full text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available. Check network.</div>`;
+            priorityGroups.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>`;
+        }
+    });
+
+    console.log(`📋 Bravo Masterlist – Fixed with auth and embedded config`);
+})();
+</script>
+
+</body>
+</html>
