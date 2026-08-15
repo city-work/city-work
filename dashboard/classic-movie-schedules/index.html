@@ -1187,11 +1187,12 @@
         async function fetchAllData() {
             if (!supabase) return;
             try {
+                // ─── UPDATED: Using 'classics' schema ───
                 const [titlesRes, episodesRes, weekendRes, turnoversRes] = await Promise.all([
-                    supabase.from('classic_titles').select('*').order('title'),
-                    supabase.from('classic_episodes').select('*').order('air_date'),
-                    supabase.from('classic_weekend_schedule').select('*').order('day', { ascending: false }),
-                    supabase.from('classic_turnovers').select('*').order('start_date')
+                    supabase.from('classics.titles').select('*').order('title'),
+                    supabase.from('classics.episodes').select('*').order('air_date'),
+                    supabase.from('classics.schedule').select('*').order('day', { ascending: false }),
+                    supabase.from('classics.turnovers').select('*').order('start_date')
                 ]);
                 if (titlesRes.error) throw titlesRes.error;
                 if (episodesRes.error) throw episodesRes.error;
@@ -1602,6 +1603,7 @@
             $('importStatus').textContent = `✅ ${data.titles.length} titles, ${data.episodes.length} episodes ready`;
         }
 
+        // ─── SYNC TO SUPABASE ─────────────────────────────────────────
         async function syncToSupabase() {
             if (!importedData || !supabase) { alert('No data or no connection'); return; }
             const btn = document.querySelector('.btn-sync');
@@ -1609,8 +1611,9 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
             try {
                 const data = importedData;
+                // ─── UPDATED: Using 'classics' schema ───
                 for (const title of data.titles) {
-                    await supabase.from('classic_titles').upsert({
+                    await supabase.from('classics.titles').upsert({
                         title: title.title,
                         total_episodes: title.total || 0,
                         available_episodes: title.available || 0,
@@ -1618,20 +1621,20 @@
                         available_until: title.until || null
                     }, { onConflict: 'title' });
                 }
-                await supabase.from('classic_weekend_schedule').delete().neq('id',
+                await supabase.from('classics.schedule').delete().neq('id',
                     '00000000-0000-0000-0000-000000000000');
                 for (const item of data.weekend) {
-                    await supabase.from('classic_weekend_schedule').insert({ day: item.day, time_slot: item.time_slot ||
+                    await supabase.from('classics.schedule').insert({ day: item.day, time_slot: item.time_slot ||
                             '', title: item.title || '' });
                 }
-                await supabase.from('classic_turnovers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                await supabase.from('classics.turnovers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 for (const item of data.turnovers) {
-                    await supabase.from('classic_turnovers').insert({ title: item.title || '', start_date: item
+                    await supabase.from('classics.turnovers').insert({ title: item.title || '', start_date: item
                             .start_date || null, end_date: item.end_date || null, notes: item.notes || '' });
                 }
-                await supabase.from('classic_episodes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                await supabase.from('classics.episodes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 for (const ep of data.episodes) {
-                    await supabase.from('classic_episodes').insert({ air_date: ep.air_date || null, episode_name: ep
+                    await supabase.from('classics.episodes').insert({ air_date: ep.air_date || null, episode_name: ep
                             .episode_name || '', show_title: ep.show_title || '', status: ep.status || false });
                 }
                 $('importStatus').textContent = '✅ Sync complete!';
