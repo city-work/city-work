@@ -1,14 +1,19 @@
-// config.js - Site design and non-sensitive defaults
-// IMPORTANT: Replace the SUPABASE url and anonKey below with your project's values.
-// Do NOT commit real keys. Copy this file to config.js locally and fill the values.
+// ============================================================
+//  config.js – ArchiveHub Configuration
+//  Place this file in the root of your project (city-work/)
+// ============================================================
 
 const design = {
+  // ─── SUPABASE CREDENTIALS ──────────────────────────────────────
+  // ⚠️ Replace these with YOUR Supabase project URL and anon key
   supabase: {
-    url: "https://yffqtbqnzrcctfnjibbo.supabase.co",  // <-- replace with your URL
-    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE" // <-- replace
+    url: "https://yffqtbqnzrcctfnjibbo.supabase.co",
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE"
   },
+
+  // ─── HEADER ─────────────────────────────────────────────────────
   header: {
-    logoText: "ArchiveHub",   // fixed casing for consistency
+    logoText: "ArchiveHub",
     navLinks: [
       { label: "Vaults", active: true },
       { label: "Tools" },
@@ -18,23 +23,31 @@ const design = {
       { label: "Analytics" }
     ]
   },
+
+  // ─── SYSTEM METRICS ────────────────────────────────────────────
   metrics: {
     storage: { total: "2,450.00 GB", used: "842.10 GB", free: "1,607.90 GB" },
-    files: { count: "14,280", change: "+12.4% this week" },
-    vaults: { count: "8 Active", change: "+2 new added" },
+    files:   { count: "14,280", change: "+12.4% this week" },
+    vaults:  { count: "8 Active", change: "+2 new added" },
     encryption: { status: "100% Secure", badge: "Verified" }
   },
+
+  // ─── ACTIVE VAULTS ─────────────────────────────────────────────
   vaults: [
     { name: "Financial Records", size: "124.5 GB", files: "3,410 Files", tag: "PDFs", tagColor: "cyan" },
-    { name: "Media Archives", size: "450.2 GB", files: "8,920 Files", tag: "RAW/PNG", tagColor: "yellow" },
-    { name: "Database Dumps", size: "267.4 GB", files: "1,950 Files", tag: "SQL/JSON", tagColor: "purple" }
+    { name: "Media Archives",    size: "450.2 GB", files: "8,920 Files", tag: "RAW/PNG", tagColor: "yellow" },
+    { name: "Database Dumps",    size: "267.4 GB", files: "1,950 Files", tag: "SQL/JSON", tagColor: "purple" }
   ],
+
+  // ─── TAG FILTERS ───────────────────────────────────────────────
   tags: [
     { label: "$DOCS", color: "cyan" },
-    { label: "$TAX", color: "red" },
-    { label: "$IMG", color: "yellow" },
-    { label: "$SQL", color: "emerald" }
+    { label: "$TAX",  color: "red" },
+    { label: "$IMG",  color: "yellow" },
+    { label: "$SQL",  color: "emerald" }
   ],
+
+  // ─── ACTIVITY FEED ─────────────────────────────────────────────
   feed: [{
     author: "System Bot",
     avatar: "AH",
@@ -46,19 +59,83 @@ const design = {
     comments: 8,
     views: "1.2k"
   }],
+
+  // ─── ARCHIVE MODULES (10 sub‑folders) ─────────────────────────
   archiveModules: [
-    { folder: 'events-archive', title: 'Events Archive', desc: 'Special events, logs, and historical records.', color: 'blue', icon: 'fa-calendar-check' },
-    { folder: 'lg-masterlist', title: 'LG Masterlist', desc: 'Complete database and operational roster for LG.', color: 'emerald', icon: 'fa-list-check' },
-    { folder: 'bravo-masterlist', title: 'Bravo Masterlist', desc: 'Roster, logs, and tracking for Bravo operations.', color: 'indigo', icon: 'fa-clipboard-list' },
-    { folder: 'tgirj-masterlist', title: 'TGIRJ Masterlist', desc: 'Master database records for TGIRJ.', color: 'purple', icon: 'fa-database' },
-    { folder: 'daily-chores', title: 'Daily Chores', desc: 'Daily task checklists and maintenance tracking.', color: 'amber', icon: 'fa-broom' },
-    { folder: 'commercial', title: 'Commercial', desc: 'Commercial archives, media, and advertisements.', color: 'teal', icon: 'fa-rectangle-ad' },
-    { folder: 'cps', title: 'CPS', desc: 'CPS documents, logs, and compliance records.', color: 'cyan', icon: 'fa-shield-halved' },
-    { folder: 'choice-concert-schedule', title: 'Choice Concert Schedule', desc: 'Concert lineups, dates, and event schedules.', color: 'rose', icon: 'fa-music' },
-    { folder: 'weekly-schedule', title: 'Weekly Schedule', desc: 'Weekly operational agendas and timetables.', color: 'sky', icon: 'fa-calendar-days' },
-    { folder: 'classic-movie-schedules', title: 'Classic Movie Schedules', desc: 'Schedules and programming for classic movies.', color: 'orange', icon: 'fa-film' }
+    {
+      folder: 'events-archive',
+      title: 'Events Archive',
+      desc: 'Special events, logs, and historical records.',
+      color: 'blue',
+      icon: 'fa-calendar-check'
+    },
+    {
+      folder: 'lg-masterlist',
+      title: 'LG Masterlist',
+      desc: 'Complete database and operational roster for LG.',
+      color: 'emerald',
+      icon: 'fa-list-check'
+    },
+    {
+      folder: 'bravo-masterlist',
+      title: 'Bravo Masterlist',
+      desc: 'Roster, logs, and tracking for Bravo operations.',
+      color: 'indigo',
+      icon: 'fa-clipboard-list'
+    },
+    {
+      folder: 'tgirj-masterlist',
+      title: 'TGIRJ Masterlist',
+      desc: 'Master database records for TGIRJ.',
+      color: 'purple',
+      icon: 'fa-database'
+    },
+    {
+      folder: 'daily-chores',
+      title: 'Daily Chores',
+      desc: 'Daily task checklists and maintenance tracking.',
+      color: 'amber',
+      icon: 'fa-broom'
+    },
+    {
+      folder: 'commercial',
+      title: 'Commercial',
+      desc: 'Commercial archives, media, and advertisements.',
+      color: 'teal',
+      icon: 'fa-rectangle-ad'
+    },
+    {
+      folder: 'cps',
+      title: 'CPS',
+      desc: 'CPS documents, logs, and compliance records.',
+      color: 'cyan',
+      icon: 'fa-shield-halved'
+    },
+    {
+      folder: 'choice-concert-schedule',
+      title: 'Choice Concert Schedule',
+      desc: 'Concert lineups, dates, and event schedules.',
+      color: 'rose',
+      icon: 'fa-music'
+    },
+    {
+      folder: 'weekly-schedule',
+      title: 'Weekly Schedule',
+      desc: 'Weekly operational agendas and timetables.',
+      color: 'sky',
+      icon: 'fa-calendar-days'
+    },
+    {
+      folder: 'classic-movie-schedules',   // ✅ Correct spelling
+      title: 'Classic Movie Schedules',
+      desc: 'Schedules and programming for classic movies.',
+      color: 'orange',
+      icon: 'fa-film'
+    }
   ]
 };
 
-// expose globally
-if (typeof window !== 'undefined') window.design = design;
+// ─── EXPOSE GLOBALLY ─────────────────────────────────────────────
+if (typeof window !== 'undefined') {
+  window.design = design;
+}
