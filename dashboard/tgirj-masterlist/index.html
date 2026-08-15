@@ -31,7 +31,6 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../../config.js"></script>
 
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -134,18 +133,37 @@
         .badge-outro { background: #fce4ec; color: #9a1b32; }
         .badge-commercial { background: #fef3c7; color: #92400e; }
 
-        #loadingSpinner { display: none; }
+        /* ─── LOADING SPINNER ─── */
+        #loadingSpinner {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        #loadingSpinner .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #4F46E5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 
 <body class="h-screen w-screen bg-[#F1F5F9] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden text-slate-800 antialiased font-sans">
 
-    <!-- ═══ LOADING SPINNER ═══ -->
-    <div id="loadingSpinner" class="fixed inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-50">
-        <div class="flex flex-col items-center">
-            <i class="fa-solid fa-spinner fa-spin text-4xl text-indigo-600"></i>
-            <p class="mt-3 text-sm font-medium text-slate-600">Loading masterlist...</p>
-        </div>
+    <!-- ─── LOADING SPINNER ─── -->
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+        <p class="text-sm font-medium text-slate-600">Loading TGIRJ Masterlist...</p>
     </div>
 
 <div class="bg-white w-full max-w-[1440px] h-full max-h-[920px] rounded-3xl shadow-2xl flex border border-slate-200/80 overflow-hidden relative">
@@ -164,7 +182,7 @@
             </span>
         </div>
         <div class="flex flex-col items-center space-y-3 w-full px-2">
-            <button id="logoutBtn" class="w-10 h-10 rounded-xl text-rose-400 hover:bg-rose-50 transition flex items-center justify-center" title="Log Out">
+            <button id="logoutBtn" class="w-10 h-10 rounded-xl text-rose-400 hover:bg-rose-50 transition flex items-center justify-center" title="Sign Out">
                 <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
             </button>
         </div>
@@ -181,10 +199,16 @@
                 </a>
                 <span class="text-slate-300">/</span>
                 <span class="text-[11px] font-semibold bg-purple-50 text-purple-700 px-3 py-1 rounded-full border border-purple-100">TGIRJ Masterlist</span>
+                <span id="statusBadge" class="text-[10px] font-medium px-2.5 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
+                    <span class="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Checking...
+                </span>
             </div>
             <div class="flex items-center space-x-3">
                 <button onclick="refreshData()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition flex items-center justify-center" title="Refresh">
                     <i class="fa-solid fa-rotate-right text-xs" id="refresh-icon"></i>
+                </button>
+                <button id="logoutBtnHeader" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 transition shadow-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i> Sign Out
                 </button>
                 <a href="../index.html" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-[#0F172A] text-white hover:bg-slate-800 transition shadow-sm">Main Hub</a>
             </div>
@@ -241,7 +265,7 @@
                 <!-- ═══ MASTERLIST VIEW ═══ -->
                 <div id="masterlist-view">
                     <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">📋 TGIRJ Masterlist</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">Select a date to view its entries. Use priority filter in sidebar.</p>
+                    <p class="text-xs text-slate-500 mt-0.5" id="userInfo">Checking session...</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6" id="date-list">
                         <div class="col-span-full text-center text-slate-400 text-sm py-8">⏳ Loading dates...</div>
                     </div>
@@ -283,105 +307,24 @@
 (function() {
     'use strict';
 
-    // ─── READ SUPABASE CONFIG FROM design ──────────────────────────
-    let SUPABASE_URL, SUPABASE_ANON_KEY;
-    try {
-        if (typeof design !== 'undefined' && design.supabase) {
-            SUPABASE_URL = design.supabase.url;
-            SUPABASE_ANON_KEY = design.supabase.anonKey;
-        } else {
-            throw new Error('design.supabase not found');
-        }
-    } catch (e) {
-        document.body.innerHTML = `
-            <div class="flex items-center justify-center min-h-screen bg-slate-100 p-4">
-                <div class="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center">
-                    <i class="fa-solid fa-triangle-exclamation text-4xl text-amber-500 mb-4"></i>
-                    <h2 class="text-xl font-bold text-slate-800">Configuration Error</h2>
-                    <p class="text-sm text-slate-600 mt-2">Could not load Supabase credentials. Please check <code>config.js</code>.</p>
-                </div>
-            </div>
-        `;
-        throw new Error('Config missing');
-    }
-
-    const supabase = window.supabase
-        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-        : null;
-    if (!supabase) {
-        document.body.innerHTML = `
-            <div class="flex items-center justify-center min-h-screen bg-slate-100 p-4">
-                <div class="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center">
-                    <i class="fa-solid fa-triangle-exclamation text-4xl text-amber-500 mb-4"></i>
-                    <h2 class="text-xl font-bold text-slate-800">Supabase Error</h2>
-                    <p class="text-sm text-slate-600 mt-2">Could not initialise Supabase client.</p>
-                </div>
-            </div>
-        `;
-        throw new Error('Supabase client missing');
-    }
-
+    // ─── CONFIGURATION (Embedded) ──────────────────────────────
+    // Replace with your own Supabase credentials if different
+    const SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
     const TABLE_NAME = 'tgirj_masterlist';
 
-    // ─── SESSION CHECK ──────────────────────────────────────────────
-    async function checkAccess() {
-        const spinner = document.getElementById('loadingSpinner');
-        spinner.style.display = 'flex';
-        try {
-            const { data, error } = await supabase.auth.getSession();
-            if (error) throw error;
-            const session = data?.session;
-            if (!session) {
-                localStorage.removeItem('archivehub_user');
-                window.location.href = '../../index.html';
-                return false;
-            }
-
-            // Ensure profile exists
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', session.user.id)
-                .maybeSingle();
-
-            let role = 'user';
-            if (profileError && profileError.code !== 'PGRST116') throw profileError;
-            if (!profile) {
-                await supabase.from('profiles').insert({
-                    id: session.user.id,
-                    email: session.user.email,
-                    role: 'user'
-                });
-            } else {
-                role = profile.role || 'user';
-            }
-
-            localStorage.setItem('archivehub_user', JSON.stringify({
-                id: session.user.id,
-                email: session.user.email,
-                role: role,
-                session: session
-            }));
-
-            return true;
-        } catch (err) {
-            console.error('Access check error:', err);
-            localStorage.removeItem('archivehub_user');
-            window.location.href = '../../index.html';
-            return false;
-        } finally {
-            spinner.style.display = 'none';
+    let supabase = null;
+    try {
+        if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            console.warn('Supabase library not loaded');
         }
+    } catch (e) {
+        console.warn('Failed to create Supabase client:', e.message);
     }
 
-    // ─── STATE ─────────────────────────────────────────────────────
-    let allEntries = [];
-    let allDates = [];
-    let dateDataMap = {};
-    let currentPriority = 'all';
-    let currentView = 'masterlist';
-
-    // ─── DOM REFS ──────────────────────────────────────────────────
+    // ─── DOM REFS ──────────────────────────────────────────────
     const $ = id => document.getElementById(id);
     const dateList = $('date-list');
     const priorityGroups = $('priority-groups');
@@ -392,9 +335,23 @@
     const statSongs = $('stat-songs');
     const statSpel = $('stat-spel');
     const statEvents = $('stat-events');
+    const statusBadge = $('statusBadge');
+    const userInfo = $('userInfo');
+    const loadingSpinner = $('loadingSpinner');
     const logoutBtn = $('logoutBtn');
+    const logoutBtnHeader = $('logoutBtnHeader');
+    const refreshIcon = $('refresh-icon');
 
-    // ─── HELPERS ──────────────────────────────────────────────────
+    // ─── STATE ─────────────────────────────────────────────────
+    let allEntries = [];
+    let allDates = [];
+    let dateDataMap = {};
+    let currentPriority = 'all';
+    let currentView = 'masterlist';
+    let userRole = 'user';
+    let userEmail = 'Unknown';
+
+    // ─── HELPERS ──────────────────────────────────────────────
     function esc(s) {
         if (s == null || s === '') return '—';
         const m = { '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' };
@@ -417,8 +374,100 @@
         return map[p] || '';
     }
 
+    function setStatus(text, type) {
+        const colors = {
+            ok: 'bg-green-50 text-green-700 border-green-200',
+            error: 'bg-red-50 text-red-700 border-red-200',
+            warning: 'bg-amber-50 text-amber-700 border-amber-200',
+            info: 'bg-blue-50 text-blue-700 border-blue-200'
+        };
+        const dotColors = {
+            ok: 'bg-green-400',
+            error: 'bg-red-400',
+            warning: 'bg-amber-400',
+            info: 'bg-blue-400'
+        };
+        statusBadge.className = `text-[10px] font-medium px-2.5 py-0.5 rounded-full border flex items-center gap-1 ${colors[type] || colors.info}`;
+        statusBadge.innerHTML = `<span class="inline-block w-2 h-2 rounded-full ${dotColors[type] || 'bg-blue-400'}"></span> ${text}`;
+    }
+
+    // ─── AUTH CHECK ────────────────────────────────────────────
+    async function checkSession() {
+        if (!supabase) {
+            setStatus('No Supabase', 'error');
+            userInfo.textContent = '⚠️ Supabase client missing';
+            return;
+        }
+
+        loadingSpinner.style.display = 'flex';
+
+        try {
+            const { data, error } = await supabase.auth.getSession();
+            if (error) throw error;
+            const session = data?.session;
+
+            if (!session || !session.user) {
+                setStatus('Not logged in', 'error');
+                userInfo.textContent = 'Please log in';
+                loadingSpinner.style.display = 'none';
+                setTimeout(() => { window.location.href = '../../index.html'; }, 1500);
+                return;
+            }
+
+            userEmail = session.user.email;
+
+            // Fetch/ create profile
+            let role = 'user';
+            try {
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (!profileError && profile?.role) {
+                    role = profile.role;
+                } else if (!profile) {
+                    await supabase.from('profiles').insert({
+                        id: session.user.id,
+                        email: session.user.email,
+                        role: 'user'
+                    });
+                    console.log('Created missing profile');
+                }
+            } catch (e) {
+                console.warn('Profile fetch error:', e.message);
+            }
+
+            userRole = role;
+            const roleDisplay = role === 'admin' ? '👑 Admin' : '👤 User';
+            setStatus(`✅ ${roleDisplay}`, 'ok');
+            userInfo.textContent = `Logged in as ${roleDisplay} · ${userEmail}`;
+
+            // Save to localStorage
+            localStorage.setItem('archivehub_user', JSON.stringify({
+                id: session.user.id,
+                email: session.user.email,
+                role: role,
+                session: session
+            }));
+
+            // ─── Now fetch data ──────────────────────────────────────
+            await fetchAllData();
+
+        } catch (err) {
+            console.error('Session error:', err);
+            setStatus('❌ Connection error', 'error');
+            userInfo.textContent = 'Error connecting to Supabase';
+        } finally {
+            loadingSpinner.style.display = 'none';
+        }
+    }
+
     // ─── FETCH DATA ──────────────────────────────────────────────
     async function fetchAllData() {
+        if (!supabase) return;
+
         try {
             const { data, error } = await supabase
                 .from(TABLE_NAME)
@@ -430,7 +479,6 @@
 
             allEntries = data || [];
 
-            // Group by date
             const grouped = {};
             allEntries.forEach(row => {
                 const date = row.event_date;
@@ -442,7 +490,6 @@
             allDates = Object.keys(grouped).sort();
             dateDataMap = grouped;
 
-            // Stats
             const totalSegments = allEntries.length;
             const songs = allEntries.filter(r => r.type === 'song').length;
             const spels = allEntries.filter(r => r.type === 'spel').length;
@@ -502,11 +549,6 @@
             if (groups[p]) groups[p].push(row);
         });
 
-        // If a specific priority is selected, show only that group
-        const activePriority = currentPriority;
-        const showAll = activePriority === 'all';
-        const priorityKeys = showAll ? ['A', 'B', 'C'] : [activePriority];
-
         const priorityLabels = {
             'A': '🔴 A – Top Priority',
             'B': '🟡 B – Mid Priority',
@@ -514,7 +556,7 @@
         };
 
         let html = '';
-        priorityKeys.forEach(p => {
+        ['A', 'B', 'C'].forEach(p => {
             const entries = groups[p] || [];
             if (!entries.length) {
                 html += `
@@ -676,22 +718,18 @@
     // ─── LOGOUT ────────────────────────────────────────────────────
     async function logoutUser() {
         try {
-            await supabase.auth.signOut();
-        } catch (err) {
-            console.warn('Logout warning:', err);
-        } finally {
-            localStorage.removeItem('archivehub_user');
-            window.location.href = '../../index.html';
-        }
+            if (supabase) await supabase.auth.signOut();
+        } catch (_) {}
+        localStorage.removeItem('archivehub_user');
+        window.location.href = '../../index.html';
     }
-    logoutBtn.addEventListener('click', logoutUser);
 
     // ─── REFRESH ──────────────────────────────────────────────────
     window.refreshData = function() {
-        const icon = document.getElementById('refresh-icon');
-        icon.classList.add('fa-spin');
+        if (!refreshIcon) return;
+        refreshIcon.classList.add('fa-spin');
         fetchAllData().finally(() => {
-            icon.classList.remove('fa-spin');
+            refreshIcon.classList.remove('fa-spin');
         });
     };
 
@@ -700,15 +738,28 @@
         if (e.key === 'Escape') closeModal();
     });
 
+    // ─── ATTACH LOGOUT BUTTONS ──────────────────────────────────
+    if (logoutBtn) logoutBtn.addEventListener('click', logoutUser);
+    if (logoutBtnHeader) logoutBtnHeader.addEventListener('click', logoutUser);
+
     // ─── INIT ──────────────────────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', async function() {
-        const access = await checkAccess();
-        if (access) {
-            fetchAllData();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show loading spinner
+        loadingSpinner.style.display = 'flex';
+        
+        // Check session and load data
+        if (supabase) {
+            checkSession();
+        } else {
+            setStatus('No Supabase client', 'error');
+            userInfo.textContent = '⚠️ Supabase library not loaded';
+            loadingSpinner.style.display = 'none';
+            dateList.innerHTML = `<div class="col-span-full text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available. Check network.</div>`;
+            priorityGroups.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>`;
         }
     });
 
-    console.log('📋 TGIRJ Masterlist – Fixed version with centralised config and better session handling');
+    console.log('📋 TGIRJ Masterlist – Fixed with auth and embedded config');
 })();
 </script>
 
