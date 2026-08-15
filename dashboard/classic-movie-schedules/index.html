@@ -1057,7 +1057,6 @@
         const SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
 
-        // FIX: Use a different variable name to avoid redeclaration
         let supabaseClient = null;
         try {
             if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
@@ -1162,10 +1161,10 @@
             if (!supabaseClient) return;
             try {
                 const [titlesRes, episodesRes, weekendRes, turnoversRes] = await Promise.all([
-                    supabaseClient.from('classics.titles').select('*').order('title'),
-                    supabaseClient.from('classics.episodes').select('*').order('air_date'),
-                    supabaseClient.from('classics.schedule').select('*').order('day', { ascending: false }),
-                    supabaseClient.from('classics.turnovers').select('*').order('start_date')
+                    supabaseClient.from('classic_titles').select('*').order('title'),
+                    supabaseClient.from('classic_episodes').select('*').order('air_date'),
+                    supabaseClient.from('classic_schedule').select('*').order('day', { ascending: false }),
+                    supabaseClient.from('classic_turnovers').select('*').order('start_date')
                 ]);
                 if (titlesRes.error) throw titlesRes.error;
                 if (episodesRes.error) throw episodesRes.error;
@@ -1326,7 +1325,7 @@
 
             if (!showEpisodes.length) {
                 tableBody.innerHTML =
-                `<tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">No episodes for this show.</td></tr>`;
+                    `<tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">No episodes for this show.</td></tr>`;
             } else {
                 tableBody.innerHTML = showEpisodes.map(ep => {
                     const badge = getStatusBadge(ep.status);
@@ -1371,7 +1370,7 @@
         function renderTurnovers(data) {
             if (!data.length) {
                 turnoversContainer.innerHTML =
-                `<div class="turnover-item"><span class="turnover-title">No turnovers</span></div>`;
+                    `<div class="turnover-item"><span class="turnover-title">No turnovers</span></div>`;
                 return;
             }
             turnoversContainer.innerHTML = data.map(item => `
@@ -1565,7 +1564,7 @@
             try {
                 const data = importedData;
                 for (const title of data.titles) {
-                    await supabaseClient.from('classics.titles').upsert({
+                    await supabaseClient.from('classic_titles').upsert({
                         title: title.title,
                         total_episodes: title.total || 0,
                         available_episodes: title.available || 0,
@@ -1573,20 +1572,20 @@
                         available_until: title.until || null
                     }, { onConflict: 'title' });
                 }
-                await supabaseClient.from('classics.schedule').delete().neq('id',
+                await supabaseClient.from('classic_schedule').delete().neq('id',
                     '00000000-0000-0000-0000-000000000000');
                 for (const item of data.weekend) {
-                    await supabaseClient.from('classics.schedule').insert({ day: item.day, time_slot: item.time_slot ||
+                    await supabaseClient.from('classic_schedule').insert({ day: item.day, time_slot: item.time_slot ||
                             '', title: item.title || '' });
                 }
-                await supabaseClient.from('classics.turnovers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                await supabaseClient.from('classic_turnovers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 for (const item of data.turnovers) {
-                    await supabaseClient.from('classics.turnovers').insert({ title: item.title || '', start_date: item
+                    await supabaseClient.from('classic_turnovers').insert({ title: item.title || '', start_date: item
                             .start_date || null, end_date: item.end_date || null, notes: item.notes || '' });
                 }
-                await supabaseClient.from('classics.episodes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                await supabaseClient.from('classic_episodes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 for (const ep of data.episodes) {
-                    await supabaseClient.from('classics.episodes').insert({ air_date: ep.air_date || null, episode_name: ep
+                    await supabaseClient.from('classic_episodes').insert({ air_date: ep.air_date || null, episode_name: ep
                             .episode_name || '', show_title: ep.show_title || '', status: ep.status || false });
                 }
                 $('importStatus').textContent = '✅ Sync complete!';
