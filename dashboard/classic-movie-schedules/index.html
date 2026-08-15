@@ -307,7 +307,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: 1fr 1fr;
             gap: 0.75rem;
         }
         @media (max-width: 640px) {
@@ -585,10 +585,6 @@
             padding: 0.3rem 0.75rem;
             border-bottom: 1px solid var(--border-light);
             font-size: 0.7rem;
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 0.5rem;
-            align-items: center;
         }
         .turnover-item:last-child {
             border-bottom: none;
@@ -596,17 +592,6 @@
         .turnover-item .turnover-title {
             font-weight: 600;
             color: var(--text-primary);
-        }
-        .turnover-item .turnover-dates {
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            white-space: nowrap;
-        }
-        .turnover-item .turnover-notes {
-            grid-column: 1 / -1;
-            font-size: 0.55rem;
-            color: var(--text-muted);
-            font-style: italic;
         }
 
         .calendar-grid {
@@ -940,6 +925,7 @@
                 </div>
             </header>
 
+            <!-- Stats Row - Only 2 cards -->
             <div class="stats-grid" id="statsRow">
                 <div class="stat-card">
                     <div class="stat-icon blue"><i class="fa-solid fa-film"></i></div>
@@ -955,15 +941,9 @@
                         <div class="stat-value" id="statNextExpire" style="font-size:0.9rem;">—</div>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon emerald"><i class="fa-solid fa-signal"></i></div>
-                    <div class="stat-info">
-                        <div class="stat-label">Status</div>
-                        <div class="stat-value" id="statStatus" style="font-size:0.9rem;color:#059669;">✅ Live</div>
-                    </div>
-                </div>
             </div>
 
+            <!-- Show Header (hidden when on Main) -->
             <div id="showHeader" class="show-header" style="display:none;">
                 <div class="show-title"><i class="fa-solid fa-tv"></i> <span id="showHeaderTitle">Show Name</span></div>
                 <div class="show-stats">
@@ -973,6 +953,7 @@
                 </div>
             </div>
 
+            <!-- Collection Table -->
             <div class="section-card">
                 <div class="section-header">
                     <i class="fa-solid fa-list"></i>
@@ -1002,6 +983,7 @@
                 </div>
             </div>
 
+            <!-- Two Column: Schedule + Turnovers -->
             <div class="two-col">
                 <div class="section-card">
                     <div class="section-header"><i class="fa-regular fa-calendar"></i> SCHEDULE</div>
@@ -1014,12 +996,11 @@
                 </div>
                 <div class="section-card">
                     <div class="section-header"><i class="fa-regular fa-note-sticky"></i> TURNOVERS</div>
-                    <div id="turnoversContainer">
-                        <div class="turnover-item"><span class="turnover-title">No turnovers</span></div>
-                    </div>
+                    <div id="turnoversContainer"></div>
                 </div>
             </div>
 
+            <!-- Calendar -->
             <div class="section-card">
                 <div class="section-header"><i class="fa-regular fa-calendar-circle-plus"></i> WEEKLY CALENDAR</div>
                 <div class="calendar-grid" id="calendarGrid"></div>
@@ -1094,6 +1075,7 @@
         const scheduleSun = $('scheduleSun');
         const turnoversContainer = $('turnoversContainer');
         const calendarGrid = $('calendarGrid');
+        const statsRow = $('statsRow');
 
         // ─── HELPERS ──────────────────────────────────────────────────
         function esc(s) {
@@ -1111,7 +1093,12 @@
         function formatDate(dateStr) {
             if (!dateStr || dateStr === '—') return '—';
             try {
-                const d = new Date(dateStr + 'T00:00:00');
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) {
+                    const d2 = new Date(dateStr + 'T00:00:00');
+                    if (isNaN(d2.getTime())) return dateStr;
+                    return d2.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                }
                 return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             } catch { return dateStr; }
         }
@@ -1230,11 +1217,6 @@
                 currentShowId = showId;
                 const show = allShows.find(s => s.id === showId);
                 if (show) {
-                    showHeader.style.display = 'flex';
-                    showHeaderTitle.textContent = show.title;
-                    showHeaderTotal.textContent = show.total_episodes || 0;
-                    showHeaderAvailable.textContent = show.available_episodes || 0;
-                    showHeaderUntil.textContent = show.available_until || '—';
                     renderShowView(show);
                 }
             }
@@ -1242,6 +1224,9 @@
 
         // ─── RENDER MAIN VIEW ─────────────────────────────────────────
         function renderMainView() {
+            // ─── STATS ARE VISIBLE IN MAIN VIEW ───
+            if (statsRow) statsRow.style.display = 'grid';
+
             const totalShows = allShows.length;
             let nextExpire = '—';
             allShows.forEach(item => {
@@ -1251,7 +1236,6 @@
             });
             $('statTotalShows').textContent = totalShows;
             $('statNextExpire').textContent = formatDate(nextExpire);
-            $('statStatus').textContent = '✅ Live';
 
             tableHead.innerHTML = `
                 <tr>
@@ -1265,10 +1249,8 @@
                 tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>`;
             } else {
                 tableBody.innerHTML = allShows.map(item => {
-                    const dot = item.available_episodes > 10 ? 'green' : (item.available_episodes > 0 ? 'yellow' :
-                        'red');
-                    const badge = item.available_episodes > 10 ? 'badge-avail' : (item.available_episodes > 0 ?
-                        'badge-limited' : 'badge-low');
+                    const dot = item.available_episodes > 10 ? 'green' : (item.available_episodes > 0 ? 'yellow' : 'red');
+                    const badge = item.available_episodes > 10 ? 'badge-avail' : (item.available_episodes > 0 ? 'badge-limited' : 'badge-low');
                     return `
                         <tr>
                             <td class="font-bold">${esc(item.title)}</td>
@@ -1287,16 +1269,8 @@
 
         // ─── RENDER SHOW VIEW ─────────────────────────────────────────
         function renderShowView(show) {
-            const totalShows = allShows.length;
-            let nextExpire = '—';
-            allShows.forEach(item => {
-                if (item.available_until && (nextExpire === '—' || item.available_until < nextExpire)) {
-                    nextExpire = item.available_until;
-                }
-            });
-            $('statTotalShows').textContent = totalShows;
-            $('statNextExpire').textContent = formatDate(nextExpire);
-            $('statStatus').textContent = '✅ Live';
+            // ─── STATS ARE HIDDEN IN SHOW VIEW ───
+            if (statsRow) statsRow.style.display = 'none';
 
             showHeader.style.display = 'flex';
             showHeaderTitle.textContent = show.title;
@@ -1305,8 +1279,7 @@
             showHeaderUntil.textContent = show.available_until || '—';
 
             const showEpisodes = allEpisodes.filter(ep => ep.show_title === show.title);
-            const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done' || ep.status === 'true')
-            .length;
+            const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done' || ep.status === 'true').length;
             const total = show.total_episodes || showEpisodes.length || 1;
             const percent = Math.round((done / total) * 100);
 
@@ -1324,8 +1297,7 @@
             `;
 
             if (!showEpisodes.length) {
-                tableBody.innerHTML =
-                    `<tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">No episodes for this show.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">No episodes for this show.</td></tr>`;
             } else {
                 tableBody.innerHTML = showEpisodes.map(ep => {
                     const badge = getStatusBadge(ep.status);
@@ -1368,18 +1340,51 @@
 
         // ─── RENDER TURNOVERS ─────────────────────────────────────────
         function renderTurnovers(data) {
-            if (!data.length) {
-                turnoversContainer.innerHTML =
-                    `<div class="turnover-item"><span class="turnover-title">No turnovers</span></div>`;
+            if (!data || !data.length) {
+                turnoversContainer.innerHTML = `
+                    <div class="table-wrap" style="padding:0.5rem;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>TITLES</th>
+                                    <th>START DATE</th>
+                                    <th>END DATE</th>
+                                    <th>NOTES</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="4" class="text-center py-4 text-slate-400 text-sm">No turnovers</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
                 return;
             }
-            turnoversContainer.innerHTML = data.map(item => `
-                <div class="turnover-item">
-                    <span class="turnover-title">${esc(item.title)}</span>
-                    <span class="turnover-dates">${esc(item.start_date || '—')} → ${esc(item.end_date || '—')}</span>
-                    ${item.notes ? `<span class="turnover-notes">${esc(item.notes)}</span>` : ''}
+            
+            turnoversContainer.innerHTML = `
+                <div class="table-wrap" style="padding:0.5rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align:left;padding:0.4rem 0.6rem;font-weight:600;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);border-bottom:2px solid var(--border-color);background:var(--bg-header);">TITLES</th>
+                                <th style="text-align:left;padding:0.4rem 0.6rem;font-weight:600;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);border-bottom:2px solid var(--border-color);background:var(--bg-header);">START DATE</th>
+                                <th style="text-align:left;padding:0.4rem 0.6rem;font-weight:600;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);border-bottom:2px solid var(--border-color);background:var(--bg-header);">END DATE</th>
+                                <th style="text-align:left;padding:0.4rem 0.6rem;font-weight:600;font-size:0.55rem;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);border-bottom:2px solid var(--border-color);background:var(--bg-header);">NOTES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.map(item => `
+                                <tr>
+                                    <td style="padding:0.4rem 0.6rem;border-bottom:1px solid var(--border-light);color:var(--text-primary);vertical-align:middle;font-weight:600;">${esc(item.title)}</td>
+                                    <td style="padding:0.4rem 0.6rem;border-bottom:1px solid var(--border-light);color:var(--text-primary);vertical-align:middle;">${esc(item.start_date || '—')}</td>
+                                    <td style="padding:0.4rem 0.6rem;border-bottom:1px solid var(--border-light);color:var(--text-primary);vertical-align:middle;">${esc(item.end_date || '—')}</td>
+                                    <td style="padding:0.4rem 0.6rem;border-bottom:1px solid var(--border-light);color:var(--text-muted);vertical-align:middle;font-size:0.65rem;">${esc(item.notes || '')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
-            `).join('');
+            `;
         }
 
         // ─── RENDER CALENDAR ──────────────────────────────────────────
@@ -1447,10 +1452,8 @@
                     if (!row || row.length === 0) continue;
                     const firstCell = String(row[0] || '').trim().toUpperCase();
                     if (firstCell.includes('CLASSICS COLLECTION')) { currentSection = 'titles'; continue; }
-                    if (firstCell.includes('SCHEDULE') || firstCell.includes('SATURDAY')) { currentSection =
-                        'schedule'; continue; }
-                    if (firstCell.includes('TURNOVERS') || firstCell.includes('TURN0VERS')) { currentSection =
-                        'turnovers'; continue; }
+                    if (firstCell.includes('SCHEDULE') || firstCell.includes('SATURDAY')) { currentSection = 'schedule'; continue; }
+                    if (firstCell.includes('TURNOVERS') || firstCell.includes('TURN0VERS')) { currentSection = 'turnovers'; continue; }
                     if (firstCell.includes('TITLES') || firstCell.includes('TOTAL') || firstCell.includes('AVAILABLE') ||
                         firstCell.includes('DATE') || firstCell.includes('NOTES')) continue;
                     if (row.every(c => c === undefined || String(c).trim() === '')) continue;
@@ -1461,22 +1464,19 @@
                         const available = parseInt(row[3]) || parseInt(row[2]) || 0;
                         const until = String(row[5] || row[4] || '').trim();
                         if (title && !title.includes('=') && !title.includes('CLASSICS')) {
-                            result.titles.push({ title, total, available, until, status: available > 0 ? 'Active' :
-                                    'Expiring' });
+                            result.titles.push({ title, total, available, until, status: available > 0 ? 'Active' : 'Expiring' });
                         }
                     }
                     if (currentSection === 'schedule') {
                         const day = String(row[0] || '').trim().toLowerCase();
                         const timeTitle = String(row[1] || row[2] || '').trim();
-                        if (day && timeTitle && !day.includes('schedule') && !day.includes('saturday') && !day
-                            .includes('sunday')) {
+                        if (day && timeTitle && !day.includes('schedule') && !day.includes('saturday') && !day.includes('sunday')) {
                             let dayType = day.includes('sat') ? 'Saturday' : (day.includes('sun') ? 'Sunday' : null);
                             if (dayType && timeTitle) {
                                 let timeSlot = '';
                                 const timeMatch = timeTitle.match(/(\d{1,2}:\d{2}[AP]M\s*-\s*\d{1,2}:\d{2}[AP]M)/i);
                                 if (timeMatch) timeSlot = timeMatch[0];
-                                result.weekend.push({ day: dayType, time_slot: timeSlot || timeTitle, title: timeTitle
-                                        .replace(timeSlot, '').trim() || timeTitle });
+                                result.weekend.push({ day: dayType, time_slot: timeSlot || timeTitle, title: timeTitle.replace(timeSlot, '').trim() || timeTitle });
                             }
                         }
                     }
@@ -1486,16 +1486,13 @@
                         const end = String(row[2] || '').trim();
                         const notes = String(row[3] || '').trim();
                         if (title && !title.includes('TITLES') && !title.includes('TURNOVERS')) {
-                            result.turnovers.push({ title, start_date: start || null, end_date: end || null,
-                                notes: notes || '' });
+                            result.turnovers.push({ title, start_date: start || null, end_date: end || null, notes: notes || '' });
                         }
                     }
                 }
             }
 
-            const showSheetNames = ['POPEYE CLASSIC', 'CHARLIE CHAPLIN', 'JOHNNY STACCATO', 'WHATS MY LINE',
-                "WHAT'S MY LINE"
-            ];
+            const showSheetNames = ['POPEYE CLASSIC', 'CHARLIE CHAPLIN', 'JOHNNY STACCATO', 'WHATS MY LINE', "WHAT'S MY LINE"];
             const showNameMap = {
                 'POPEYE CLASSIC': 'POPEYE CLASSIC',
                 'CHARLIE CHAPLIN': 'CHARLIE CHAPLIN',
@@ -1518,13 +1515,11 @@
                     const date = String(row[0] || '').trim();
                     const episode = String(row[1] || '').trim();
                     const status = String(row[2] || '').trim().toUpperCase();
-                    if (date && episode && !date.includes('DATE') && !date.includes('TOTAL') && !episode.includes(
-                        'EPISODE') && !episode.includes('TOTAL')) {
+                    if (date && episode && !date.includes('DATE') && !date.includes('TOTAL') && !episode.includes('EPISODE') && !episode.includes('TOTAL')) {
                         let finalStatus = false;
                         if (status === 'TRUE' || row[2] === true || row[2] === 'TRUE') finalStatus = true;
                         if (status === 'FALSE' || row[2] === false || row[2] === 'FALSE') finalStatus = false;
-                        result.episodes.push({ air_date: date, episode_name: episode, show_title: showTitle,
-                            status: finalStatus });
+                        result.episodes.push({ air_date: date, episode_name: episode, show_title: showTitle, status: finalStatus });
                     }
                 }
             });
@@ -1545,11 +1540,9 @@
             const episodeCounts = {};
             data.episodes.forEach(ep => { episodeCounts[ep.show_title] = (episodeCounts[ep.show_title] || 0) + 1; });
             data.titles.slice(0, 10).forEach(t => {
-                html +=
-                    `<tr><td><strong>${esc(t.title)}</strong></td><td>${t.total}</td><td>${t.available}</td><td>${episodeCounts[t.title] || 0}</td></tr>`;
+                html += `<tr><td><strong>${esc(t.title)}</strong></td><td>${t.total}</td><td>${t.available}</td><td>${episodeCounts[t.title] || 0}</td></tr>`;
             });
-            if (data.titles.length > 10) html +=
-                `<tr><td colspan="4" class="text-center text-slate-400 text-xs">+ ${data.titles.length - 10} more</td></tr>`;
+            if (data.titles.length > 10) html += `<tr><td colspan="4" class="text-center text-slate-400 text-xs">+ ${data.titles.length - 10} more</td></tr>`;
             html += `</tbody></table>`;
             $('importPreviewTable').innerHTML = html;
             $('importStatus').textContent = `✅ ${data.titles.length} titles, ${data.episodes.length} episodes ready`;
@@ -1572,21 +1565,17 @@
                         available_until: title.until || null
                     }, { onConflict: 'title' });
                 }
-                await supabaseClient.from('classic_schedule').delete().neq('id',
-                    '00000000-0000-0000-0000-000000000000');
+                await supabaseClient.from('classic_schedule').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 for (const item of data.weekend) {
-                    await supabaseClient.from('classic_schedule').insert({ day: item.day, time_slot: item.time_slot ||
-                            '', title: item.title || '' });
+                    await supabaseClient.from('classic_schedule').insert({ day: item.day, time_slot: item.time_slot || '', title: item.title || '' });
                 }
                 await supabaseClient.from('classic_turnovers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 for (const item of data.turnovers) {
-                    await supabaseClient.from('classic_turnovers').insert({ title: item.title || '', start_date: item
-                            .start_date || null, end_date: item.end_date || null, notes: item.notes || '' });
+                    await supabaseClient.from('classic_turnovers').insert({ title: item.title || '', start_date: item.start_date || null, end_date: item.end_date || null, notes: item.notes || '' });
                 }
                 await supabaseClient.from('classic_episodes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 for (const ep of data.episodes) {
-                    await supabaseClient.from('classic_episodes').insert({ air_date: ep.air_date || null, episode_name: ep
-                            .episode_name || '', show_title: ep.show_title || '', status: ep.status || false });
+                    await supabaseClient.from('classic_episodes').insert({ air_date: ep.air_date || null, episode_name: ep.episode_name || '', show_title: ep.show_title || '', status: ep.status || false });
                 }
                 $('importStatus').textContent = '✅ Sync complete!';
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Done!';
