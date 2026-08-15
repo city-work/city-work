@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Classics Collection · Dark Theme</title>
+    <title>Classics Collection · Unified Dashboard</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,34 +18,54 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
-        /* ─── DARK THEME VARIABLES ─── */
+        /* ─── LIGHT THEME ─── */
         :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
-            --bg-card: #1a2234;
-            --bg-card-hover: #243049;
-            --bg-input: #1a2234;
-            --bg-sidebar: #0d1320;
-            --bg-header: #111827;
-            --border-color: #2a3a4f;
-            --border-light: #1e2d42;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --text-inverse: #0f172a;
-            --accent-blue: #3b82f6;
-            --accent-blue-hover: #2563eb;
+            --bg-page: #f1f5f9;
+            --bg-white: #ffffff;
+            --bg-sidebar: #0f172a;
+            --bg-card: #ffffff;
+            --bg-hover: #f8fafc;
+            --bg-input: #fafafa;
+            --bg-header: #f8fafc;
+            --border-color: #e5e7eb;
+            --border-light: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --text-white: #ffffff;
+            --accent-blue: #2563eb;
+            --accent-blue-hover: #1d4ed8;
             --accent-green: #22c55e;
             --accent-yellow: #eab308;
             --accent-red: #ef4444;
-            --shadow-color: rgba(0, 0, 0, 0.4);
-            --gradient-progress: linear-gradient(90deg, #3b82f6, #22c55e);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --gradient-progress: linear-gradient(90deg, #2563eb, #22c55e);
         }
 
         body {
-            background: var(--bg-primary);
+            background: var(--bg-page);
             color: var(--text-primary);
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ─── SCROLLBAR ─── */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
 
         /* ─── UNIFIED DASHBOARD LAYOUT ─── */
@@ -79,10 +99,1650 @@
             padding: 1.25rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.75rem;
             height: calc(100vh - 2.5rem);
             position: sticky;
             top: 1.25rem;
             overflow-y: auto;
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .sidebar-header .icon-box {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-blue);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .sidebar-header h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+        }
+        .sidebar-header .badge {
+            font-size: 0.5rem;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 0.1rem 0.5rem;
+            border-radius: 999px;
+            color: #94a3b8;
+            margin-left: auto;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .show-list-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            font-weight: 700;
+            margin-top: 0.15rem;
+        }
+        .show-list-label i {
+            margin-right: 0.3rem;
+        }
+
+        .show-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 0.7rem;
+            border-radius: 0.6rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid transparent;
+        }
+        .show-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+        .show-item.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+        .show-item.active .episode-count {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .show-item .show-name {
+            font-weight: 600;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .show-item .episode-count {
+            font-size: 0.65rem;
+            color: #94a3b8;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .show-item .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .show-item .status-dot.green {
+            background: var(--accent-green);
+        }
+        .show-item .status-dot.yellow {
+            background: var(--accent-yellow);
+        }
+        .show-item .status-dot.red {
+            background: var(--accent-red);
+        }
+        .show-item .progress-bar {
+            grid-column: 1 / -1;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 0.1rem;
+        }
+        .show-item .progress-bar .fill {
+            height: 100%;
+            border-radius: 999px;
+            background: var(--gradient-progress);
+            transition: width 0.6s ease;
+        }
+        .show-item.active .progress-bar .fill {
+            background: linear-gradient(90deg, #60a5fa, #34d399);
+        }
+
+        .sidebar-divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            margin: 0.1rem 0;
+        }
+
+        .episode-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .episode-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.2rem 0 0.4rem 0;
+        }
+        .episode-section-header h4 {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #94a3b8;
+        }
+        .episode-section-header .episode-count-badge {
+            font-size: 0.55rem;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0.1rem 0.5rem;
+            border-radius: 999px;
+            color: #94a3b8;
+        }
+
+        .episode-list-container {
+            flex: 1;
+            overflow-y: auto;
+            margin: 0 -0.25rem;
+            padding: 0 0.25rem;
+        }
+        .episode-list-container::-webkit-scrollbar {
+            width: 3px;
+        }
+        .episode-list-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+        }
+
+        .episode-item {
+            display: grid;
+            grid-template-columns: 1fr 2fr auto auto;
+            gap: 0.3rem;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.7rem;
+            border-radius: 0.4rem;
+            align-items: center;
+            transition: background 0.15s;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .episode-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .episode-item.done {
+            opacity: 0.4;
+        }
+        .episode-item.done .episode-title {
+            text-decoration: line-through;
+        }
+        .episode-item .episode-date {
+            font-size: 0.6rem;
+            color: #94a3b8;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .episode-item .episode-title {
+            color: #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .episode-item .episode-actions {
+            display: flex;
+            gap: 0.15rem;
+        }
+        .episode-item .episode-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.6rem;
+            padding: 0.1rem 0.2rem;
+            border-radius: 4px;
+            transition: all 0.15s;
+            color: #64748b;
+        }
+        .episode-item .episode-actions .toggle-btn:hover {
+            color: var(--accent-green);
+            background: rgba(34, 197, 94, 0.1);
+        }
+        .episode-item .episode-actions .delete-btn:hover {
+            color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .add-episode-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            padding: 0.35rem;
+            border-radius: 0.5rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+        .add-episode-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .empty-episodes {
+            color: #64748b;
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 1.5rem 0;
+            font-style: italic;
+        }
+
+        /* ─── MAIN CONTENT ─── */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .main-header {
+            background: var(--bg-white);
+            border-radius: 1.25rem;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            box-shadow: var(--shadow);
+        }
+        .main-header h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
             color: var(--text-primary);
-            border: 1px solid var
+        }
+        .main-header h1 span {
+            color: var(--accent-blue);
+        }
+        .main-header .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-import {
+            background: var(--text-primary);
+            color: white;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-import:hover {
+            background: #1e293b;
+            transform: scale(1.02);
+        }
+
+        .btn-signout {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            padding: 0.3rem 0.9rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-signout:hover {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .btn-mainhub {
+            background: var(--text-primary);
+            color: white;
+            border: none;
+            padding: 0.3rem 0.9rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .btn-mainhub:hover {
+            background: #1e293b;
+        }
+
+        .status-badge-top {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.2rem 0.7rem;
+            border-radius: 9999px;
+            border: 1px solid;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .status-badge-top.status-ok {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+        .status-badge-top.status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+        .status-badge-top.status-waiting {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fcd34d;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.green {
+            background: var(--accent-green);
+        }
+        .status-dot.amber {
+            background: var(--accent-yellow);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        .status-dot.red {
+            background: var(--accent-red);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+        .stat-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            transition: box-shadow 0.2s;
+            box-shadow: var(--shadow);
+        }
+        .stat-card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+        .stat-card .stat-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--text-muted);
+        }
+        .stat-card .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-top: 0.1rem;
+        }
+        .stat-card .stat-sub {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .stat-card .stat-icon {
+            float: right;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .stat-card .stat-icon.blue {
+            background: #eff6ff;
+            color: var(--accent-blue);
+        }
+        .stat-card .stat-icon.indigo {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+        .stat-card .stat-icon.amber {
+            background: #fffbeb;
+            color: #d97706;
+        }
+        .stat-card .stat-icon.emerald {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .section-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .section-card .section-header {
+            padding: 0.6rem 1rem;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-header);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-card .section-header i {
+            color: var(--accent-blue);
+        }
+        .section-card .section-header .badge-pill {
+            margin-left: auto;
+            font-size: 0.55rem;
+            font-weight: 600;
+            background: #e5e7eb;
+            padding: 0.1rem 0.6rem;
+            border-radius: 999px;
+            color: var(--text-muted);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            padding: 0 0.25rem 0.25rem 0.25rem;
+        }
+        .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+        .table-wrap th {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            font-weight: 600;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border-color);
+            background: var(--bg-header);
+        }
+        .table-wrap td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+        .table-wrap tr:last-child td {
+            border-bottom: none;
+        }
+        .table-wrap tr:hover td {
+            background: var(--bg-hover);
+        }
+        .table-wrap tr.highlight-row td {
+            background: #eff6ff !important;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .status-badge {
+            padding: 0.1rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .badge-avail {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-limited {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+        .badge-low {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .indicator-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .indicator-dot.green {
+            background: var(--accent-green);
+        }
+        .indicator-dot.yellow {
+            background: var(--accent-yellow);
+        }
+        .indicator-dot.red {
+            background: var(--accent-red);
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .schedule-day {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.7rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .schedule-day:last-child {
+            border-bottom: none;
+        }
+        .schedule-day .time {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.6rem;
+        }
+        .schedule-day .title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .schedule-day .day-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.3px;
+        }
+
+        .turnover-item {
+            padding: 0.4rem 0.75rem;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.7rem;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .turnover-item:last-child {
+            border-bottom: none;
+        }
+        .turnover-item .turnover-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .turnover-item .turnover-dates {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+        }
+        .turnover-item .turnover-notes {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            padding: 0.75rem;
+        }
+        @media (max-width: 1024px) {
+            .calendar-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        @media (max-width: 640px) {
+            .calendar-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .calendar-day {
+            background: #fafafa;
+            border: 1px solid var(--border-color);
+            border-radius: 0.6rem;
+            overflow: hidden;
+            min-height: 60px;
+        }
+        .calendar-day .day-header {
+            background: var(--bg-header);
+            padding: 0.2rem 0.4rem;
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .calendar-day .day-header .day-num {
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+        .calendar-day .day-body {
+            padding: 0.25rem 0.3rem;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+        .calendar-day .day-body .cal-event {
+            font-size: 0.55rem;
+            padding: 0.1rem 0.25rem;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .calendar-day .day-body .empty-cal {
+            font-size: 0.5rem;
+            color: #d1d5db;
+            text-align: center;
+            padding: 0.25rem 0;
+            font-style: italic;
+        }
+
+        /* ─── MODALS ─── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .modal-card {
+            background: var(--bg-white);
+            border-radius: 1.25rem;
+            max-width: 500px;
+            width: 100%;
+            padding: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-card .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .modal-card .modal-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .modal-card .modal-header .close-btn {
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+        }
+        .modal-card .modal-header .close-btn:hover {
+            color: var(--accent-red);
+        }
+        .modal-card label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.3px;
+            display: block;
+            margin-bottom: 0.15rem;
+        }
+        .modal-card input,
+        .modal-card select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            background: var(--bg-input);
+            transition: border-color 0.2s;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+        .modal-card input:focus,
+        .modal-card select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: var(--bg-white);
+        }
+        .modal-card .btn-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .modal-card .btn-row button {
+            flex: 1;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .modal-card .btn-row .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+        }
+        .modal-card .btn-row .btn-primary:hover {
+            background: var(--accent-blue-hover);
+        }
+        .modal-card .btn-row .btn-secondary {
+            background: #f1f5f9;
+            color: var(--text-muted);
+        }
+        .modal-card .btn-row .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .import-modal .modal-card {
+            max-width: 800px;
+        }
+        .import-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.5rem;
+            margin: 0.75rem 0;
+        }
+        .import-summary-item {
+            background: var(--bg-header);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            text-align: center;
+        }
+        .import-summary-item .number {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .import-summary-item .label {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .drop-zone:hover {
+            border-color: var(--accent-blue);
+        }
+        .drop-zone i {
+            font-size: 2rem;
+            color: var(--text-muted);
+        }
+        .drop-zone p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+        .preview-table-wrap {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            margin: 0.5rem 0;
+        }
+        .preview-table-wrap table {
+            width: 100%;
+            font-size: 0.65rem;
+            border-collapse: collapse;
+        }
+        .preview-table-wrap th {
+            background: var(--bg-header);
+            padding: 0.25rem 0.5rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+        }
+        .preview-table-wrap td {
+            padding: 0.25rem 0.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .btn-sync {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 0.4rem 1.2rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-sync:hover {
+            background: var(--accent-blue-hover);
+        }
+        .btn-sync:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #loadingSpinner {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        #loadingSpinner .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                height: auto;
+                position: static;
+                max-height: 450px;
+            }
+            .unified-dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── LOADING ─── -->
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+        <p class="loading-text">Loading Classics Collection...</p>
+    </div>
+
+    <!-- ─── UNIFIED DASHBOARD ─── -->
+    <div class="unified-dashboard">
+
+        <!-- ═══ SIDEBAR ═══ -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="icon-box"><i class="fa-solid fa-box-archive"></i></div>
+                <h2>Classics</h2>
+                <span class="badge">v2.0</span>
+            </div>
+
+            <span class="show-list-label"><i class="fa-regular fa-circle-play mr-1"></i> Shows</span>
+            <div id="showList"></div>
+
+            <hr class="sidebar-divider" />
+
+            <div class="episode-section">
+                <div class="episode-section-header">
+                    <h4><i class="fa-regular fa-list-check mr-1"></i> Episodes</h4>
+                    <span class="episode-count-badge" id="episodeCountBadge">0</span>
+                </div>
+                <div class="episode-list-container" id="episodeListContainer">
+                    <div class="empty-episodes">Select a show to view episodes</div>
+                </div>
+                <button class="add-episode-btn" onclick="openAddEpisodeModal()">
+                    <i class="fa-solid fa-plus"></i> Add Episode
+                </button>
+            </div>
+        </aside>
+
+        <!-- ═══ MAIN CONTENT ═══ -->
+        <main class="main-content">
+
+            <!-- Header -->
+            <header class="main-header">
+                <h1><span>Classics</span> Collection</h1>
+                <div class="header-actions">
+                    <span id="statusBadge" class="status-badge-top status-waiting">
+                        <span class="status-dot amber"></span> Connecting...
+                    </span>
+                    <button onclick="openImportModal()" class="btn-import">
+                        <i class="fa-solid fa-file-import"></i> Import Excel
+                    </button>
+                    <button id="logoutBtn" class="btn-signout">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                    </button>
+                    <a href="../index.html" class="btn-mainhub">Main Hub</a>
+                </div>
+            </header>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fa-solid fa-film"></i></div>
+                    <div class="stat-label">Total Titles</div>
+                    <div class="stat-value" id="statTotalTitles">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon indigo"><i class="fa-solid fa-circle-play"></i></div>
+                    <div class="stat-label">Available Episodes</div>
+                    <div class="stat-value" id="statAvailableEpisodes">0</div>
+                    <div class="stat-sub" id="statTotalEpisodes">Out of 0 Total</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon amber"><i class="fa-regular fa-clock"></i></div>
+                    <div class="stat-label">Next Expiration</div>
+                    <div class="stat-value" id="statNextExpire" style="font-size:1rem;">—</div>
+                    <div class="stat-sub" id="statNextExpireTitle">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon emerald"><i class="fa-solid fa-signal"></i></div>
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value" id="statSheetStatus" style="font-size:1rem;color:#059669;">✅ Live</div>
+                    <div class="stat-sub">Supabase Connected</div>
+                </div>
+            </div>
+
+            <!-- Collection Table -->
+            <div class="section-card">
+                <div class="section-header">
+                    <i class="fa-solid fa-list"></i> Classics Collection
+                    <span class="badge-pill">read-only</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th class="text-center">Total</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Available</th>
+                                <th class="text-center">Indicator</th>
+                                <th class="text-right">Available Until</th>
+                            </tr>
+                        </thead>
+                        <tbody id="collectionBody">
+                            <tr><td colspan="6" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Two Column: Schedule + Turnovers -->
+            <div class="two-col">
+                <div class="section-card">
+                    <div class="section-header"><i class="fa-regular fa-calendar"></i> Weekend Schedule</div>
+                    <div id="scheduleContainer">
+                        <div class="schedule-day"><span class="day-label">Saturday</span></div>
+                        <div id="scheduleSat"><div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div></div>
+                        <div class="schedule-day" style="border-top:1px solid var(--border-light);"><span class="day-label">Sunday</span></div>
+                        <div id="scheduleSun"><div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div></div>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <div class="section-header"><i class="fa-regular fa-note-sticky"></i> Turnovers</div>
+                    <div id="turnoversContainer">
+                        <div class="turnover-item"><span class="turnover-title">No turnovers</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="section-card">
+                <div class="section-header"><i class="fa-regular fa-calendar-circle-plus"></i> Weekly Calendar</div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ─── ADD EPISODE MODAL ─── -->
+    <div id="addEpisodeModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-plus-circle text-blue-600 mr-2"></i> Add Episode</h3>
+                <button class="close-btn" onclick="closeAddEpisodeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addEpisodeForm" onsubmit="handleAddEpisode(event)">
+                <label>Air Date</label>
+                <input type="text" id="episodeDate" placeholder="e.g., 2025-12-01" required />
+                <label>Episode Title</label>
+                <input type="text" id="episodeName" placeholder="e.g., E17 - New Episode" required />
+                <div class="btn-row">
+                    <button type="button" class="btn-secondary" onclick="closeAddEpisodeModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Episode</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── IMPORT MODAL ─── -->
+    <div id="importModal" class="modal-overlay import-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-import text-blue-600 mr-2"></i> Import Excel</h3>
+                <button class="close-btn" onclick="closeImportModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="drop-zone" onclick="document.getElementById('excelFileInput').click()">
+                <i class="fa-solid fa-cloud-upload-alt"></i>
+                <p>Click to select Excel file (.xlsx, .xls, .csv)</p>
+                <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileImport(event)" style="display:none;" />
+            </div>
+            <div id="importPreview" style="display:none;margin-top:1rem;">
+                <div class="import-summary-grid" id="importSummary"></div>
+                <div class="preview-table-wrap" id="importPreviewTable"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem;">
+                    <span id="importStatus" class="text-xs text-slate-500">Ready to sync</span>
+                    <button class="btn-sync" onclick="syncToSupabase()"><i class="fa-solid fa-cloud-upload-alt"></i> Sync to Supabase</button>
+                </div>
+            </div>
+            <div id="importError" class="text-xs text-red-500 mt-2" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // ─── SUPABASE CONFIG ──────────────────────────────────────────
+        const SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
+
+        let supabase = null;
+        try {
+            if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (e) { console.warn('Supabase library not loaded'); }
+
+        // ─── STATE ──────────────────────────────────────────────────────
+        let allShows = [];
+        let allEpisodes = [];
+        let weekendData = [];
+        let turnoverData = [];
+        let calendarData = [];
+        let currentShowId = null;
+        let currentShowTitle = null;
+        let importedData = null;
+
+        // ─── DOM REFS ──────────────────────────────────────────────────
+        const $ = id => document.getElementById(id);
+        const loadingSpinner = $('loadingSpinner');
+        const statusBadge = $('statusBadge');
+        const showList = $('showList');
+        const episodeListContainer = $('episodeListContainer');
+        const episodeCountBadge = $('episodeCountBadge');
+        const collectionBody = $('collectionBody');
+        const scheduleSat = $('scheduleSat');
+        const scheduleSun = $('scheduleSun');
+        const turnoversContainer = $('turnoversContainer');
+        const calendarGrid = $('calendarGrid');
+
+        // ─── HELPERS ──────────────────────────────────────────────────
+        function esc(s) {
+            if (s == null || s === '') return '—';
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function setStatus(text, type) {
+            const colors = { ok: 'status-ok', error: 'status-error', waiting: 'status-waiting' };
+            const dots = { ok: 'green', error: 'red', waiting: 'amber' };
+            statusBadge.className = `status-badge-top ${colors[type] || 'status-waiting'}`;
+            statusBadge.innerHTML = `<span class="status-dot ${dots[type] || 'amber'}"></span> ${text}`;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr || dateStr === '—') return '—';
+            try { const d = new Date(dateStr + 'T00:00:00'); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return dateStr; }
+        }
+
+        // ─── AUTH ──────────────────────────────────────────────────────
+        async function checkSession() {
+            loadingSpinner.style.display = 'flex';
+            setStatus('Checking...', 'waiting');
+            if (!supabase) { setStatus('⚠️ No Supabase', 'error'); loadingSpinner.style.display = 'none'; return; }
+            try {
+                const { data, error } = await supabase.auth.getSession();
+                if (error) throw error;
+                const session = data?.session;
+                if (!session || !session.user) {
+                    setStatus('🔓 Not logged in', 'error');
+                    loadingSpinner.style.display = 'none';
+                    setTimeout(() => { window.location.href = '../../index.html'; }, 1500);
+                    return;
+                }
+                try {
+                    const { data: profile } = await supabase
+                        .from('profiles').select('role').eq('id', session.user.id).maybeSingle();
+                    if (!profile) {
+                        await supabase.from('profiles').insert({ id: session.user.id, email: session.user.email, role: 'user' });
+                    }
+                } catch (e) { console.warn('Profile fetch error:', e.message); }
+                setStatus('✅ Connected', 'ok');
+                await fetchAllData();
+            } catch (err) { console.error('Session error:', err); setStatus('❌ Connection error', 'error'); } finally { loadingSpinner.style.display = 'none'; }
+        }
+
+        // ─── FETCH DATA ──────────────────────────────────────────────
+        async function fetchAllData() {
+            if (!supabase) return;
+            try {
+                const [titlesRes, episodesRes, weekendRes, turnoversRes] = await Promise.all([
+                    supabase.from('classic_titles').select('*').order('title'),
+                    supabase.from('classic_episodes').select('*').order('air_date'),
+                    supabase.from('classic_weekend_schedule').select('*').order('day', { ascending: false }),
+                    supabase.from('classic_turnovers').select('*').order('start_date')
+                ]);
+                if (titlesRes.error) throw titlesRes.error;
+                if (episodesRes.error) throw episodesRes.error;
+                if (weekendRes.error) throw weekendRes.error;
+                if (turnoversRes.error) throw turnoversRes.error;
+
+                allShows = titlesRes.data || [];
+                allEpisodes = episodesRes.data || [];
+                weekendData = weekendRes.data || [];
+                turnoverData = turnoversRes.data || [];
+
+                renderAll();
+                if (allShows.length) selectShow(allShows[0].id);
+            } catch (err) { console.error('Fetch error:', err); setStatus('⚠️ Error loading', 'error'); }
+        }
+
+        // ─── RENDER ALL ──────────────────────────────────────────────
+        function renderAll() {
+            renderStats();
+            renderSidebar();
+            renderCollectionTable();
+            renderSchedule();
+            renderTurnovers();
+            renderCalendar();
+        }
+
+        function renderStats() {
+            const totalShows = allShows.length;
+            let availEpisodes = 0, totalEpisodes = 0, nextExpire = '—', nextExpireTitle = '—';
+            allShows.forEach(item => {
+                availEpisodes += parseInt(item.available_episodes) || 0;
+                totalEpisodes += parseInt(item.total_episodes) || 0;
+                if (item.available_until && (nextExpire === '—' || item.available_until < nextExpire)) {
+                    nextExpire = item.available_until;
+                    nextExpireTitle = item.title;
+                }
+            });
+            $('statTotalTitles').textContent = totalShows;
+            $('statAvailableEpisodes').textContent = availEpisodes;
+            $('statTotalEpisodes').textContent = `Out of ${totalEpisodes} Total`;
+            $('statNextExpire').textContent = formatDate(nextExpire);
+            $('statNextExpireTitle').textContent = nextExpireTitle;
+            $('statSheetStatus').textContent = totalShows > 0 ? '✅ Live' : '—';
+        }
+
+        function renderSidebar() {
+            if (!allShows.length) {
+                showList.innerHTML = '<div style="color:#64748b;font-size:0.75rem;padding:0.5rem;">No shows found</div>';
+                return;
+            }
+            showList.innerHTML = allShows.map(show => {
+                const showEpisodes = allEpisodes.filter(ep => ep.show_title === show.title);
+                const done = showEpisodes.filter(ep => ep.status === true).length;
+                const total = show.total_episodes || showEpisodes.length || 1;
+                const percent = Math.round((done / total) * 100);
+                const dot = show.available_episodes > 10 ? 'green' : (show.available_episodes > 0 ? 'yellow' : 'red');
+                const isActive = currentShowId === show.id;
+                return `
+                    <div class="show-item ${isActive ? 'active' : ''}" onclick="selectShow('${show.id}')" data-show-id="${show.id}">
+                        <span class="show-name">${esc(show.title)}</span>
+                        <span class="episode-count">${done}/${total}</span>
+                        <span class="status-dot ${dot}"></span>
+                        <div class="progress-bar"><div class="fill" style="width:${percent}%"></div></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectShow(showId) {
+            currentShowId = showId;
+            const show = allShows.find(s => s.id === showId);
+            if (!show) return;
+            currentShowTitle = show.title;
+
+            // Update sidebar highlights
+            document.querySelectorAll('.show-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.showId === showId);
+            });
+
+            // Filter episodes
+            const showEpisodes = allEpisodes.filter(ep => ep.show_title === show.title);
+            renderEpisodeList(showEpisodes, show);
+
+            // Highlight table row
+            document.querySelectorAll('#collectionBody tr').forEach(row => {
+                row.classList.toggle('highlight-row', row.dataset.title === show.title);
+            });
+        }
+
+        function renderEpisodeList(episodes, show) {
+            if (!episodes.length) {
+                episodeListContainer.innerHTML = `<div class="empty-episodes">No episodes for ${esc(show.title)}</div>`;
+                episodeCountBadge.textContent = '0';
+                return;
+            }
+            episodeCountBadge.textContent = episodes.length;
+            episodeListContainer.innerHTML = episodes.map(ep => `
+                <div class="episode-item ${ep.status ? 'done' : ''}">
+                    <span class="episode-date">${esc(ep.air_date || '—')}</span>
+                    <span class="episode-title">${esc(ep.episode_name)}</span>
+                    <div class="episode-actions">
+                        <button class="toggle-btn" onclick="toggleEpisode('${ep.id}')" title="Toggle status">
+                            ${ep.status ? '✅' : '⬜'}
+                        </button>
+                        <button class="delete-btn" onclick="deleteEpisode('${ep.id}')" title="Delete episode">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCollectionTable() {
+            if (!allShows.length) {
+                collectionBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>`;
+                return;
+            }
+            collectionBody.innerHTML = allShows.map(item => {
+                const badgeClass = item.available_episodes > 10 ? 'badge-avail' : (item.available_episodes > 0 ? 'badge-limited' : 'badge-low');
+                const dot = item.available_episodes > 10 ? 'green' : (item.available_episodes > 0 ? 'yellow' : 'red');
+                const isActive = currentShowId === item.id;
+                return `
+                    <tr data-title="${esc(item.title)}" class="${isActive ? 'highlight-row' : ''}">
+                        <td class="font-bold">${esc(item.title)}</td>
+                        <td class="text-center font-semibold">${item.total_episodes || 0}</td>
+                        <td class="text-center"><span class="status-badge ${badgeClass}">${item.available_episodes > 10 ? 'Active' : (item.available_episodes > 0 ? 'Limited' : 'Low')}</span></td>
+                        <td class="text-center font-bold">${item.available_episodes || 0}</td>
+                        <td class="text-center"><span class="indicator-dot ${dot}"></span></td>
+                        <td class="text-right text-slate-500 font-medium">${item.available_until || '—'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderSchedule() {
+            const satItems = weekendData.filter(w => w.day === 'Saturday');
+            const sunItems = weekendData.filter(w => w.day === 'Sunday');
+            scheduleSat.innerHTML = satItems.length ? satItems.map(item =>
+                `<div class="schedule-day"><span class="time">${esc(item.time_slot)}</span><span class="title">${esc(item.title)}</span></div>`
+            ).join('') : '<div class="schedule-day"><span class="time">—</span><span class="title">No Saturday items</span></div>';
+            scheduleSun.innerHTML = sunItems.length ? sunItems.map(item =>
+                `<div class="schedule-day"><span class="time">${esc(item.time_slot)}</span><span class="title">${esc(item.title)}</span></div>`
+            ).join('') : '<div class="schedule-day"><span class="time">—</span><span class="title">No Sunday items</span></div>';
+        }
+
+        function renderTurnovers() {
+            if (!turnoverData.length) {
+                turnoversContainer.innerHTML = `<div class="turnover-item"><span class="turnover-title">No turnovers</span></div>`;
+                return;
+            }
+            turnoversContainer.innerHTML = turnoverData.map(item => `
+                <div class="turnover-item">
+                    <span class="turnover-title">${esc(item.title)}</span>
+                    <span class="turnover-dates">${esc(item.start_date || '—')} → ${esc(item.end_date || '—')}</span>
+                    <span class="turnover-notes">${esc(item.notes || '')}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderCalendar() {
+            const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+
+            calendarGrid.innerHTML = daysOfWeek.map((day, idx) => {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + idx);
+                const dateStr = date.toISOString().split('T')[0];
+                const dayEvents = allEpisodes.filter(e => e.air_date === dateStr);
+                return `
+                    <div class="calendar-day">
+                        <div class="day-header"><span>${day.substring(0,3)}</span><span class="day-num">${date.getDate()}</span></div>
+                        <div class="day-body">
+                            ${dayEvents.map(e => `<div class="cal-event">${esc(e.episode_name)}</div>`).join('')}
+                            ${dayEvents.length === 0 ? '<div class="empty-cal">—</div>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ─── EPISODE ACTIONS ──────────────────────────────────────────
+        async function toggleEpisode(episodeId) {
+            if (!supabase) return;
+            const episode = allEpisodes.find(ep => ep.id === episodeId);
+            if (!episode) return;
+            await supabase.from('classic_episodes').update({ status: !episode.status }).eq('id', episodeId);
+            await fetchAllData();
+            if (currentShowId) selectShow(currentShowId);
+        }
+
+        async function deleteEpisode(episodeId) {
+            if (!supabase || !confirm('Delete this episode?')) return;
+            await supabase.from('classic_episodes').delete().eq('id', episodeId);
+            await fetchAllData();
+            if (currentShowId) selectShow(currentShowId);
+        }
+
+        // ─── ADD EPISODE ──────────────────────────────────────────────
+        function openAddEpisodeModal() {
+            if (!currentShowId) { alert('Please select a show first.'); return; }
+            $('addEpisodeModal').classList.add('open');
+        }
+
+        function closeAddEpisodeModal() {
+            $('addEpisodeModal').classList.remove('open');
+            $('addEpisodeForm').reset();
+        }
+
+        async function handleAddEpisode(e) {
+            e.preventDefault();
+            if (!supabase || !currentShowId) return;
+            const date = $('episodeDate').value;
+            const name = $('episodeName').value;
+            await supabase.from('classic_episodes').insert({
+                air_date: date,
+                episode_name: name,
+                show_title: currentShowTitle,
+                status: false
+            });
+            closeAddEpisodeModal();
+            await fetchAllData();
+            if (currentShowId) selectShow(currentShowId);
+        }
+
+        // ─── IMPORT EXCEL ─────────────────────────────────────────────
+        function openImportModal() { $('importModal').classList.add('open'); }
+        function closeImportModal() { $('importModal').classList.remove('open'); }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    parseExcelForImport(workbook);
+                } catch (err) {
+                    $('importError').textContent = 'Error parsing file: ' + err.message;
+                    $('importError').style.display = 'block';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseExcelForImport(workbook) {
+            const result = { titles: [], weekend: [], turnovers: [], episodes: [] };
+            const sheetNames = workbook.SheetNames;
+
+            // Find NO TOUCH sheet
+            const mainSheetName = sheetNames.find(name => name.includes('NO TOUCH'));
+            if (mainSheetName) {
+                const sheet = workbook.Sheets[mainSheetName];
+                const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                let currentSection = '';
+                for (let i = 0; i < json.length; i++) {
+                    const row = json[i];
+                    if (!row || row.length === 0) continue;
+                    const firstCell = String(row[0] || '').trim().toUpperCase();
+                    if (firstCell.includes('CLASSICS COLLECTION')) { currentSection = 'titles'; continue; }
+                    if (firstCell.includes('SCHEDULE') || firstCell.includes('SATURDAY')) { currentSection = 'schedule'; continue; }
+                    if (firstCell.includes('TURNOVERS') || firstCell.includes('TURN0VERS')) { currentSection = 'turnovers'; continue; }
+                    if (firstCell.includes('TITLES') || firstCell.includes('TOTAL') || firstCell.includes('AVAILABLE') || firstCell.includes('DATE') || firstCell.includes('NOTES')) continue;
+                    if (row.every(c => c === undefined || String(c).trim() === '')) continue;
+
+                    if (currentSection === 'titles') {
+                        const title = String(row[0] || '').trim();
+                        const total = parseInt(row[1]) || 0;
+                        const available = parseInt(row[3]) || parseInt(row[2]) || 0;
+                        const until = String(row[5] || row[4] || '').trim();
+                        if (title && !title.includes('=') && !title.includes('CLASSICS')) {
+                            result.titles.push({ title, total, available, until, status: available > 0 ? 'Active' : 'Expiring' });
+                        }
+                    }
+                    if (currentSection === 'schedule') {
+                        const day = String(row[0] || '').trim().toLowerCase();
+                        const timeTitle = String(row[1] || row[2] || '').trim();
+                        if (day && timeTitle && !day.includes('schedule') && !day.includes('saturday') && !day.includes('sunday')) {
+                            let dayType = day.includes('sat') ? 'Saturday' : (day.includes('sun') ? 'Sunday' : null);
+                            if (dayType && timeTitle) {
+                                let timeSlot = '';
+                                const timeMatch = timeTitle.match(/(\d{1,2}:\d{2}[AP]M\s*-\s*\d{1,2}:\d{2}[AP]M)/i);
+                                if (timeMatch) timeSlot = timeMatch[0];
+                                result.weekend.push({ day: dayType, time_slot: timeSlot || timeTitle, title: timeTitle.replace(timeSlot, '').trim() || timeTitle });
+                            }
+                        }
+                    }
+                    if (currentSection === 'turnovers') {
+                        const title = String(row[0] || '').trim();
+                        const start = String(row[1] || '').trim();
+                        const end = String(row[2] || '').trim();
+                        const notes = String(row[3] || '').trim();
+                        if (title && !title.includes('TITLES') && !title.includes('TURNOVERS')) {
+                            result.turnovers.push({ title, start_date: start || null, end_date: end || null, notes: notes || '' });
+                        }
+                    }
+                }
+            }
+
+            // Individual show sheets
+            const showSheetNames = ['POPEYE CLASSIC', 'CHARLIE CHAPLIN', 'JOHNNY STACCATO', 'WHATS MY LINE', "WHAT'S MY LINE"];
+            const showNameMap = {
+                'POPEYE CLASSIC': 'POPEYE CLASSIC',
+                'CHARLIE CHAPLIN': 'CHARLIE CHAPLIN',
+                'JOHNNY STACCATO': 'JOHNNY STACCATO',
+                'WHATS MY LINE': "WHAT'S MY LINE GAME SHOW",
+                "WHAT'S MY LINE": "WHAT'S MY LINE GAME SHOW"
+            };
+            sheetNames.forEach(name => {
+                let showKey = null;
+                for (const key of showSheetNames) {
+                    if (name.includes(key) || key.includes(name)) { showKey = key; break; }
+                }
+                if (!showKey) return;
+                const sheet = workbook.Sheets[name];
+                const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                const showTitle = showNameMap[showKey] || showKey;
+                for (let i = 0; i < json.length; i++) {
+                    const row = json[i];
+                    if (!row || row.length < 2) continue;
+                    const date = String(row[0] || '').trim();
+                    const episode = String(row[1] || '').trim();
+                    const status = String(row[2] || '').trim().toUpperCase();
+                    if (date && episode && !date.includes('DATE') && !date.includes('TOTAL') && !episode.includes('EPISODE') && !episode.includes('TOTAL')) {
+                        let finalStatus = false;
+                        if (status === 'TRUE' || row[2] === true || row[2] === 'TRUE') finalStatus = true;
+                        if (status === 'FALSE' || row[2] === false || row[2] === 'FALSE') finalStatus = false;
+                        result.episodes.push({ air_date: date, episode_name: episode, show_title: showTitle, status: finalStatus });
+                    }
+                }
+            });
+
+            importedData = result;
+            showImportPreview(result);
+        }
+
+        function showImportPreview(data) {
+            $('importPreview').style.display = 'block';
+            $('importSummary').innerHTML = `
+                <div class="import-summary-item"><div class="number">${data.titles.length}</div><div class="label">Titles</div></div>
+                <div class="import-summary-item"><div class="number">${data.episodes.length}</div><div class="label">Episodes</div></div>
+                <div class="import-summary-item"><div class="number">${data.weekend.length}</div><div class="label">Weekend</div></div>
+                <div class="import-summary-item"><div class="number">${data.turnovers.length}</div><div class="label">Turnovers</div></div>
+            `;
+            let html = `<table><thead><tr><th>Title</th><th>Total</th><th>Available</th><th>Episodes</th></tr></thead><tbody>`;
+            const episodeCounts = {};
+            data.episodes.forEach(ep => { episodeCounts[ep.show_title] = (episodeCounts[ep.show_title] || 0) + 1; });
+            data.titles.slice(0, 10).forEach(t => {
+                html += `<tr><td><strong>${esc(t.title)}</strong></td><td>${t.total}</td><td>${t.available}</td><td>${episodeCounts[t.title] || 0}</td></tr>`;
+            });
+            if (data.titles.length > 10) html += `<tr><td colspan="4" class="text-center text-slate-400 text-xs">+ ${data.titles.length - 10} more</td></tr>`;
+            html += `</tbody></table>`;
+            $('importPreviewTable').innerHTML = html;
+            $('importStatus').textContent = `✅ ${data.titles.length} titles, ${data.episodes.length} episodes ready`;
+        }
+
+        async function syncToSupabase() {
+            if (!importedData || !supabase) { alert('No data or no connection'); return; }
+            const btn = document.querySelector('.btn-sync');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
+            try {
+                const data = importedData;
+                // Titles
+                for (const title of data.titles) {
+                    await supabase.from('classic_titles').upsert({
+                        title: title.title,
+                        total_episodes: title.total || 0,
+                        available_episodes: title.available || 0,
+                        status: title.status || 'Active',
+                        available_until: title.until || null
+                    }, { onConflict: 'title' });
+                }
+                // Weekend
+                await supabase.from('classic_weekend_schedule').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                for (const item of data.weekend) {
+                    await supabase.from('classic_weekend_schedule').insert({ day: item.day, time_slot: item.time_slot || '', title: item.title || '' });
+                }
+                // Turnovers
+                await supabase.from('classic_turnovers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                for (const item of data.turnovers) {
+                    await supabase.from('classic_turnovers').insert({ title: item.title || '', start_date: item.start_date || null, end_date: item.end_date || null, notes: item.notes || '' });
+                }
+                // Episodes
+                await supabase.from('classic_episodes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+                for (const ep of data.episodes) {
+                    await supabase.from('classic_episodes').insert({ air_date: ep.air_date || null, episode_name: ep.episode_name || '', show_title: ep.show_title || '', status: ep.status || false });
+                }
+                $('importStatus').textContent = '✅ Sync complete!';
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Done!';
+                setTimeout(() => { closeImportModal(); fetchAllData(); }, 1000);
+            } catch (err) {
+                $('importStatus').textContent = '❌ Error: ' + err.message;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-cloud-upload-alt"></i> Sync to Supabase';
+            }
+        }
+
+        // ─── LOGOUT ──────────────────────────────────────────────────
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            try { if (supabase) await supabase.auth.signOut(); } catch (_) {}
+            localStorage.removeItem('archivehub_user');
+            window.location.href = '../../index.html';
+        });
+
+        // ─── INIT ──────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', function() {
+            loadingSpinner.style.display = 'flex';
+            if (supabase) {
+                checkSession();
+            } else {
+                setStatus('⚠️ No Supabase', 'error');
+                loadingSpinner.style.display = 'none';
+            }
+        });
+
+        console.log('📽️ Classics Collection - Unified Dashboard loaded');
+    </script>
+
+</body>
+</html>
