@@ -220,6 +220,32 @@
             transform: translateX(4px);
         }
 
+        .date-note {
+            font-size: 0.6rem;
+            color: #4F46E5;
+            background: #f8fafc;
+            padding: 0.05rem 0.3rem;
+            border-radius: 0.3rem;
+            border: 1px dashed #cbd5e1;
+            cursor: text;
+            min-height: 1.2rem;
+            margin: 0.1rem 0;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .date-note:focus {
+            border-color: #4F46E5;
+            background: white;
+        }
+        .date-note:empty::before {
+            content: "📝 Click to add note...";
+            color: #94a3b8;
+        }
+        .date-note:not(:empty)::before {
+            content: "";
+        }
+
         .month-section {
             margin-bottom: 0.25rem;
         }
@@ -346,6 +372,31 @@
                 height: 28px;
                 font-size: 0.7rem;
             }
+        }
+
+        .year-section {
+            margin-bottom: 1rem;
+        }
+        .year-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0.6rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-bottom: 0.5rem;
+        }
+        .year-header:hover {
+            background: #f1f5f9;
+        }
+        .year-content {
+            display: block;
+        }
+        .year-content.collapsed {
+            display: none;
         }
     </style>
 </head>
@@ -515,12 +566,12 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
     const MASTERLIST_TABLE = 'bravo_masterlist';
     const PRIORITIZATION_TABLE = 'bravo_prioritization';
+    const DATE_NOTES_TABLE = 'bravo_date_notes';
 
     let supabaseClient = null;
     try {
         if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            window.supabaseClient = supabaseClient; // Make it global for debugging
         }
     } catch (e) { console.warn('Supabase not loaded'); }
 
@@ -545,6 +596,7 @@
     // ─── STATE ──────────────────────────────────────────────────────
     let masterlistData = [];
     let priorityData = [];
+    let dateNotes = {};
     let currentView = 'masterlist';
     let currentYear = 'all';
     let currentPriority = 'all';
@@ -565,12 +617,41 @@
         return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    function formatDate(dateStr) {
+    function formatDateDisplay(dateStr) {
         if (!dateStr) return '—';
-        try {
-            const d = new Date(dateStr + 'T00:00:00');
+        // Try to parse any date string
+        const d = parseDateFlexible(dateStr);
+        if (d && !isNaN(d)) {
             return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        } catch { return dateStr; }
+        }
+        return dateStr;
+    }
+
+    function parseDateFlexible(dateStr) {
+        if (!dateStr) return null;
+        // Try "YYYY-MM-DD"
+        let match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (match) return new Date(parseInt(match[1]), parseInt(match[2])-1, parseInt(match[3]));
+        // Try "March 19, 2019"
+        match = dateStr.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
+        if (match) {
+            const monthMap = {
+                'January':0,'February':1,'March':2,'April':3,'May':4,'June':5,
+                'July':6,'August':7,'September':8,'October':9,'November':10,'December':11
+            };
+            const month = monthMap[match[1]];
+            if (month !== undefined) {
+                const day = parseInt(match[2]);
+                const year = parseInt(match[3]);
+                return new Date(year, month, day);
+            }
+        }
+        // Try "MM/DD/YYYY"
+        match = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (match) {
+            return new Date(parseInt(match[3]), parseInt(match[1])-1, parseInt(match[2]));
+        }
+        return null;
     }
 
     function getPriorityClass(p) {
@@ -657,39 +738,26 @@
         if (!supabaseClient) return;
 
         try {
-            // Using UPPERCASE column names: TITLE, ARTIST, DATE
-            const [masterRes, priorityRes] = await Promise.all([
-                supabaseClient.from(MASTERLIST_TABLE)
-                    .select('*')
-                    .order('DATE', { ascending: true }),
-                supabaseClient.from(PRIORITIZATION_TABLE)
-                    .select('*')
-                    .order('DATE', { ascending: true })
+            const [masterRes, priorityRes, notesRes] = await Promise.all([
+                supabaseClient.from(MASTERLIST_TABLE).select('*').order('DATE', { ascending: true }),
+                supabaseClient.from(PRIORITIZATION_TABLE).select('*').order('DATE', { ascending: true }),
+                supabaseClient.from(DATE_NOTES_TABLE).select('*')
             ]);
 
-            if (masterRes.error) {
-                console.error('Masterlist error:', masterRes.error);
-                throw masterRes.error;
-            }
-            if (priorityRes.error) {
-                console.error('Priority error:', priorityRes.error);
-                throw priorityRes.error;
-            }
+            if (masterRes.error) throw masterRes.error;
+            if (priorityRes.error) throw priorityRes.error;
+            if (notesRes.error) throw notesRes.error;
 
             masterlistData = masterRes.data || [];
             priorityData = priorityRes.data || [];
 
-            console.log('✅ Masterlist data:', masterlistData.length, 'rows');
-            console.log('✅ Priority data:', priorityData.length, 'rows');
-            
-            // Log first row to see column names
-            if (masterlistData.length > 0) {
-                console.log('Sample masterlist row:', masterlistData[0]);
-                console.log('Columns:', Object.keys(masterlistData[0]));
-            }
-            if (priorityData.length > 0) {
-                console.log('Sample priority row:', priorityData[0]);
-            }
+            // Build dateNotes lookup
+            dateNotes = {};
+            (notesRes.data || []).forEach(n => {
+                dateNotes[n.DATE] = n.NOTES;
+            });
+
+            console.log('✅ Loaded:', masterlistData.length, 'master,', priorityData.length, 'priority,', Object.keys(dateNotes).length, 'notes');
 
             renderYearFilter();
             renderMasterlist();
@@ -704,13 +772,14 @@
 
     // ─── RENDER YEAR FILTER ──────────────────────────────────────
     function renderYearFilter() {
-        const years = [...new Set(masterlistData.map(e => {
-            if (!e.DATE) return null;
-            const d = new Date(e.DATE + 'T00:00:00');
-            return d.getFullYear();
-        }))].filter(Boolean).sort((a, b) => b - a);
+        const years = new Set();
+        masterlistData.forEach(e => {
+            const d = parseDateFlexible(e.DATE);
+            if (d && !isNaN(d)) years.add(d.getFullYear());
+        });
+        const sortedYears = Array.from(years).sort((a, b) => b - a);
 
-        if (!years.length) {
+        if (!sortedYears.length) {
             yearFilter.innerHTML = `
                 <div onclick="filterYear('all')" class="nav-item nav-item-active" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
                     <i class="fa-solid fa-calendar text-sm w-5 text-center"></i>
@@ -728,11 +797,10 @@
             </div>
         `;
 
-        years.forEach(year => {
+        sortedYears.forEach(year => {
             const count = masterlistData.filter(e => {
-                if (!e.DATE) return false;
-                const d = new Date(e.DATE + 'T00:00:00');
-                return d.getFullYear() === year;
+                const d = parseDateFlexible(e.DATE);
+                return d && !isNaN(d) && d.getFullYear() === year;
             }).length;
 
             html += `
@@ -764,16 +832,44 @@
         if (currentView === 'masterlist') renderMasterlist();
     };
 
+    // ─── SAVE DATE NOTE ──────────────────────────────────────────
+    window.saveDateNote = async function(dateKey, note) {
+        if (!supabaseClient) return;
+        try {
+            const trimmed = note.trim();
+            if (!trimmed) {
+                // Delete if empty
+                await supabaseClient
+                    .from(DATE_NOTES_TABLE)
+                    .delete()
+                    .eq('DATE', dateKey);
+                delete dateNotes[dateKey];
+                renderMasterlist();
+                return;
+            }
+            // Upsert
+            const { error } = await supabaseClient
+                .from(DATE_NOTES_TABLE)
+                .upsert({ DATE: dateKey, NOTES: trimmed, updated_at: new Date().toISOString() });
+            if (!error) {
+                dateNotes[dateKey] = trimmed;
+                renderMasterlist();
+            }
+        } catch (err) {
+            console.error('Save note error:', err);
+        }
+    };
+
     // ─── RENDER MASTERLIST ──────────────────────────────────────
     function renderMasterlist() {
         let filteredData = masterlistData;
 
         // Year filter
         if (currentYear !== 'all') {
+            const yearNum = parseInt(currentYear);
             filteredData = filteredData.filter(e => {
-                if (!e.DATE) return false;
-                const d = new Date(e.DATE + 'T00:00:00');
-                return d.getFullYear() === parseInt(currentYear);
+                const d = parseDateFlexible(e.DATE);
+                return d && !isNaN(d) && d.getFullYear() === yearNum;
             });
         }
 
@@ -804,13 +900,19 @@
             grouped[date].push(row);
         });
 
-        const dates = Object.keys(grouped).sort();
+        const dates = Object.keys(grouped).sort((a, b) => {
+            const da = parseDateFlexible(a);
+            const db = parseDateFlexible(b);
+            if (da && db && !isNaN(da) && !isNaN(db)) return da - db;
+            return a.localeCompare(b);
+        });
 
         // Group by Year → Month → Date
         const yearMap = {};
         dates.forEach(date => {
             const entries = grouped[date] || [];
-            const d = new Date(date + 'T00:00:00');
+            const d = parseDateFlexible(date);
+            if (!d || isNaN(d)) return;
             const year = d.getFullYear();
             const month = d.getMonth();
             const day = d.getDate();
@@ -829,17 +931,17 @@
             const months = yearMap[year];
             const sortedMonths = Object.keys(months).sort((a, b) => b - a);
 
+            const totalInYear = Object.values(months).reduce((sum, days) => sum + Object.values(days).reduce((s, entries) => s + entries.length, 0), 0);
+
             html += `
-                <div class="year-section mb-4">
-                    <div class="flex items-center gap-3 mb-3">
-                        <h3 class="text-lg font-extrabold text-slate-700">📁 ${year}</h3>
-                        <span class="text-xs text-slate-400 bg-slate-100 px-3 py-0.5 rounded-full">${filteredData.filter(e => {
-                            if (!e.DATE) return false;
-                            const d = new Date(e.DATE + 'T00:00:00');
-                            return d.getFullYear() === parseInt(year);
-                        }).length} entries</span>
+                <div class="year-section">
+                    <div class="year-header" onclick="toggleYear('year-${year}')">
+                        <span class="font-bold text-slate-700">📁 ${year}</span>
+                        <span class="text-xs text-slate-400">${totalInYear} entries</span>
+                        <span class="toggle-icon" id="icon-year-${year}"><i class="fa-solid fa-chevron-down"></i></span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-4">
+                    <div class="year-content" id="content-year-${year}">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-2">
             `;
 
             sortedMonths.forEach(month => {
@@ -861,12 +963,18 @@
                     const dateObj = new Date(parseInt(year), parseInt(month), parseInt(day));
                     const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                     const dateKey = `${year}-${String(parseInt(month)+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                    const note = dateNotes[dateKey] || '';
 
                     html += `
                         <div class="date-card-compact" onclick="openMasterlistModal('${dateKey}')">
                             <div class="flex items-center justify-between">
                                 <span class="font-semibold text-sm text-slate-700">📅 ${dateStr}</span>
                                 <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${entries.length}</span>
+                            </div>
+                            <div class="date-note" contenteditable="true" onclick="event.stopPropagation();" 
+                                 onblur="saveDateNote('${dateKey}', this.innerText.trim())"
+                                 onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
+                                ${note}
                             </div>
                             <div class="text-[10px] text-slate-400 mt-1 truncate">
                                 ${entries.slice(0, 3).map(e => esc(e.TITLE)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
@@ -882,6 +990,7 @@
             });
 
             html += `
+                        </div>
                     </div>
                 </div>
             `;
@@ -893,7 +1002,7 @@
     // ─── MASTERLIST MODAL ──────────────────────────────────────
     window.openMasterlistModal = function(dateKey) {
         const entries = masterlistData.filter(e => e.DATE === dateKey);
-        modalTitle.textContent = `📋 ${formatDate(dateKey)}`;
+        modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
 
         if (!entries.length) {
             modalBody.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>`;
@@ -918,7 +1027,7 @@
                         <td class="py-2 px-3 text-slate-400 font-mono text-[11px]">${idx + 1}</td>
                         <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
                         <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
-                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDate(row.DATE) : '—'}</td>
+                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
                     </tr>
                 `;
             });
@@ -1001,7 +1110,7 @@
                                     <tr class="table-row-hover fade-in">
                                         <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
                                         <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
-                                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDate(row.DATE) : '—'}</td>
+                                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
                                         <td class="py-2 px-3 text-center">${row.NOTES ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.NOTES)}</span>` : '—'}</td>
                                     </tr>
                                 `).join('')}
@@ -1040,7 +1149,6 @@
             document.getElementById('masterlist-view').classList.remove('hidden');
             document.getElementById('priority-view').classList.add('hidden');
             
-            // Show Masterlist filters, hide Priority filters
             searchSection.style.display = 'block';
             yearDivider.style.display = 'block';
             yearSection.style.display = 'block';
@@ -1052,13 +1160,25 @@
             document.getElementById('priority-view').classList.remove('hidden');
             document.getElementById('masterlist-view').classList.add('hidden');
             
-            // Hide Masterlist filters, show Priority filters
             searchSection.style.display = 'none';
             yearDivider.style.display = 'none';
             yearSection.style.display = 'none';
             priorityFilterSection.style.display = 'block';
             
             renderPriorityGroups();
+        }
+    };
+
+    // ─── TOGGLE YEAR ──────────────────────────────────────────────
+    window.toggleYear = function(yearId) {
+        const content = document.getElementById('content-' + yearId);
+        const icon = document.getElementById('icon-' + yearId);
+        if (!content) return;
+        content.classList.toggle('collapsed');
+        if (icon) {
+            const chevron = icon.querySelector('i');
+            if (chevron) chevron.classList.toggle('fa-chevron-down');
+            if (chevron) chevron.classList.toggle('fa-chevron-up');
         }
     };
 
@@ -1106,10 +1226,7 @@
         }
     });
 
-    console.log('📋 Bravo Masterlist – Two tables (Masterlist + Prioritization)');
-    console.log('Column names used (UPPERCASE):');
-    console.log('  - masterlist: TITLE, ARTIST, DATE');
-    console.log('  - prioritization: TITLE, ARTIST, DATE, CATEGORIZATION, NOTES');
+    console.log('📋 Bravo Masterlist – Revised with date parsing & notes');
 })();
 </script>
 
