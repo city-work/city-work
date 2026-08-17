@@ -46,77 +46,36 @@
         @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
 
         .nav-item {
-            padding: 0.6rem 1rem;
+            padding: 0.5rem 0.8rem;
             border-radius: 0.75rem;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 600;
             color: #64748b;
             transition: all 0.15s;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.6rem;
         }
         .nav-item:hover { background: #f1f5f9; color: #0f172a; }
         .nav-item-active { background: #eef2ff; color: #4F46E5; }
 
-        .priority-filter {
-            padding: 0.25rem 0.9rem;
-            border-radius: 0.6rem;
-            font-size: 0.75rem;
-            font-weight: 700;
+        .priority-filter-rail {
+            padding: 0.2rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.15s;
-            border: 2px solid transparent;
-        }
-        .priority-filter:hover { transform: scale(1.05); }
-        .priority-filter-active {
-            border-color: #4F46E5;
-            background: #eef2ff !important;
-            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
-        }
-
-        .priority-a { background: #fee2e2; color: #991b1b; }
-        .priority-b { background: #fef3c7; color: #92400e; }
-        .priority-c { background: #dbeafe; color: #1e40af; }
-
-        .badge-song { background: #d1fae5; color: #065f46; }
-        .badge-spel { background: #f1f5f9; color: #475569; }
-        .badge-intro { background: #dbeafe; color: #1e40af; }
-        .badge-outro { background: #fce4ec; color: #9a1b32; }
-        .badge-commercial { background: #fef3c7; color: #92400e; }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(4px);
-            z-index: 50;
             display: flex;
             align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease;
+            gap: 0.5rem;
         }
-        .modal-overlay.open {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .modal-card {
-            background: white;
-            border-radius: 1.5rem;
-            max-width: 800px;
-            width: 95%;
-            max-height: 85vh;
-            overflow-y: auto;
-            padding: 1.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            transform: scale(0.95) translateY(10px);
-            transition: transform 0.25s ease;
-        }
-        .modal-overlay.open .modal-card {
-            transform: scale(1) translateY(0);
+        .priority-filter-rail:hover { transform: scale(1.02); }
+        .priority-filter-rail-active {
+            background: #eef2ff;
+            color: #4F46E5;
+            box-shadow: 0 1px 4px rgba(79, 70, 229, 0.15);
         }
 
         .status-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
@@ -194,7 +153,7 @@
             padding: 1.25rem 0.75rem;
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 0.2rem;
             overflow-y: auto;
             flex-shrink: 0;
         }
@@ -238,13 +197,13 @@
             letter-spacing: 0.5px;
             color: #64748b;
             font-weight: 700;
-            padding: 0.5rem 0.5rem 0.25rem 0.5rem;
+            padding: 0.4rem 0.5rem 0.2rem 0.5rem;
         }
 
         .sidebar-divider {
             border: none;
             border-top: 1px solid #e2e8f0;
-            margin: 0.5rem 0;
+            margin: 0.3rem 0;
         }
 
         .date-card-compact {
@@ -294,13 +253,12 @@
             background: #f8fafc;
         }
 
-        /* Search Bar */
         .search-bar {
             display: flex;
             align-items: center;
             background: #f1f5f9;
             border-radius: 0.6rem;
-            padding: 0.3rem 0.75rem;
+            padding: 0.25rem 0.7rem;
             border: 1px solid #e2e8f0;
             transition: all 0.2s;
         }
@@ -313,8 +271,8 @@
             border: none;
             background: transparent;
             outline: none;
-            padding: 0.3rem 0;
-            font-size: 0.8rem;
+            padding: 0.25rem 0;
+            font-size: 0.75rem;
             width: 100%;
             color: #0f172a;
         }
@@ -323,8 +281,45 @@
         }
         .search-bar i {
             color: #94a3b8;
-            font-size: 0.8rem;
-            margin-right: 0.5rem;
+            font-size: 0.75rem;
+            margin-right: 0.4rem;
+        }
+
+        .priority-a { background: #fee2e2; color: #991b1b; }
+        .priority-b { background: #fef3c7; color: #92400e; }
+        .priority-c { background: #dbeafe; color: #1e40af; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 1.5rem;
+            max-width: 800px;
+            width: 95%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.25s ease;
+        }
+        .modal-overlay.open .modal-card {
+            transform: scale(1) translateY(0);
         }
 
         @media (max-width: 768px) {
@@ -377,7 +372,7 @@
 
         <!-- Menu -->
         <div class="sidebar-label">Menu</div>
-        <div class="space-y-1">
+        <div class="space-y-0.5">
             <div onclick="switchView('masterlist')" class="nav-item nav-item-active" id="nav-masterlist">
                 <i class="fa-solid fa-list-check text-sm w-5 text-center"></i>
                 <span>Masterlist</span>
@@ -391,22 +386,45 @@
         <!-- Divider -->
         <hr class="sidebar-divider" />
 
-        <!-- ─── SEARCH BAR ─── -->
-        <div class="sidebar-label" style="margin-top:0.25rem;">Search</div>
-        <div class="search-bar" id="searchBar">
-            <i class="fa-solid fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search by title or artist..." oninput="handleSearch()" />
+        <!-- ─── SEARCH BAR (Masterlist only) ─── -->
+        <div id="searchSection">
+            <div class="sidebar-label">Search</div>
+            <div class="search-bar">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search title or artist..." oninput="handleSearch()" />
+            </div>
         </div>
 
         <!-- Divider -->
-        <hr class="sidebar-divider" />
+        <hr class="sidebar-divider" id="yearDivider" />
 
-        <!-- ─── YEAR FILTER ─── -->
-        <div class="sidebar-label">📅 Years</div>
-        <div class="space-y-0.5" id="year-filter">
-            <div onclick="filterYear('all')" class="nav-item nav-item-active" id="year-all" style="font-size:0.75rem; padding:0.4rem 0.8rem;">
-                <i class="fa-solid fa-calendar text-sm w-5 text-center"></i>
-                <span>All Years</span>
+        <!-- ─── YEAR FILTER (Masterlist only) ─── -->
+        <div id="yearSection">
+            <div class="sidebar-label">📅 Years</div>
+            <div class="space-y-0.5" id="year-filter">
+                <div onclick="filterYear('all')" class="nav-item nav-item-active" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
+                    <i class="fa-solid fa-calendar text-sm w-5 text-center"></i>
+                    <span>All Years</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── PRIORITY FILTER (Priority only) ─── -->
+        <div id="priorityFilterSection" style="display:none;">
+            <div class="sidebar-label">🏷️ Priority</div>
+            <div class="space-y-0.5">
+                <div onclick="filterPriorityRail('all')" class="priority-filter-rail priority-filter-rail-active" data-priority="all" style="background:#f1f5f9; color:#475569; font-weight:600;">
+                    <i class="fa-solid fa-list text-sm w-5 text-center"></i> All
+                </div>
+                <div onclick="filterPriorityRail('A')" class="priority-filter-rail" data-priority="A" style="background:#fee2e2; color:#991b1b;">
+                    <span class="w-5 text-center">🔴</span> A – Top Priority
+                </div>
+                <div onclick="filterPriorityRail('B')" class="priority-filter-rail" data-priority="B" style="background:#fef3c7; color:#92400e;">
+                    <span class="w-5 text-center">🟡</span> B – Mid Priority
+                </div>
+                <div onclick="filterPriorityRail('C')" class="priority-filter-rail" data-priority="C" style="background:#dbeafe; color:#1e40af;">
+                    <span class="w-5 text-center">🔵</span> C – Lower Priority
+                </div>
             </div>
         </div>
 
@@ -457,27 +475,9 @@
 
             <!-- ═══ PRIORITY VIEW ═══ -->
             <div id="priority-view" class="hidden">
-                <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
-                    <div>
-                        <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">🏷️ Priority Groups</h2>
-                        <p class="text-xs text-slate-500 mt-0.5" id="priorityInfo">Entries grouped by priority level.</p>
-                    </div>
-                    <!-- ─── FILTER BUTTONS ─── -->
-                    <div class="flex flex-wrap items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200/80 shadow-sm">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Filter:</span>
-                        <div onclick="filterPriority('all')" class="priority-filter priority-filter-active text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="all" style="background: #f1f5f9; color: #475569; font-weight:600;">
-                            All
-                        </div>
-                        <div onclick="filterPriority('A')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="A" style="background: #fee2e2; color: #991b1b; font-weight:600;">
-                            🔴 A
-                        </div>
-                        <div onclick="filterPriority('B')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="B" style="background: #fef3c7; color: #92400e; font-weight:600;">
-                            🟡 B
-                        </div>
-                        <div onclick="filterPriority('C')" class="priority-filter text-xs text-center px-3 py-1 rounded-lg cursor-pointer transition-all hover:scale-105" data-priority="C" style="background: #dbeafe; color: #1e40af; font-weight:600;">
-                            🔵 C
-                        </div>
-                    </div>
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">🏷️ Priority Groups</h2>
+                    <p class="text-xs text-slate-500 mt-0.5" id="priorityInfo">Entries grouped by priority level.</p>
                 </div>
                 <div id="priority-content">
                     <div class="text-center text-slate-400 text-sm py-8">⏳ Loading...</div>
@@ -536,6 +536,10 @@
     const refreshIcon = $('refresh-icon');
     const yearFilter = $('year-filter');
     const searchInput = $('searchInput');
+    const searchSection = $('searchSection');
+    const yearSection = $('yearSection');
+    const yearDivider = $('yearDivider');
+    const priorityFilterSection = $('priorityFilterSection');
 
     // ─── STATE ──────────────────────────────────────────────────────
     let masterlistData = [];
@@ -652,9 +656,10 @@
         if (!supabaseClient) return;
 
         try {
+            // FIXED: Using 'date' column instead of 'event_date'
             const [masterRes, priorityRes] = await Promise.all([
-                supabaseClient.from(MASTERLIST_TABLE).select('*').order('event_date', { ascending: true }),
-                supabaseClient.from(PRIORITIZATION_TABLE).select('*').order('event_date', { ascending: true })
+                supabaseClient.from(MASTERLIST_TABLE).select('*').order('date', { ascending: true }),
+                supabaseClient.from(PRIORITIZATION_TABLE).select('*').order('date', { ascending: true })
             ]);
 
             if (masterRes.error) throw masterRes.error;
@@ -662,6 +667,11 @@
 
             masterlistData = masterRes.data || [];
             priorityData = priorityRes.data || [];
+
+            console.log('✅ Masterlist data:', masterlistData.length);
+            console.log('✅ Priority data:', priorityData.length);
+            if (masterlistData.length > 0) console.log('Sample masterlist:', masterlistData[0]);
+            if (priorityData.length > 0) console.log('Sample priority:', priorityData[0]);
 
             renderYearFilter();
             renderMasterlist();
@@ -677,14 +687,14 @@
     // ─── RENDER YEAR FILTER ──────────────────────────────────────
     function renderYearFilter() {
         const years = [...new Set(masterlistData.map(e => {
-            if (!e.event_date) return null;
-            const d = new Date(e.event_date + 'T00:00:00');
+            if (!e.date) return null;
+            const d = new Date(e.date + 'T00:00:00');
             return d.getFullYear();
         }))].filter(Boolean).sort((a, b) => b - a);
 
         if (!years.length) {
             yearFilter.innerHTML = `
-                <div onclick="filterYear('all')" class="nav-item nav-item-active" id="year-all" style="font-size:0.75rem; padding:0.4rem 0.8rem;">
+                <div onclick="filterYear('all')" class="nav-item nav-item-active" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
                     <i class="fa-solid fa-calendar text-sm w-5 text-center"></i>
                     <span>All Years</span>
                 </div>
@@ -694,7 +704,7 @@
         }
 
         let html = `
-            <div onclick="filterYear('all')" class="nav-item ${currentYear === 'all' ? 'nav-item-active' : ''}" id="year-all" style="font-size:0.75rem; padding:0.4rem 0.8rem;">
+            <div onclick="filterYear('all')" class="nav-item ${currentYear === 'all' ? 'nav-item-active' : ''}" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
                 <i class="fa-solid fa-calendar text-sm w-5 text-center"></i>
                 <span>All Years</span>
             </div>
@@ -702,8 +712,8 @@
 
         years.forEach(year => {
             const count = masterlistData.filter(e => {
-                if (!e.event_date) return false;
-                const d = new Date(e.event_date + 'T00:00:00');
+                if (!e.date) return false;
+                const d = new Date(e.date + 'T00:00:00');
                 return d.getFullYear() === year;
             }).length;
 
@@ -727,13 +737,13 @@
                 el.classList.add('nav-item-active');
             }
         });
-        renderMasterlist();
+        if (currentView === 'masterlist') renderMasterlist();
     };
 
     // ─── SEARCH HANDLER ──────────────────────────────────────────
     window.handleSearch = function() {
         searchTerm = searchInput.value.toLowerCase().trim();
-        renderMasterlist();
+        if (currentView === 'masterlist') renderMasterlist();
     };
 
     // ─── RENDER MASTERLIST ──────────────────────────────────────
@@ -743,8 +753,8 @@
         // Year filter
         if (currentYear !== 'all') {
             filteredData = filteredData.filter(e => {
-                if (!e.event_date) return false;
-                const d = new Date(e.event_date + 'T00:00:00');
+                if (!e.date) return false;
+                const d = new Date(e.date + 'T00:00:00');
                 return d.getFullYear() === parseInt(currentYear);
             });
         }
@@ -770,7 +780,7 @@
         // Group by date
         const grouped = {};
         filteredData.forEach(row => {
-            const date = row.event_date;
+            const date = row.date;
             if (!date) return;
             if (!grouped[date]) grouped[date] = [];
             grouped[date].push(row);
@@ -806,8 +816,8 @@
                     <div class="flex items-center gap-3 mb-3">
                         <h3 class="text-lg font-extrabold text-slate-700">📁 ${year}</h3>
                         <span class="text-xs text-slate-400 bg-slate-100 px-3 py-0.5 rounded-full">${filteredData.filter(e => {
-                            if (!e.event_date) return false;
-                            const d = new Date(e.event_date + 'T00:00:00');
+                            if (!e.date) return false;
+                            const d = new Date(e.date + 'T00:00:00');
                             return d.getFullYear() === parseInt(year);
                         }).length} entries</span>
                     </div>
@@ -864,7 +874,7 @@
 
     // ─── MASTERLIST MODAL ──────────────────────────────────────
     window.openMasterlistModal = function(dateKey) {
-        const entries = masterlistData.filter(e => e.event_date === dateKey);
+        const entries = masterlistData.filter(e => e.date === dateKey);
         modalTitle.textContent = `📋 ${formatDate(dateKey)}`;
 
         if (!entries.length) {
@@ -890,7 +900,7 @@
                         <td class="py-2 px-3 text-slate-400 font-mono text-[11px]">${idx + 1}</td>
                         <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.title)}</td>
                         <td class="py-2 px-3 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
-                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.event_date ? formatDate(row.event_date) : '—'}</td>
+                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.date ? formatDate(row.date) : '—'}</td>
                     </tr>
                 `;
             });
@@ -908,7 +918,7 @@
 
         // Priority filter
         if (currentPriority !== 'all') {
-            filteredData = filteredData.filter(e => e.categorization === currentPriority);
+            filteredData = filteredData.filter(e => (e.categorization || '').toUpperCase() === currentPriority);
         }
 
         if (!filteredData.length) {
@@ -922,7 +932,7 @@
 
         const groups = { 'A': [], 'B': [], 'C': [] };
         filteredData.forEach(row => {
-            const p = row.categorization || 'C';
+            const p = (row.categorization || 'C').toUpperCase();
             if (groups[p]) groups[p].push(row);
         });
 
@@ -956,7 +966,7 @@
                             <span class="text-sm font-bold ${getPriorityClass(p)} px-3 py-0.5 rounded-full">${priorityLabels[p]}</span>
                             <span class="text-xs text-slate-400">${entries.length} entries</span>
                         </div>
-                        <button onclick="filterPriority('${p}')" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">View all →</button>
+                        <button onclick="filterPriorityRail('${p}')" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">View all →</button>
                     </div>
                     <div class="overflow-x-auto max-h-[250px] overflow-y-auto custom-scrollbar">
                         <table class="w-full text-left border-collapse text-sm priority-groups-table">
@@ -973,7 +983,7 @@
                                     <tr class="table-row-hover fade-in">
                                         <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.title)}</td>
                                         <td class="py-2 px-3 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
-                                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.event_date ? formatDate(row.event_date) : '—'}</td>
+                                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.date ? formatDate(row.date) : '—'}</td>
                                         <td class="py-2 px-3 text-center">${row.notes ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.notes)}</span>` : '—'}</td>
                                     </tr>
                                 `).join('')}
@@ -987,13 +997,13 @@
         priorityContent.innerHTML = html;
     }
 
-    // ─── PRIORITY FILTER ──────────────────────────────────────────
-    window.filterPriority = function(priority) {
+    // ─── PRIORITY FILTER RAIL ──────────────────────────────────────
+    window.filterPriorityRail = function(priority) {
         currentPriority = priority;
-        document.querySelectorAll('.priority-filter').forEach(el => {
-            el.classList.remove('priority-filter-active');
+        document.querySelectorAll('.priority-filter-rail').forEach(el => {
+            el.classList.remove('priority-filter-rail-active');
             if (el.dataset.priority === priority) {
-                el.classList.add('priority-filter-active');
+                el.classList.add('priority-filter-rail-active');
             }
         });
 
@@ -1011,11 +1021,25 @@
             document.getElementById('nav-masterlist').classList.add('nav-item-active');
             document.getElementById('masterlist-view').classList.remove('hidden');
             document.getElementById('priority-view').classList.add('hidden');
+            
+            // Show Masterlist filters, hide Priority filters
+            searchSection.style.display = 'block';
+            yearDivider.style.display = 'block';
+            yearSection.style.display = 'block';
+            priorityFilterSection.style.display = 'none';
+            
             renderMasterlist();
         } else {
             document.getElementById('nav-priority').classList.add('nav-item-active');
             document.getElementById('priority-view').classList.remove('hidden');
             document.getElementById('masterlist-view').classList.add('hidden');
+            
+            // Hide Masterlist filters, show Priority filters
+            searchSection.style.display = 'none';
+            yearDivider.style.display = 'none';
+            yearSection.style.display = 'none';
+            priorityFilterSection.style.display = 'block';
+            
             renderPriorityGroups();
         }
     };
@@ -1065,6 +1089,9 @@
     });
 
     console.log('📋 Bravo Masterlist – Two tables (Masterlist + Prioritization)');
+    console.log('Column names used:');
+    console.log('  - masterlist: title, artist, date');
+    console.log('  - prioritization: title, artist, date, categorization, notes');
 })();
 </script>
 
