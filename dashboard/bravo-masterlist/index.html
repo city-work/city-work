@@ -33,6 +33,7 @@
     </script>
 
     <style>
+        /* ─── All styles (same as before) ─── */
         * {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         }
@@ -348,7 +349,6 @@
             transform: scale(1) translateY(0);
         }
 
-        /* ─── Priority full height ─── */
         .priority-full-height {
             display: flex;
             flex-direction: column;
@@ -687,6 +687,20 @@
         return null;
     }
 
+    // Normalize a date string to YYYY-MM-DD
+    function getNormalizedDate(dateStr) {
+        if (!dateStr) return null;
+        const d = parseDateFlexible(dateStr);
+        if (d && !isNaN(d)) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        // If parsing fails, return the raw string as fallback (but will be treated as Unknown)
+        return null;
+    }
+
     function getPriorityClass(p) {
         const map = { 'A': 'priority-a', 'B': 'priority-b', 'C': 'priority-c' };
         return map[p] || '';
@@ -889,6 +903,7 @@
     function renderMasterlist() {
         let filteredData = masterlistData;
 
+        // Year filter
         if (currentYear !== 'all') {
             const yearNum = parseInt(currentYear);
             filteredData = filteredData.filter(e => {
@@ -897,6 +912,7 @@
             });
         }
 
+        // Search
         if (searchTerm) {
             filteredData = filteredData.filter(e => {
                 const title = (e.TITLE || '').toLowerCase();
@@ -914,41 +930,49 @@
             return;
         }
 
+        // Group by normalized date key (YYYY-MM-DD)
         const grouped = {};
         filteredData.forEach(row => {
-            const date = row.DATE;
-            if (!date) return;
-            if (!grouped[date]) grouped[date] = [];
-            grouped[date].push(row);
+            const rawDate = row.DATE;
+            let key = getNormalizedDate(rawDate);
+            if (!key) {
+                // If cannot normalize, use raw date as key (treated as Unknown later)
+                key = rawDate;
+            }
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(row);
         });
 
-        const dates = Object.keys(grouped).sort((a, b) => {
+        // Sort keys by date (if possible)
+        const keys = Object.keys(grouped).sort((a, b) => {
             const da = parseDateFlexible(a);
             const db = parseDateFlexible(b);
             if (da && db && !isNaN(da) && !isNaN(db)) return da - db;
             return a.localeCompare(b);
         });
 
+        // Build yearMap
         const yearMap = {};
-        const unknownEntries = [];
+        const unknownKeys = [];
 
-        dates.forEach(date => {
-            const entries = grouped[date] || [];
-            const d = parseDateFlexible(date);
-            if (!d || isNaN(d)) {
+        keys.forEach(key => {
+            const entries = grouped[key];
+            const d = parseDateFlexible(key);
+            if (d && !isNaN(d)) {
+                const year = d.getFullYear();
+                const month = d.getMonth();
+                const day = d.getDate();
+                if (!yearMap[year]) yearMap[year] = {};
+                if (!yearMap[year][month]) yearMap[year][month] = {};
+                if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
+                yearMap[year][month][day] = entries;
+            } else {
+                // Unknown date
                 if (!yearMap['Unknown']) yearMap['Unknown'] = {};
                 if (!yearMap['Unknown']['Unknown']) yearMap['Unknown']['Unknown'] = {};
                 if (!yearMap['Unknown']['Unknown']['Unknown']) yearMap['Unknown']['Unknown']['Unknown'] = [];
                 yearMap['Unknown']['Unknown']['Unknown'].push(...entries);
-                return;
             }
-            const year = d.getFullYear();
-            const month = d.getMonth();
-            const day = d.getDate();
-            if (!yearMap[year]) yearMap[year] = {};
-            if (!yearMap[year][month]) yearMap[year][month] = {};
-            if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
-            yearMap[year][month][day] = entries;
         });
 
         const sortedYears = Object.keys(yearMap).sort((a, b) => {
@@ -974,7 +998,7 @@
                                 ${unknownGroup.map(row => `
                                     <div class="date-card-compact" onclick="openMasterlistModal('${row.DATE}')">
                                         <div class="flex items-center justify-between">
-                                            <span class="font-semibold text-sm text-slate-700">${esc(row.DATE)}</span>
+                                            <span class="font-semibold text-sm text-slate-700">📅 ${esc(row.DATE)}</span>
                                         </div>
                                         <div class="text-[10px] text-slate-400">${esc(row.TITLE)}${row.ARTIST ? ' - ' + esc(row.ARTIST) : ''}</div>
                                     </div>
@@ -985,6 +1009,7 @@
                 `;
                 return;
             }
+
             const sortedMonths = Object.keys(months).sort((a, b) => b - a);
             const totalInYear = Object.values(months).reduce((sum, days) => sum + Object.values(days).reduce((s, entries) => s + entries.length, 0), 0);
 
@@ -1087,40 +1112,17 @@
     }
 
     window.openMasterlistModal = function(dateKey) {
-        let entries = masterlistData.filter(e => e.DATE === dateKey);
-
-        if (!entries.length) {
-            const targetDate = parseDateFlexible(dateKey);
-            if (targetDate && !isNaN(targetDate)) {
-                const targetStr = targetDate.toISOString().split('T')[0];
-                const found = masterlistData.filter(e => {
-                    const d = parseDateFlexible(e.DATE);
-                    return d && !isNaN(d) && d.toISOString().split('T')[0] === targetStr;
-                });
-                if (found.length) {
-                    const grouped = {};
-                    found.forEach(row => {
-                        const d = parseDateFlexible(row.DATE);
-                        if (d && !isNaN(d)) {
-                            const key = d.toISOString().split('T')[0];
-                            if (!grouped[key]) grouped[key] = [];
-                            grouped[key].push(row);
-                        }
-                    });
-                    const keys = Object.keys(grouped);
-                    if (keys.length) {
-                        modalTitle.textContent = `📋 ${formatDateDisplay(keys[0])}`;
-                        renderModalEntries(grouped[keys[0]]);
-                        return;
-                    }
-                }
-            }
-        }
+        // Filter entries where normalized date matches the key
+        const entries = masterlistData.filter(row => {
+            const norm = getNormalizedDate(row.DATE);
+            return norm === dateKey;
+        });
 
         if (entries.length) {
             modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
             renderModalEntries(entries);
         } else {
+            // If no match, try to parse the key and display a message
             modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
             modalBody.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>`;
             modalOverlay.classList.add('open');
@@ -1320,7 +1322,7 @@
         }
     });
 
-    console.log('📋 Bravo Masterlist – Final verified version');
+    console.log('📋 Bravo Masterlist – Final with normalized grouping & modal');
 })();
 </script>
 
