@@ -348,12 +348,12 @@
             transform: scale(1) translateY(0);
         }
 
-        /* Priority container – fills available height */
+        /* ─── Priority full height ─── */
         .priority-full-height {
             display: flex;
             flex-direction: column;
             flex: 1;
-            min-height: 0; /* Allow flex shrink */
+            min-height: 0;
         }
         .priority-full-height .bg-white.rounded-xl {
             flex: 1;
@@ -428,17 +428,15 @@
 
 <div class="bg-white w-full max-w-[1440px] h-full max-h-[920px] rounded-3xl shadow-2xl flex border border-slate-200/80 overflow-hidden relative">
 
-    <!-- ═══ LEFT RAIL (FULL MENU) ═══ -->
+    <!-- ═══ LEFT RAIL ═══ -->
     <aside class="left-rail-full custom-scrollbar">
 
-        <!-- Brand -->
         <div class="brand">
             <div class="icon-box"><i class="fa-solid fa-box-archive"></i></div>
             <h2>Archive<span style="color:#4F46E5;">Hub</span></h2>
             <span class="badge">Bravo</span>
         </div>
 
-        <!-- Menu -->
         <div class="sidebar-label">Menu</div>
         <div class="space-y-0.5">
             <div onclick="switchView('masterlist')" class="nav-item nav-item-active" id="nav-masterlist">
@@ -451,10 +449,9 @@
             </div>
         </div>
 
-        <!-- Divider -->
         <hr class="sidebar-divider" />
 
-        <!-- ─── SEARCH BAR (Masterlist only) ─── -->
+        <!-- ─── SEARCH (Masterlist only) ─── -->
         <div id="searchSection">
             <div class="sidebar-label">Search</div>
             <div class="search-bar">
@@ -463,7 +460,6 @@
             </div>
         </div>
 
-        <!-- Divider -->
         <hr class="sidebar-divider" id="yearDivider" />
 
         <!-- ─── YEAR FILTER (Masterlist only) ─── -->
@@ -496,10 +492,8 @@
             </div>
         </div>
 
-        <!-- Divider -->
         <hr class="sidebar-divider" />
 
-        <!-- Sign Out -->
         <div class="nav-item" onclick="logoutUser()" style="color:#ef4444; cursor:pointer; margin-top:auto;">
             <i class="fa-solid fa-sign-out-alt text-sm w-5 text-center" style="color:#ef4444;"></i>
             <span>Sign Out</span>
@@ -509,7 +503,6 @@
     <!-- ═══ MAIN CONTENT ═══ -->
     <div class="flex-1 flex flex-col h-full overflow-hidden relative bg-[#F8FAFC]">
 
-        <!-- ─── HEADER ─── -->
         <header class="px-6 sm:px-8 py-4 bg-white/90 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between shrink-0 z-10">
             <div class="flex items-center space-x-3">
                 <span class="text-sm font-medium text-slate-500" id="userInfo">Checking session...</span>
@@ -525,7 +518,6 @@
             </div>
         </header>
 
-        <!-- ─── CONTENT ─── -->
         <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
 
             <!-- ═══ MASTERLIST VIEW ═══ -->
@@ -571,9 +563,6 @@
     </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════ -->
-<!--  JAVASCRIPT                                                    -->
-<!-- ════════════════════════════════════════════════════════════════ -->
 <script>
 (function() {
     'use strict';
@@ -625,8 +614,8 @@
     function setStatus(text, type) {
         const colors = { ok: 'status-ok', error: 'status-error', waiting: 'status-waiting' };
         const dots = { ok: 'green', error: 'red', waiting: 'amber' };
-        statusBadge.className = status-badge-top ${colors[type] || 'status-waiting'};
-        statusBadge.innerHTML = <span class="status-dot ${dots[type] || 'amber'}"></span> ${text};
+        statusBadge.className = `status-badge-top ${colors[type] || 'status-waiting'}`;
+        statusBadge.innerHTML = `<span class="status-dot ${dots[type] || 'amber'}"></span> ${text}`;
     }
 
     function esc(s) {
@@ -643,7 +632,6 @@
         return dateStr;
     }
 
-    // Enhanced date parser – handles many formats
     function parseDateFlexible(dateStr) {
         if (!dateStr) return null;
         const cleaned = dateStr.trim();
@@ -668,11 +656,9 @@
             const a = parseInt(match[1]);
             const b = parseInt(match[2]);
             const year = parseInt(match[3]);
-            // If first number > 12, treat as DD/MM
             if (a > 12) {
                 return new Date(year, b-1, a);
             } else {
-                // Assume MM/DD
                 return new Date(year, a-1, b);
             }
         }
@@ -686,7 +672,7 @@
             return new Date(year, month-1, day);
         }
 
-        // Try just "Month DD" (use current year)
+        // Try just "Month DD"
         match = cleaned.match(/(\w+)\s+(\d{1,2})/);
         if (match) {
             const monthMap = { 'january':0,'february':1,'march':2,'april':3,'may':4,'june':5,'july':6,'august':7,'september':8,'october':9,'november':10,'december':11 };
@@ -698,19 +684,12 @@
             }
         }
 
-        // If all else fails, return null
-        console.warn('Unable to parse date:', dateStr);
         return null;
     }
 
     function getPriorityClass(p) {
         const map = { 'A': 'priority-a', 'B': 'priority-b', 'C': 'priority-c' };
         return map[p] || '';
-    }
-
-    function getPriorityLabel(p) {
-        const map = { 'A': '🔴 A', 'B': '🟡 B', 'C': '🔵 C' };
-        return map[p] || p || '—';
     }
 
     // ─── AUTH ──────────────────────────────────────────────────────
@@ -761,8 +740,8 @@
 
             userRole = role;
             const roleDisplay = role === 'admin' ? '👑 Admin' : '👤 User';
-            setStatus(✅ ${roleDisplay}, 'ok');
-            userInfo.textContent = Logged in as ${roleDisplay} · ${userEmail};
+            setStatus(`✅ ${roleDisplay}`, 'ok');
+            userInfo.textContent = `Logged in as ${roleDisplay} · ${userEmail}`;
 
             localStorage.setItem('archivehub_user', JSON.stringify({
                 id: session.user.id,
@@ -813,8 +792,8 @@
 
         } catch (err) {
             console.error('Fetch error:', err);
-            masterlistContent.innerHTML = <div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>;
-            priorityContent.innerHTML = <div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>;
+            masterlistContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>`;
+            priorityContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>`;
         }
     }
 
@@ -943,7 +922,6 @@
             grouped[date].push(row);
         });
 
-        // Sort dates by parsed date (or raw string fallback)
         const dates = Object.keys(grouped).sort((a, b) => {
             const da = parseDateFlexible(a);
             const db = parseDateFlexible(b);
@@ -958,7 +936,6 @@
             const entries = grouped[date] || [];
             const d = parseDateFlexible(date);
             if (!d || isNaN(d)) {
-                // Group under "Unknown"
                 if (!yearMap['Unknown']) yearMap['Unknown'] = {};
                 if (!yearMap['Unknown']['Unknown']) yearMap['Unknown']['Unknown'] = {};
                 if (!yearMap['Unknown']['Unknown']['Unknown']) yearMap['Unknown']['Unknown']['Unknown'] = [];
@@ -985,7 +962,6 @@
         sortedYears.forEach(year => {
             const months = yearMap[year];
             if (year === 'Unknown') {
-                // Render unknown entries as a single group
                 const unknownGroup = months['Unknown']['Unknown']['Unknown'];
                 html += `
                     <div class="year-section">
@@ -1041,7 +1017,7 @@
                     const entries = days[day];
                     const dateObj = new Date(parseInt(year), parseInt(month), parseInt(day));
                     const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                    const dateKey = ${year}-${String(parseInt(month)+1).padStart(2,'0')}-${String(day).padStart(2,'0')};
+                    const dateKey = `${year}-${String(parseInt(month)+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
                     const note = dateNotes[dateKey] || '';
 
                     html += `
@@ -1111,10 +1087,8 @@
     }
 
     window.openMasterlistModal = function(dateKey) {
-        // Try direct match first
         let entries = masterlistData.filter(e => e.DATE === dateKey);
 
-        // If no direct match, try flexible matching
         if (!entries.length) {
             const targetDate = parseDateFlexible(dateKey);
             if (targetDate && !isNaN(targetDate)) {
@@ -1135,7 +1109,7 @@
                     });
                     const keys = Object.keys(grouped);
                     if (keys.length) {
-                        modalTitle.textContent =📋 ${formatDateDisplay(keys[0])}`;
+                        modalTitle.textContent = `📋 ${formatDateDisplay(keys[0])}`;
                         renderModalEntries(grouped[keys[0]]);
                         return;
                     }
@@ -1144,11 +1118,11 @@
         }
 
         if (entries.length) {
-            modalTitle.textContent =📋 ${formatDateDisplay(dateKey)}`;
+            modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
             renderModalEntries(entries);
         } else {
-            modalTitle.textContent =📋 ${formatDateDisplay(dateKey)}`;
-            modalBody.innerHTML = <div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>;
+            modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
+            modalBody.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>`;
             modalOverlay.classList.add('open');
         }
     };
@@ -1191,10 +1165,9 @@
             if (entries.length) {
                 html = renderPriorityGroup(p, entries, priorityLabels[p]);
             } else {
-                html = <div class="text-center text-slate-400 text-sm py-8">No entries with priority ${p}</div>;
+                html = `<div class="text-center text-slate-400 text-sm py-8">No entries with priority ${p}</div>`;
             }
         } else {
-            // Show all groups that have entries
             ['A', 'B', 'C'].forEach(p => {
                 const entries = groups[p] || [];
                 if (entries.length) {
@@ -1202,7 +1175,7 @@
                 }
             });
             if (!html) {
-                html = <div class="text-center text-slate-400 text-sm py-8">No entries found</div>;
+                html = `<div class="text-center text-slate-400 text-sm py-8">No entries found</div>`;
             }
         }
 
@@ -1235,7 +1208,7 @@
                                     <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
                                     <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
                                     <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
-                                    <td class="py-2 px-3 text-center">${row.NOTES ? <span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.NOTES)}</span> : '—'}</td>
+                                    <td class="py-2 px-3 text-center">${row.NOTES ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.NOTES)}</span>` : '—'}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -1342,12 +1315,12 @@
             setStatus('⚠️ No Supabase', 'error');
             userInfo.textContent = '⚠️ Supabase client not available';
             loadingSpinner.style.display = 'none';
-            masterlistContent.innerHTML = <div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>;
-            priorityContent.innerHTML = <div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>;
+            masterlistContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>`;
+            priorityContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>`;
         }
     });
 
-    console.log('📋 Bravo Masterlist – Final with full data & priority spacing');
+    console.log('📋 Bravo Masterlist – Final verified version');
 })();
 </script>
 
