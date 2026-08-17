@@ -656,10 +656,14 @@
         if (!supabaseClient) return;
 
         try {
-            // FIXED: Using 'date' column instead of 'event_date'
+            // FIXED: Using UPPERCASE column names
             const [masterRes, priorityRes] = await Promise.all([
-                supabaseClient.from(MASTERLIST_TABLE).select('*').order('date', { ascending: true }),
-                supabaseClient.from(PRIORITIZATION_TABLE).select('*').order('date', { ascending: true })
+                supabaseClient.from(MASTERLIST_TABLE)
+                    .select('*')
+                    .order('DATE', { ascending: true }),
+                supabaseClient.from(PRIORITIZATION_TABLE)
+                    .select('*')
+                    .order('DATE', { ascending: true })
             ]);
 
             if (masterRes.error) throw masterRes.error;
@@ -670,8 +674,6 @@
 
             console.log('✅ Masterlist data:', masterlistData.length);
             console.log('✅ Priority data:', priorityData.length);
-            if (masterlistData.length > 0) console.log('Sample masterlist:', masterlistData[0]);
-            if (priorityData.length > 0) console.log('Sample priority:', priorityData[0]);
 
             renderYearFilter();
             renderMasterlist();
@@ -687,8 +689,8 @@
     // ─── RENDER YEAR FILTER ──────────────────────────────────────
     function renderYearFilter() {
         const years = [...new Set(masterlistData.map(e => {
-            if (!e.date) return null;
-            const d = new Date(e.date + 'T00:00:00');
+            if (!e.DATE) return null;
+            const d = new Date(e.DATE + 'T00:00:00');
             return d.getFullYear();
         }))].filter(Boolean).sort((a, b) => b - a);
 
@@ -712,8 +714,8 @@
 
         years.forEach(year => {
             const count = masterlistData.filter(e => {
-                if (!e.date) return false;
-                const d = new Date(e.date + 'T00:00:00');
+                if (!e.DATE) return false;
+                const d = new Date(e.DATE + 'T00:00:00');
                 return d.getFullYear() === year;
             }).length;
 
@@ -753,8 +755,8 @@
         // Year filter
         if (currentYear !== 'all') {
             filteredData = filteredData.filter(e => {
-                if (!e.date) return false;
-                const d = new Date(e.date + 'T00:00:00');
+                if (!e.DATE) return false;
+                const d = new Date(e.DATE + 'T00:00:00');
                 return d.getFullYear() === parseInt(currentYear);
             });
         }
@@ -762,8 +764,8 @@
         // Search filter
         if (searchTerm) {
             filteredData = filteredData.filter(e => {
-                const title = (e.title || '').toLowerCase();
-                const artist = (e.artist || '').toLowerCase();
+                const title = (e.TITLE || '').toLowerCase();
+                const artist = (e.ARTIST || '').toLowerCase();
                 return title.includes(searchTerm) || artist.includes(searchTerm);
             });
         }
@@ -780,7 +782,7 @@
         // Group by date
         const grouped = {};
         filteredData.forEach(row => {
-            const date = row.date;
+            const date = row.DATE;
             if (!date) return;
             if (!grouped[date]) grouped[date] = [];
             grouped[date].push(row);
@@ -816,8 +818,8 @@
                     <div class="flex items-center gap-3 mb-3">
                         <h3 class="text-lg font-extrabold text-slate-700">📁 ${year}</h3>
                         <span class="text-xs text-slate-400 bg-slate-100 px-3 py-0.5 rounded-full">${filteredData.filter(e => {
-                            if (!e.date) return false;
-                            const d = new Date(e.date + 'T00:00:00');
+                            if (!e.DATE) return false;
+                            const d = new Date(e.DATE + 'T00:00:00');
                             return d.getFullYear() === parseInt(year);
                         }).length} entries</span>
                     </div>
@@ -851,7 +853,7 @@
                                 <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${entries.length}</span>
                             </div>
                             <div class="text-[10px] text-slate-400 mt-1 truncate">
-                                ${entries.slice(0, 3).map(e => esc(e.title)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
+                                ${entries.slice(0, 3).map(e => esc(e.TITLE)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
                             </div>
                         </div>
                     `;
@@ -874,7 +876,7 @@
 
     // ─── MASTERLIST MODAL ──────────────────────────────────────
     window.openMasterlistModal = function(dateKey) {
-        const entries = masterlistData.filter(e => e.date === dateKey);
+        const entries = masterlistData.filter(e => e.DATE === dateKey);
         modalTitle.textContent = `📋 ${formatDate(dateKey)}`;
 
         if (!entries.length) {
@@ -898,9 +900,9 @@
                 tableHtml += `
                     <tr class="table-row-hover fade-in">
                         <td class="py-2 px-3 text-slate-400 font-mono text-[11px]">${idx + 1}</td>
-                        <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.title)}</td>
-                        <td class="py-2 px-3 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
-                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.date ? formatDate(row.date) : '—'}</td>
+                        <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
+                        <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
+                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDate(row.DATE) : '—'}</td>
                     </tr>
                 `;
             });
@@ -918,7 +920,7 @@
 
         // Priority filter
         if (currentPriority !== 'all') {
-            filteredData = filteredData.filter(e => (e.categorization || '').toUpperCase() === currentPriority);
+            filteredData = filteredData.filter(e => (e.CATEGORIZATION || '').toUpperCase() === currentPriority);
         }
 
         if (!filteredData.length) {
@@ -932,7 +934,7 @@
 
         const groups = { 'A': [], 'B': [], 'C': [] };
         filteredData.forEach(row => {
-            const p = (row.categorization || 'C').toUpperCase();
+            const p = (row.CATEGORIZATION || 'C').toUpperCase();
             if (groups[p]) groups[p].push(row);
         });
 
@@ -981,10 +983,10 @@
                             <tbody>
                                 ${entries.map(row => `
                                     <tr class="table-row-hover fade-in">
-                                        <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.title)}</td>
-                                        <td class="py-2 px-3 text-slate-500">${row.artist ? esc(row.artist) : '—'}</td>
-                                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.date ? formatDate(row.date) : '—'}</td>
-                                        <td class="py-2 px-3 text-center">${row.notes ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.notes)}</span>` : '—'}</td>
+                                        <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
+                                        <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
+                                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDate(row.DATE) : '—'}</td>
+                                        <td class="py-2 px-3 text-center">${row.NOTES ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.NOTES)}</span>` : '—'}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -1089,9 +1091,9 @@
     });
 
     console.log('📋 Bravo Masterlist – Two tables (Masterlist + Prioritization)');
-    console.log('Column names used:');
-    console.log('  - masterlist: title, artist, date');
-    console.log('  - prioritization: title, artist, date, categorization, notes');
+    console.log('Column names used (UPPERCASE):');
+    console.log('  - masterlist: TITLE, ARTIST, DATE');
+    console.log('  - prioritization: TITLE, ARTIST, DATE, CATEGORIZATION, NOTES');
 })();
 </script>
 
