@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bravo Masterlist · ArchiveHub</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        brand: { 
+                            bg: '#F8FAFC', 
+                            surface: '#FFFFFF', 
+                            dark: '#0F172A', 
+                            accent: '#4F46E5',
+                            accentLight: '#EEF2FF',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .fade-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        .nav-item {
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.75rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.15s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .nav-item:hover { background: #f1f5f9; color: #0f172a; }
+        .nav-item-active { background: #eef2ff; color: #4F46E5; }
+
+        .priority-filter-rail {
+            padding: 0.2rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .priority-filter-rail:hover { transform: scale(1.02); }
+        .priority-filter-rail-active {
+            background: #eef2ff;
+            color: #4F46E5;
+            box-shadow: 0 1px 4px rgba(79, 70, 229, 0.15);
+        }
+
+        .status-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
+        .status-error { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .status-waiting { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+        .status-badge-top {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.2rem 0.7rem;
+            border-radius: 9999px;
+            border: 1px solid;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.green { background: #22c55e; }
+        .status-dot.amber { background: #eab308; animation: pulse 1.5s ease-in-out infinite; }
+        .status-dot.red { background: #ef4444; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .btn-signout {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            padding: 0.3rem 0.9rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+        }
+        .btn-signout:hover {
+            background: #fee2e2;
+            border-color: #ef4444;
+            transform: scale(1.02);
+        }
+
+        #loadingSpinner {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        #loadingSpinner .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #4F46E5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .table-row-hover:hover { background: #f8fafc; }
+        
+        .left-rail-full {
+            width: 200px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 1.25rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .left-rail-full .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0 0.5rem 0.75rem 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0.5rem;
+        }
+        .left-rail-full .brand .icon-box {
+            width: 32px;
+            height: 32px;
+            background: #0f172a;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .left-rail-full .brand h2 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .left-rail-full .brand .badge {
+            font-size: 0.45rem;
+            background: #eef2ff;
+            color: #4F46E5;
+            padding: 0.1rem 0.4rem;
+            border-radius: 999px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .sidebar-label {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            font-weight: 700;
+            padding: 0.4rem 0.5rem 0.2rem 0.5rem;
+        }
+
+        .sidebar-divider {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 0.3rem 0;
+        }
+
+        .date-card-compact {
+            padding: 0.5rem 0.75rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.6rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .date-card-compact:hover {
+            border-color: #4F46E5;
+            box-shadow: 0 2px 8px -4px rgba(79, 70, 229, 0.12);
+            transform: translateX(4px);
+        }
+
+        .date-note {
+            font-size: 0.6rem;
+            color: #4F46E5;
+            background: #f8fafc;
+            padding: 0.05rem 0.3rem;
+            border-radius: 0.3rem;
+            border: 1px dashed #cbd5e1;
+            cursor: text;
+            min-height: 1.2rem;
+            margin: 0.1rem 0;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .date-note:focus {
+            border-color: #4F46E5;
+            background: white;
+        }
+        .date-note:empty::before {
+            content: "📝 Click to add note...";
+            color: #94a3b8;
+        }
+        .date-note:not(:empty)::before {
+            content: "";
+        }
+
+        .month-section {
+            margin-bottom: 0.25rem;
+        }
+
+        .priority-groups-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+        .priority-groups-table th {
+            text-align: left;
+            padding: 0.4rem 0.6rem;
+            font-weight: 600;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #94a3b8;
+            border-bottom: 2px solid #e5e7eb;
+            background: #f8fafc;
+        }
+        .priority-groups-table td {
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #0f172a;
+            vertical-align: middle;
+        }
+        .priority-groups-table tr:last-child td {
+            border-bottom: none;
+        }
+        .priority-groups-table tr:hover td {
+            background: #f8fafc;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: #f1f5f9;
+            border-radius: 0.6rem;
+            padding: 0.25rem 0.7rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .search-bar:focus-within {
+            border-color: #4F46E5;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .search-bar input {
+            border: none;
+            background: transparent;
+            outline: none;
+            padding: 0.25rem 0;
+            font-size: 0.75rem;
+            width: 100%;
+            color: #0f172a;
+        }
+        .search-bar input::placeholder {
+            color: #94a3b8;
+        }
+        .search-bar i {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            margin-right: 0.4rem;
+        }
+
+        .priority-a { background: #fee2e2; color: #991b1b; }
+        .priority-b { background: #fef3c7; color: #92400e; }
+        .priority-c { background: #dbeafe; color: #1e40af; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: white;
+            border-radius: 1.5rem;
+            max-width: 800px;
+            width: 95%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.25s ease;
+        }
+        .modal-overlay.open .modal-card {
+            transform: scale(1) translateY(0);
+        }
+
+        /* Priority container – fills available height */
+        .priority-full-height {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0; /* Allow flex shrink */
+        }
+        .priority-full-height .bg-white.rounded-xl {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .priority-full-height .overflow-x-auto {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .left-rail-full {
+                width: 56px;
+                padding: 0.75rem 0.4rem;
+            }
+            .left-rail-full .brand h2,
+            .left-rail-full .brand .badge,
+            .left-rail-full .nav-item span,
+            .left-rail-full .sidebar-label {
+                display: none;
+            }
+            .left-rail-full .nav-item {
+                justify-content: center;
+                padding: 0.5rem;
+            }
+            .left-rail-full .brand {
+                padding: 0 0.2rem 0.5rem 0.2rem;
+                justify-content: center;
+            }
+            .left-rail-full .brand .icon-box {
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
+            }
+        }
+
+        .year-section {
+            margin-bottom: 1rem;
+        }
+        .year-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0.6rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-bottom: 0.5rem;
+        }
+        .year-header:hover {
+            background: #f1f5f9;
+        }
+        .year-content {
+            display: block;
+        }
+        .year-content.collapsed {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="h-screen w-screen bg-[#F1F5F9] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden text-slate-800 antialiased font-sans">
+
+    <!-- ─── LOADING SPINNER ─── -->
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+        <p class="text-sm font-medium text-slate-600">Loading Bravo Masterlist...</p>
+    </div>
+
+<div class="bg-white w-full max-w-[1440px] h-full max-h-[920px] rounded-3xl shadow-2xl flex border border-slate-200/80 overflow-hidden relative">
+
+    <!-- ═══ LEFT RAIL (FULL MENU) ═══ -->
+    <aside class="left-rail-full custom-scrollbar">
+
+        <!-- Brand -->
+        <div class="brand">
+            <div class="icon-box"><i class="fa-solid fa-box-archive"></i></div>
+            <h2>Archive<span style="color:#4F46E5;">Hub</span></h2>
+            <span class="badge">Bravo</span>
+        </div>
+
+        <!-- Menu -->
+        <div class="sidebar-label">Menu</div>
+        <div class="space-y-0.5">
+            <div onclick="switchView('masterlist')" class="nav-item nav-item-active" id="nav-masterlist">
+                <i class="fa-solid fa-list-check text-sm w-5 text-center"></i>
+                <span>Masterlist</span>
+            </div>
+            <div onclick="switchView('priority')" class="nav-item" id="nav-priority">
+                <i class="fa-solid fa-flag text-sm w-5 text-center"></i>
+                <span>Priority</span>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider" />
+
+        <!-- ─── SEARCH BAR (Masterlist only) ─── -->
+        <div id="searchSection">
+            <div class="sidebar-label">Search</div>
+            <div class="search-bar">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search title or artist..." oninput="handleSearch()" />
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider" id="yearDivider" />
+
+        <!-- ─── YEAR FILTER (Masterlist only) ─── -->
+        <div id="yearSection">
+            <div class="sidebar-label">📅 Years</div>
+            <div class="space-y-0.5" id="year-filter">
+                <div onclick="filterYear('all')" class="nav-item nav-item-active" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
+                    <i class="fa-solid fa-calendar text-sm w-5 text-center"></i>
+                    <span>All Years</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── PRIORITY FILTER (Priority only) ─── -->
+        <div id="priorityFilterSection" style="display:none;">
+            <div class="sidebar-label">🏷️ Priority</div>
+            <div class="space-y-0.5">
+                <div onclick="filterPriorityRail('all')" class="priority-filter-rail priority-filter-rail-active" data-priority="all" style="background:#f1f5f9; color:#475569; font-weight:600;">
+                    <i class="fa-solid fa-list text-sm w-5 text-center"></i> All
+                </div>
+                <div onclick="filterPriorityRail('A')" class="priority-filter-rail" data-priority="A" style="background:#fee2e2; color:#991b1b;">
+                    <span class="w-5 text-center">🔴</span> A – Top Priority
+                </div>
+                <div onclick="filterPriorityRail('B')" class="priority-filter-rail" data-priority="B" style="background:#fef3c7; color:#92400e;">
+                    <span class="w-5 text-center">🟡</span> B – Mid Priority
+                </div>
+                <div onclick="filterPriorityRail('C')" class="priority-filter-rail" data-priority="C" style="background:#dbeafe; color:#1e40af;">
+                    <span class="w-5 text-center">🔵</span> C – Lower Priority
+                </div>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider" />
+
+        <!-- Sign Out -->
+        <div class="nav-item" onclick="logoutUser()" style="color:#ef4444; cursor:pointer; margin-top:auto;">
+            <i class="fa-solid fa-sign-out-alt text-sm w-5 text-center" style="color:#ef4444;"></i>
+            <span>Sign Out</span>
+        </div>
+    </aside>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative bg-[#F8FAFC]">
+
+        <!-- ─── HEADER ─── -->
+        <header class="px-6 sm:px-8 py-4 bg-white/90 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between shrink-0 z-10">
+            <div class="flex items-center space-x-3">
+                <span class="text-sm font-medium text-slate-500" id="userInfo">Checking session...</span>
+                <span id="statusBadge" class="status-badge-top status-waiting">
+                    <span class="status-dot amber"></span> Connecting...
+                </span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="refreshData()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition flex items-center justify-center" title="Refresh">
+                    <i class="fa-solid fa-rotate-right text-xs" id="refresh-icon"></i>
+                </button>
+                <a href="../index.html" class="text-xs font-semibold px-4 py-1.5 rounded-full bg-[#0F172A] text-white hover:bg-slate-800 transition shadow-sm">Main Hub</a>
+            </div>
+        </header>
+
+        <!-- ─── CONTENT ─── -->
+        <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+
+            <!-- ═══ MASTERLIST VIEW ═══ -->
+            <div id="masterlist-view">
+                <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">📋 Bravo Masterlist</h2>
+                        <p class="text-xs text-slate-500 mt-0.5" id="masterlistInfo">All entries organized by date.</p>
+                    </div>
+                </div>
+                <div id="masterlist-content">
+                    <div class="text-center text-slate-400 text-sm py-8">⏳ Loading...</div>
+                </div>
+            </div>
+
+            <!-- ═══ PRIORITY VIEW ═══ -->
+            <div id="priority-view" class="hidden">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">🏷️ Priority Groups</h2>
+                    <p class="text-xs text-slate-500 mt-0.5" id="priorityInfo">Entries grouped by priority level.</p>
+                </div>
+                <div id="priority-content" class="priority-full-height">
+                    <div class="text-center text-slate-400 text-sm py-8">⏳ Loading...</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal-card">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+            <h3 class="text-lg font-bold text-slate-900" id="modal-title">Entries</h3>
+            <button onclick="closeModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition flex items-center justify-center">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <div class="mt-4" id="modal-body">
+            <div class="text-center text-slate-400 text-sm py-8">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!--  JAVASCRIPT                                                    -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+    'use strict';
+
+    // ─── SUPABASE CONFIG ──────────────────────────────────────────
+    const SUPABASE_URL = 'https://yffqtbqnzrcctfnjibbo.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE';
+    const MASTERLIST_TABLE = 'bravo_masterlist';
+    const PRIORITIZATION_TABLE = 'bravo_prioritization';
+    const DATE_NOTES_TABLE = 'bravo_date_notes';
+
+    let supabaseClient = null;
+    try {
+        if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+    } catch (e) { console.warn('Supabase not loaded'); }
+
+    // ─── DOM REFS ──────────────────────────────────────────────────
+    const $ = id => document.getElementById(id);
+    const masterlistContent = $('masterlist-content');
+    const priorityContent = $('priority-content');
+    const modalOverlay = $('modal-overlay');
+    const modalTitle = $('modal-title');
+    const modalBody = $('modal-body');
+    const statusBadge = $('statusBadge');
+    const userInfo = $('userInfo');
+    const loadingSpinner = $('loadingSpinner');
+    const refreshIcon = $('refresh-icon');
+    const yearFilter = $('year-filter');
+    const searchInput = $('searchInput');
+    const searchSection = $('searchSection');
+    const yearSection = $('yearSection');
+    const yearDivider = $('yearDivider');
+    const priorityFilterSection = $('priorityFilterSection');
+
+    // ─── STATE ──────────────────────────────────────────────────────
+    let masterlistData = [];
+    let priorityData = [];
+    let dateNotes = {};
+    let currentView = 'masterlist';
+    let currentYear = 'all';
+    let currentPriority = 'all';
+    let searchTerm = '';
+    let userRole = 'user';
+    let userEmail = 'Unknown';
+
+    // ─── HELPERS ──────────────────────────────────────────────────
+    function setStatus(text, type) {
+        const colors = { ok: 'status-ok', error: 'status-error', waiting: 'status-waiting' };
+        const dots = { ok: 'green', error: 'red', waiting: 'amber' };
+        statusBadge.className = status-badge-top ${colors[type] || 'status-waiting'};
+        statusBadge.innerHTML = <span class="status-dot ${dots[type] || 'amber'}"></span> ${text};
+    }
+
+    function esc(s) {
+        if (s == null || s === '') return '—';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function formatDateDisplay(dateStr) {
+        if (!dateStr) return '—';
+        const d = parseDateFlexible(dateStr);
+        if (d && !isNaN(d)) {
+            return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+        return dateStr;
+    }
+
+    // Enhanced date parser – handles many formats
+    function parseDateFlexible(dateStr) {
+        if (!dateStr) return null;
+        const cleaned = dateStr.trim();
+
+        // Try YYYY-MM-DD
+        let match = cleaned.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (match) return new Date(parseInt(match[1]), parseInt(match[2])-1, parseInt(match[3]));
+
+        // Try Month DD, YYYY (with optional comma)
+        match = cleaned.match(/(\w+)\s+(\d{1,2}),?\s*(\d{4})/);
+        if (match) {
+            const monthMap = { 'january':0,'february':1,'march':2,'april':3,'may':4,'june':5,'july':6,'august':7,'september':8,'october':9,'november':10,'december':11 };
+            const month = monthMap[match[1].toLowerCase()];
+            if (month !== undefined) {
+                return new Date(parseInt(match[3]), month, parseInt(match[2]));
+            }
+        }
+
+        // Try MM/DD/YYYY or DD/MM/YYYY
+        match = cleaned.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (match) {
+            const a = parseInt(match[1]);
+            const b = parseInt(match[2]);
+            const year = parseInt(match[3]);
+            // If first number > 12, treat as DD/MM
+            if (a > 12) {
+                return new Date(year, b-1, a);
+            } else {
+                // Assume MM/DD
+                return new Date(year, a-1, b);
+            }
+        }
+
+        // Try DD-MM-YYYY
+        match = cleaned.match(/(\d{1,2})-(\d{1,2})-(\d{4})/);
+        if (match) {
+            const day = parseInt(match[1]);
+            const month = parseInt(match[2]);
+            const year = parseInt(match[3]);
+            return new Date(year, month-1, day);
+        }
+
+        // Try just "Month DD" (use current year)
+        match = cleaned.match(/(\w+)\s+(\d{1,2})/);
+        if (match) {
+            const monthMap = { 'january':0,'february':1,'march':2,'april':3,'may':4,'june':5,'july':6,'august':7,'september':8,'october':9,'november':10,'december':11 };
+            const month = monthMap[match[1].toLowerCase()];
+            if (month !== undefined) {
+                const day = parseInt(match[2]);
+                const year = new Date().getFullYear();
+                return new Date(year, month, day);
+            }
+        }
+
+        // If all else fails, return null
+        console.warn('Unable to parse date:', dateStr);
+        return null;
+    }
+
+    function getPriorityClass(p) {
+        const map = { 'A': 'priority-a', 'B': 'priority-b', 'C': 'priority-c' };
+        return map[p] || '';
+    }
+
+    function getPriorityLabel(p) {
+        const map = { 'A': '🔴 A', 'B': '🟡 B', 'C': '🔵 C' };
+        return map[p] || p || '—';
+    }
+
+    // ─── AUTH ──────────────────────────────────────────────────────
+    async function checkSession() {
+        loadingSpinner.style.display = 'flex';
+        setStatus('Checking...', 'waiting');
+
+        if (!supabaseClient) {
+            setStatus('⚠️ No Supabase', 'error');
+            userInfo.textContent = '⚠️ Supabase client missing';
+            loadingSpinner.style.display = 'none';
+            return;
+        }
+
+        try {
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (error) throw error;
+            const session = data?.session;
+
+            if (!session || !session.user) {
+                setStatus('🔓 Not logged in', 'error');
+                userInfo.textContent = 'Please log in';
+                loadingSpinner.style.display = 'none';
+                setTimeout(() => { window.location.href = '../../index.html'; }, 1500);
+                return;
+            }
+
+            userEmail = session.user.email;
+
+            let role = 'user';
+            try {
+                const { data: profile } = await supabaseClient
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                if (!profile) {
+                    await supabaseClient.from('profiles').insert({
+                        id: session.user.id,
+                        email: session.user.email,
+                        role: 'user'
+                    });
+                } else if (profile.role) {
+                    role = profile.role;
+                }
+            } catch (e) { console.warn('Profile fetch error:', e.message); }
+
+            userRole = role;
+            const roleDisplay = role === 'admin' ? '👑 Admin' : '👤 User';
+            setStatus(✅ ${roleDisplay}, 'ok');
+            userInfo.textContent = Logged in as ${roleDisplay} · ${userEmail};
+
+            localStorage.setItem('archivehub_user', JSON.stringify({
+                id: session.user.id,
+                email: session.user.email,
+                role: role,
+                session: session
+            }));
+
+            await fetchAllData();
+
+        } catch (err) {
+            console.error('Session error:', err);
+            setStatus('❌ Connection error', 'error');
+            userInfo.textContent = 'Error connecting to Supabase';
+        } finally {
+            loadingSpinner.style.display = 'none';
+        }
+    }
+
+    // ─── FETCH DATA ──────────────────────────────────────────────
+    async function fetchAllData() {
+        if (!supabaseClient) return;
+
+        try {
+            const [masterRes, priorityRes, notesRes] = await Promise.all([
+                supabaseClient.from(MASTERLIST_TABLE).select('*').order('DATE', { ascending: true }),
+                supabaseClient.from(PRIORITIZATION_TABLE).select('*').order('DATE', { ascending: true }),
+                supabaseClient.from(DATE_NOTES_TABLE).select('*')
+            ]);
+
+            if (masterRes.error) throw masterRes.error;
+            if (priorityRes.error) throw priorityRes.error;
+            if (notesRes.error) throw notesRes.error;
+
+            masterlistData = masterRes.data || [];
+            priorityData = priorityRes.data || [];
+
+            dateNotes = {};
+            (notesRes.data || []).forEach(n => {
+                dateNotes[n.DATE] = n.NOTES;
+            });
+
+            console.log('✅ Loaded:', masterlistData.length, 'master,', priorityData.length, 'priority,', Object.keys(dateNotes).length, 'notes');
+
+            renderYearFilter();
+            renderMasterlist();
+            renderPriorityGroups();
+
+        } catch (err) {
+            console.error('Fetch error:', err);
+            masterlistContent.innerHTML = <div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>;
+            priorityContent.innerHTML = <div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>;
+        }
+    }
+
+    // ─── RENDER YEAR FILTER ──────────────────────────────────────
+    function renderYearFilter() {
+        const years = new Set();
+        masterlistData.forEach(e => {
+            const d = parseDateFlexible(e.DATE);
+            if (d && !isNaN(d)) years.add(d.getFullYear());
+        });
+        const sortedYears = Array.from(years).sort((a, b) => b - a);
+
+        if (!sortedYears.length) {
+            yearFilter.innerHTML = `
+                <div onclick="filterYear('all')" class="nav-item nav-item-active" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
+                    <i class="fa-solid fa-calendar text-sm w-5 text-center"></i>
+                    <span>All Years</span>
+                </div>
+                <div style="color:#64748b;font-size:0.65rem;padding:0.3rem 0.8rem;">No years found</div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div onclick="filterYear('all')" class="nav-item ${currentYear === 'all' ? 'nav-item-active' : ''}" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
+                <i class="fa-solid fa-calendar text-sm w-5 text-center"></i>
+                <span>All Years</span>
+            </div>
+        `;
+
+        sortedYears.forEach(year => {
+            const count = masterlistData.filter(e => {
+                const d = parseDateFlexible(e.DATE);
+                return d && !isNaN(d) && d.getFullYear() === year;
+            }).length;
+
+            html += `
+                <div onclick="filterYear('${year}')" class="nav-item ${currentYear === String(year) ? 'nav-item-active' : ''}" data-year="${year}" style="font-size:0.75rem; padding:0.3rem 0.8rem; display:flex; justify-content:space-between;">
+                    <span><i class="fa-solid fa-folder text-sm w-5 text-center" style="color:#4F46E5;"></i> ${year}</span>
+                    <span style="font-size:0.6rem; color:#94a3b8; background:rgba(0,0,0,0.05); padding:0.05rem 0.4rem; border-radius:999px;">${count}</span>
+                </div>
+            `;
+        });
+
+        yearFilter.innerHTML = html;
+    }
+
+    // ─── FILTER YEAR ─────────────────────────────────────────────
+    window.filterYear = function(year) {
+        currentYear = String(year);
+        document.querySelectorAll('#year-filter .nav-item').forEach(el => {
+            el.classList.remove('nav-item-active');
+            if (el.dataset.year === year || (year === 'all' && el.id === 'year-all')) {
+                el.classList.add('nav-item-active');
+            }
+        });
+        if (currentView === 'masterlist') renderMasterlist();
+    };
+
+    // ─── SEARCH HANDLER ──────────────────────────────────────────
+    window.handleSearch = function() {
+        searchTerm = searchInput.value.toLowerCase().trim();
+        if (currentView === 'masterlist') renderMasterlist();
+    };
+
+    // ─── SAVE DATE NOTE ──────────────────────────────────────────
+    window.saveDateNote = async function(dateKey, note) {
+        if (!supabaseClient) return;
+        try {
+            const trimmed = note.trim();
+            if (!trimmed) {
+                await supabaseClient
+                    .from(DATE_NOTES_TABLE)
+                    .delete()
+                    .eq('DATE', dateKey);
+                delete dateNotes[dateKey];
+                renderMasterlist();
+                return;
+            }
+            const { error } = await supabaseClient
+                .from(DATE_NOTES_TABLE)
+                .upsert({ DATE: dateKey, NOTES: trimmed, updated_at: new Date().toISOString() });
+            if (!error) {
+                dateNotes[dateKey] = trimmed;
+                renderMasterlist();
+            }
+        } catch (err) {
+            console.error('Save note error:', err);
+        }
+    };
+
+    // ─── RENDER MASTERLIST ──────────────────────────────────────
+    function renderMasterlist() {
+        let filteredData = masterlistData;
+
+        if (currentYear !== 'all') {
+            const yearNum = parseInt(currentYear);
+            filteredData = filteredData.filter(e => {
+                const d = parseDateFlexible(e.DATE);
+                return d && !isNaN(d) && d.getFullYear() === yearNum;
+            });
+        }
+
+        if (searchTerm) {
+            filteredData = filteredData.filter(e => {
+                const title = (e.TITLE || '').toLowerCase();
+                const artist = (e.ARTIST || '').toLowerCase();
+                return title.includes(searchTerm) || artist.includes(searchTerm);
+            });
+        }
+
+        if (!filteredData.length) {
+            masterlistContent.innerHTML = `
+                <div class="text-center text-slate-400 text-sm py-8">
+                    No entries found${searchTerm ? ' matching "' + searchTerm + '"' : ''}${currentYear !== 'all' ? ' in ' + currentYear : ''}
+                </div>
+            `;
+            return;
+        }
+
+        const grouped = {};
+        filteredData.forEach(row => {
+            const date = row.DATE;
+            if (!date) return;
+            if (!grouped[date]) grouped[date] = [];
+            grouped[date].push(row);
+        });
+
+        // Sort dates by parsed date (or raw string fallback)
+        const dates = Object.keys(grouped).sort((a, b) => {
+            const da = parseDateFlexible(a);
+            const db = parseDateFlexible(b);
+            if (da && db && !isNaN(da) && !isNaN(db)) return da - db;
+            return a.localeCompare(b);
+        });
+
+        const yearMap = {};
+        const unknownEntries = [];
+
+        dates.forEach(date => {
+            const entries = grouped[date] || [];
+            const d = parseDateFlexible(date);
+            if (!d || isNaN(d)) {
+                // Group under "Unknown"
+                if (!yearMap['Unknown']) yearMap['Unknown'] = {};
+                if (!yearMap['Unknown']['Unknown']) yearMap['Unknown']['Unknown'] = {};
+                if (!yearMap['Unknown']['Unknown']['Unknown']) yearMap['Unknown']['Unknown']['Unknown'] = [];
+                yearMap['Unknown']['Unknown']['Unknown'].push(...entries);
+                return;
+            }
+            const year = d.getFullYear();
+            const month = d.getMonth();
+            const day = d.getDate();
+            if (!yearMap[year]) yearMap[year] = {};
+            if (!yearMap[year][month]) yearMap[year][month] = {};
+            if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
+            yearMap[year][month][day] = entries;
+        });
+
+        const sortedYears = Object.keys(yearMap).sort((a, b) => {
+            if (a === 'Unknown') return 1;
+            if (b === 'Unknown') return -1;
+            return b - a;
+        });
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+        let html = '';
+        sortedYears.forEach(year => {
+            const months = yearMap[year];
+            if (year === 'Unknown') {
+                // Render unknown entries as a single group
+                const unknownGroup = months['Unknown']['Unknown']['Unknown'];
+                html += `
+                    <div class="year-section">
+                        <div class="year-header">
+                            <span class="font-bold text-slate-700">📁 Unknown</span>
+                            <span class="text-xs text-slate-400">${unknownGroup.length} entries</span>
+                        </div>
+                        <div class="year-content" style="display:block;">
+                            <div class="grid grid-cols-1 gap-2 ml-2">
+                                ${unknownGroup.map(row => `
+                                    <div class="date-card-compact" onclick="openMasterlistModal('${row.DATE}')">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-semibold text-sm text-slate-700">${esc(row.DATE)}</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">${esc(row.TITLE)}${row.ARTIST ? ' - ' + esc(row.ARTIST) : ''}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            const sortedMonths = Object.keys(months).sort((a, b) => b - a);
+            const totalInYear = Object.values(months).reduce((sum, days) => sum + Object.values(days).reduce((s, entries) => s + entries.length, 0), 0);
+
+            html += `
+                <div class="year-section">
+                    <div class="year-header" onclick="toggleYear('year-${year}')">
+                        <span class="font-bold text-slate-700">📁 ${year}</span>
+                        <span class="text-xs text-slate-400">${totalInYear} entries</span>
+                        <span class="toggle-icon" id="icon-year-${year}"><i class="fa-solid fa-chevron-down"></i></span>
+                    </div>
+                    <div class="year-content" id="content-year-${year}">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-2">
+            `;
+
+            sortedMonths.forEach(month => {
+                const days = months[month];
+                const sortedDays = Object.keys(days).sort((a, b) => b - a);
+                const totalInMonth = Object.values(days).reduce((sum, dayEntries) => sum + dayEntries.length, 0);
+
+                html += `
+                    <div class="month-section col-span-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h4 class="text-sm font-bold text-indigo-600">📂 ${monthNames[parseInt(month)]}</h4>
+                            <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${totalInMonth} entries</span>
+                        </div>
+                        <div class="space-y-2 ml-3">
+                `;
+
+                sortedDays.forEach(day => {
+                    const entries = days[day];
+                    const dateObj = new Date(parseInt(year), parseInt(month), parseInt(day));
+                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    const dateKey = ${year}-${String(parseInt(month)+1).padStart(2,'0')}-${String(day).padStart(2,'0')};
+                    const note = dateNotes[dateKey] || '';
+
+                    html += `
+                        <div class="date-card-compact" onclick="openMasterlistModal('${dateKey}')">
+                            <div class="flex items-center justify-between">
+                                <span class="font-semibold text-sm text-slate-700">📅 ${dateStr}</span>
+                                <span class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">${entries.length}</span>
+                            </div>
+                            <div class="date-note" contenteditable="true" onclick="event.stopPropagation();" 
+                                 onblur="saveDateNote('${dateKey}', this.innerText.trim())"
+                                 onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
+                                ${note}
+                            </div>
+                            <div class="text-[10px] text-slate-400 mt-1 truncate">
+                                ${entries.slice(0, 3).map(e => esc(e.TITLE)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        masterlistContent.innerHTML = html;
+    }
+
+    // ─── MASTERLIST MODAL ──────────────────────────────────────
+    function renderModalEntries(entries) {
+        let tableHtml = `
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm priority-groups-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>TITLE</th>
+                            <th>ARTIST</th>
+                            <th>DATE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        entries.forEach((row, idx) => {
+            tableHtml += `
+                <tr class="table-row-hover fade-in">
+                    <td class="py-2 px-3 text-slate-400 font-mono text-[11px]">${idx + 1}</td>
+                    <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
+                    <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
+                    <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
+                </tr>
+            `;
+        });
+
+        tableHtml += '</tbody></table></div>';
+        modalBody.innerHTML = tableHtml;
+        modalOverlay.classList.add('open');
+    }
+
+    window.openMasterlistModal = function(dateKey) {
+        // Try direct match first
+        let entries = masterlistData.filter(e => e.DATE === dateKey);
+
+        // If no direct match, try flexible matching
+        if (!entries.length) {
+            const targetDate = parseDateFlexible(dateKey);
+            if (targetDate && !isNaN(targetDate)) {
+                const targetStr = targetDate.toISOString().split('T')[0];
+                const found = masterlistData.filter(e => {
+                    const d = parseDateFlexible(e.DATE);
+                    return d && !isNaN(d) && d.toISOString().split('T')[0] === targetStr;
+                });
+                if (found.length) {
+                    const grouped = {};
+                    found.forEach(row => {
+                        const d = parseDateFlexible(row.DATE);
+                        if (d && !isNaN(d)) {
+                            const key = d.toISOString().split('T')[0];
+                            if (!grouped[key]) grouped[key] = [];
+                            grouped[key].push(row);
+                        }
+                    });
+                    const keys = Object.keys(grouped);
+                    if (keys.length) {
+                        modalTitle.textContent =📋 ${formatDateDisplay(keys[0])}`;
+                        renderModalEntries(grouped[keys[0]]);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (entries.length) {
+            modalTitle.textContent =📋 ${formatDateDisplay(dateKey)}`;
+            renderModalEntries(entries);
+        } else {
+            modalTitle.textContent =📋 ${formatDateDisplay(dateKey)}`;
+            modalBody.innerHTML = <div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>;
+            modalOverlay.classList.add('open');
+        }
+    };
+
+    // ─── RENDER PRIORITY GROUPS ──────────────────────────────────
+    function renderPriorityGroups() {
+        let filteredData = priorityData;
+
+        if (currentPriority !== 'all') {
+            filteredData = filteredData.filter(e => (e.CATEGORIZATION || '').toUpperCase() === currentPriority);
+        }
+
+        if (!filteredData.length) {
+            priorityContent.innerHTML = `
+                <div class="text-center text-slate-400 text-sm py-8">
+                    No entries found${currentPriority !== 'all' ? ' with priority ' + currentPriority : ''}
+                </div>
+            `;
+            return;
+        }
+
+        const groups = {};
+        filteredData.forEach(row => {
+            const p = (row.CATEGORIZATION || 'C').toUpperCase();
+            if (!groups[p]) groups[p] = [];
+            groups[p].push(row);
+        });
+
+        const priorityLabels = {
+            'A': '🔴 A – Top Priority',
+            'B': '🟡 B – Mid Priority',
+            'C': '🔵 C – Lower Priority'
+        };
+
+        let html = '';
+
+        if (currentPriority !== 'all') {
+            const p = currentPriority;
+            const entries = groups[p] || [];
+            if (entries.length) {
+                html = renderPriorityGroup(p, entries, priorityLabels[p]);
+            } else {
+                html = <div class="text-center text-slate-400 text-sm py-8">No entries with priority ${p}</div>;
+            }
+        } else {
+            // Show all groups that have entries
+            ['A', 'B', 'C'].forEach(p => {
+                const entries = groups[p] || [];
+                if (entries.length) {
+                    html += renderPriorityGroup(p, entries, priorityLabels[p]);
+                }
+            });
+            if (!html) {
+                html = <div class="text-center text-slate-400 text-sm py-8">No entries found</div>;
+            }
+        }
+
+        priorityContent.innerHTML = html;
+    }
+
+    function renderPriorityGroup(priority, entries, label) {
+        return `
+            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col flex-1">
+                <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold ${getPriorityClass(priority)} px-3 py-0.5 rounded-full">${label}</span>
+                        <span class="text-xs text-slate-400">${entries.length} entries</span>
+                    </div>
+                    <button onclick="filterPriorityRail('${priority}')" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">View all →</button>
+                </div>
+                <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-sm priority-groups-table">
+                        <thead class="sticky top-0 bg-white z-10">
+                            <tr>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th>Date</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${entries.map(row => `
+                                <tr class="table-row-hover fade-in">
+                                    <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
+                                    <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
+                                    <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
+                                    <td class="py-2 px-3 text-center">${row.NOTES ? <span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.NOTES)}</span> : '—'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    // ─── PRIORITY FILTER RAIL ──────────────────────────────────────
+    window.filterPriorityRail = function(priority) {
+        currentPriority = priority;
+        document.querySelectorAll('.priority-filter-rail').forEach(el => {
+            el.classList.remove('priority-filter-rail-active');
+            if (el.dataset.priority === priority) {
+                el.classList.add('priority-filter-rail-active');
+            }
+        });
+
+        if (currentView === 'priority') {
+            renderPriorityGroups();
+        }
+    };
+
+    // ─── VIEW SWITCHING ──────────────────────────────────────────
+    window.switchView = function(view) {
+        currentView = view;
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('nav-item-active'));
+
+        if (view === 'masterlist') {
+            document.getElementById('nav-masterlist').classList.add('nav-item-active');
+            document.getElementById('masterlist-view').classList.remove('hidden');
+            document.getElementById('priority-view').classList.add('hidden');
+            
+            searchSection.style.display = 'block';
+            yearDivider.style.display = 'block';
+            yearSection.style.display = 'block';
+            priorityFilterSection.style.display = 'none';
+            
+            renderMasterlist();
+        } else {
+            document.getElementById('nav-priority').classList.add('nav-item-active');
+            document.getElementById('priority-view').classList.remove('hidden');
+            document.getElementById('masterlist-view').classList.add('hidden');
+            
+            searchSection.style.display = 'none';
+            yearDivider.style.display = 'none';
+            yearSection.style.display = 'none';
+            priorityFilterSection.style.display = 'block';
+            
+            renderPriorityGroups();
+        }
+    };
+
+    // ─── TOGGLE YEAR ──────────────────────────────────────────────
+    window.toggleYear = function(yearId) {
+        const content = document.getElementById('content-' + yearId);
+        const icon = document.getElementById('icon-' + yearId);
+        if (!content) return;
+        content.classList.toggle('collapsed');
+        if (icon) {
+            const chevron = icon.querySelector('i');
+            if (chevron) chevron.classList.toggle('fa-chevron-down');
+            if (chevron) chevron.classList.toggle('fa-chevron-up');
+        }
+    };
+
+    // ─── REFRESH ──────────────────────────────────────────────────
+    window.refreshData = function() {
+        if (refreshIcon) refreshIcon.classList.add('fa-spin');
+        fetchAllData().finally(() => {
+            if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+        });
+    };
+
+    // ─── LOGOUT ────────────────────────────────────────────────────
+    window.logoutUser = async function() {
+        try {
+            if (supabaseClient) await supabaseClient.auth.signOut();
+        } catch (_) {}
+        localStorage.removeItem('archivehub_user');
+        window.location.href = '../../index.html';
+    };
+
+    // ─── MODAL ──────────────────────────────────────────────────
+    window.closeModal = function() {
+        modalOverlay.classList.remove('open');
+    };
+
+    modalOverlay.addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    // ─── INIT ──────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+        loadingSpinner.style.display = 'flex';
+        if (supabaseClient) {
+            checkSession();
+        } else {
+            setStatus('⚠️ No Supabase', 'error');
+            userInfo.textContent = '⚠️ Supabase client not available';
+            loadingSpinner.style.display = 'none';
+            masterlistContent.innerHTML = <div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>;
+            priorityContent.innerHTML = <div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>;
+        }
+    });
+
+    console.log('📋 Bravo Masterlist – Final with full data & priority spacing');
+})();
+</script>
+
+</body>
+</html>
