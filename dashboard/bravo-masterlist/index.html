@@ -619,7 +619,6 @@
 
     function formatDateDisplay(dateStr) {
         if (!dateStr) return '—';
-        // Try to parse any date string
         const d = parseDateFlexible(dateStr);
         if (d && !isNaN(d)) {
             return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -751,7 +750,6 @@
             masterlistData = masterRes.data || [];
             priorityData = priorityRes.data || [];
 
-            // Build dateNotes lookup
             dateNotes = {};
             (notesRes.data || []).forEach(n => {
                 dateNotes[n.DATE] = n.NOTES;
@@ -838,7 +836,6 @@
         try {
             const trimmed = note.trim();
             if (!trimmed) {
-                // Delete if empty
                 await supabaseClient
                     .from(DATE_NOTES_TABLE)
                     .delete()
@@ -847,7 +844,6 @@
                 renderMasterlist();
                 return;
             }
-            // Upsert
             const { error } = await supabaseClient
                 .from(DATE_NOTES_TABLE)
                 .upsert({ DATE: dateKey, NOTES: trimmed, updated_at: new Date().toISOString() });
@@ -864,7 +860,6 @@
     function renderMasterlist() {
         let filteredData = masterlistData;
 
-        // Year filter
         if (currentYear !== 'all') {
             const yearNum = parseInt(currentYear);
             filteredData = filteredData.filter(e => {
@@ -873,7 +868,6 @@
             });
         }
 
-        // Search filter
         if (searchTerm) {
             filteredData = filteredData.filter(e => {
                 const title = (e.TITLE || '').toLowerCase();
@@ -891,7 +885,6 @@
             return;
         }
 
-        // Group by date
         const grouped = {};
         filteredData.forEach(row => {
             const date = row.DATE;
@@ -907,7 +900,6 @@
             return a.localeCompare(b);
         });
 
-        // Group by Year → Month → Date
         const yearMap = {};
         dates.forEach(date => {
             const entries = grouped[date] || [];
@@ -1000,50 +992,86 @@
     }
 
     // ─── MASTERLIST MODAL ──────────────────────────────────────
-    window.openMasterlistModal = function(dateKey) {
-        const entries = masterlistData.filter(e => e.DATE === dateKey);
-        modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
+    function renderModalEntries(entries) {
+        let tableHtml = `
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm priority-groups-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>TITLE</th>
+                            <th>ARTIST</th>
+                            <th>DATE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
 
-        if (!entries.length) {
-            modalBody.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>`;
-        } else {
-            let tableHtml = `
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm priority-groups-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>TITLE</th>
-                                <th>ARTIST</th>
-                                <th>DATE</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+        entries.forEach((row, idx) => {
+            tableHtml += `
+                <tr class="table-row-hover fade-in">
+                    <td class="py-2 px-3 text-slate-400 font-mono text-[11px]">${idx + 1}</td>
+                    <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
+                    <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
+                    <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
+                </tr>
             `;
+        });
 
-            entries.forEach((row, idx) => {
-                tableHtml += `
-                    <tr class="table-row-hover fade-in">
-                        <td class="py-2 px-3 text-slate-400 font-mono text-[11px]">${idx + 1}</td>
-                        <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
-                        <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
-                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
-                    </tr>
-                `;
-            });
+        tableHtml += '</tbody></table></div>';
+        modalBody.innerHTML = tableHtml;
+        modalOverlay.classList.add('open');
+    }
 
-            tableHtml += '</tbody></table></div>';
-            modalBody.innerHTML = tableHtml;
+    window.openMasterlistModal = function(dateKey) {
+        // Try direct match first
+        let entries = masterlistData.filter(e => e.DATE === dateKey);
+
+        // If no direct match, try flexible matching
+        if (!entries.length) {
+            const targetDate = parseDateFlexible(dateKey);
+            if (targetDate && !isNaN(targetDate)) {
+                const targetStr = targetDate.toISOString().split('T')[0];
+                const found = masterlistData.filter(e => {
+                    const d = parseDateFlexible(e.DATE);
+                    return d && !isNaN(d) && d.toISOString().split('T')[0] === targetStr;
+                });
+                if (found.length) {
+                    // Group by normalized date to preserve grouping
+                    const grouped = {};
+                    found.forEach(row => {
+                        const d = parseDateFlexible(row.DATE);
+                        if (d && !isNaN(d)) {
+                            const key = d.toISOString().split('T')[0];
+                            if (!grouped[key]) grouped[key] = [];
+                            grouped[key].push(row);
+                        }
+                    });
+                    const keys = Object.keys(grouped);
+                    if (keys.length) {
+                        modalTitle.textContent = `📋 ${formatDateDisplay(keys[0])}`;
+                        renderModalEntries(grouped[keys[0]]);
+                        return;
+                    }
+                }
+            }
         }
 
-        modalOverlay.classList.add('open');
+        // If entries found via direct match or fallback
+        if (entries.length) {
+            modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
+            renderModalEntries(entries);
+        } else {
+            modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
+            modalBody.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>`;
+            modalOverlay.classList.add('open');
+        }
     };
 
     // ─── RENDER PRIORITY GROUPS ──────────────────────────────────
     function renderPriorityGroups() {
         let filteredData = priorityData;
 
-        // Priority filter
         if (currentPriority !== 'all') {
             filteredData = filteredData.filter(e => (e.CATEGORIZATION || '').toUpperCase() === currentPriority);
         }
@@ -1057,10 +1085,11 @@
             return;
         }
 
-        const groups = { 'A': [], 'B': [], 'C': [] };
+        const groups = {};
         filteredData.forEach(row => {
             const p = (row.CATEGORIZATION || 'C').toUpperCase();
-            if (groups[p]) groups[p].push(row);
+            if (!groups[p]) groups[p] = [];
+            groups[p].push(row);
         });
 
         const priorityLabels = {
@@ -1070,58 +1099,67 @@
         };
 
         let html = '';
-        ['A', 'B', 'C'].forEach(p => {
+
+        // If a specific priority is selected, ONLY show that group
+        if (currentPriority !== 'all') {
+            const p = currentPriority;
             const entries = groups[p] || [];
-
-            if (!entries.length) {
-                html += `
-                    <div class="bg-white rounded-xl border border-slate-200/80 p-4 shadow-sm">
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="text-sm font-bold ${getPriorityClass(p)} px-2.5 py-0.5 rounded-full">${priorityLabels[p]}</span>
-                            <span class="text-xs text-slate-400">0 entries</span>
-                        </div>
-                        <p class="text-xs text-slate-400 text-center py-4">No entries with this priority</p>
-                    </div>
-                `;
-                return;
+            if (entries.length) {
+                html = renderPriorityGroup(p, entries, priorityLabels[p]);
+            } else {
+                html = `<div class="text-center text-slate-400 text-sm py-8">No entries with priority ${p}</div>`;
             }
-
-            html += `
-                <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-                    <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold ${getPriorityClass(p)} px-3 py-0.5 rounded-full">${priorityLabels[p]}</span>
-                            <span class="text-xs text-slate-400">${entries.length} entries</span>
-                        </div>
-                        <button onclick="filterPriorityRail('${p}')" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">View all →</button>
-                    </div>
-                    <div class="overflow-x-auto max-h-[250px] overflow-y-auto custom-scrollbar">
-                        <table class="w-full text-left border-collapse text-sm priority-groups-table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Artist</th>
-                                    <th>Date</th>
-                                    <th>Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${entries.map(row => `
-                                    <tr class="table-row-hover fade-in">
-                                        <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
-                                        <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
-                                        <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
-                                        <td class="py-2 px-3 text-center">${row.NOTES ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.NOTES)}</span>` : '—'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-        });
+        } else {
+            // Show all groups that have entries
+            ['A', 'B', 'C'].forEach(p => {
+                const entries = groups[p] || [];
+                if (entries.length) {
+                    html += renderPriorityGroup(p, entries, priorityLabels[p]);
+                }
+            });
+            if (!html) {
+                html = `<div class="text-center text-slate-400 text-sm py-8">No entries found</div>`;
+            }
+        }
 
         priorityContent.innerHTML = html;
+    }
+
+    // Helper to render a single priority group
+    function renderPriorityGroup(priority, entries, label) {
+        return `
+            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold ${getPriorityClass(priority)} px-3 py-0.5 rounded-full">${label}</span>
+                        <span class="text-xs text-slate-400">${entries.length} entries</span>
+                    </div>
+                    <button onclick="filterPriorityRail('${priority}')" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">View all →</button>
+                </div>
+                <div class="overflow-x-auto max-h-[250px] overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-sm priority-groups-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th>Date</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${entries.map(row => `
+                                <tr class="table-row-hover fade-in">
+                                    <td class="py-2 px-3 text-slate-700 font-medium">${esc(row.TITLE)}</td>
+                                    <td class="py-2 px-3 text-slate-500">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
+                                    <td class="py-2 px-3 text-slate-400 text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
+                                    <td class="py-2 px-3 text-center">${row.NOTES ? `<span class="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${esc(row.NOTES)}</span>` : '—'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
     }
 
     // ─── PRIORITY FILTER RAIL ──────────────────────────────────────
@@ -1226,7 +1264,7 @@
         }
     });
 
-    console.log('📋 Bravo Masterlist – Revised with date parsing & notes');
+    console.log('📋 Bravo Masterlist – Final version with fixed priority & modal');
 })();
 </script>
 
