@@ -520,6 +520,7 @@
     try {
         if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            window.supabaseClient = supabaseClient; // Make it global for debugging
         }
     } catch (e) { console.warn('Supabase not loaded'); }
 
@@ -656,7 +657,7 @@
         if (!supabaseClient) return;
 
         try {
-            // FIXED: Using UPPERCASE column names
+            // Using UPPERCASE column names: TITLE, ARTIST, DATE
             const [masterRes, priorityRes] = await Promise.all([
                 supabaseClient.from(MASTERLIST_TABLE)
                     .select('*')
@@ -666,14 +667,29 @@
                     .order('DATE', { ascending: true })
             ]);
 
-            if (masterRes.error) throw masterRes.error;
-            if (priorityRes.error) throw priorityRes.error;
+            if (masterRes.error) {
+                console.error('Masterlist error:', masterRes.error);
+                throw masterRes.error;
+            }
+            if (priorityRes.error) {
+                console.error('Priority error:', priorityRes.error);
+                throw priorityRes.error;
+            }
 
             masterlistData = masterRes.data || [];
             priorityData = priorityRes.data || [];
 
-            console.log('✅ Masterlist data:', masterlistData.length);
-            console.log('✅ Priority data:', priorityData.length);
+            console.log('✅ Masterlist data:', masterlistData.length, 'rows');
+            console.log('✅ Priority data:', priorityData.length, 'rows');
+            
+            // Log first row to see column names
+            if (masterlistData.length > 0) {
+                console.log('Sample masterlist row:', masterlistData[0]);
+                console.log('Columns:', Object.keys(masterlistData[0]));
+            }
+            if (priorityData.length > 0) {
+                console.log('Sample priority row:', priorityData[0]);
+            }
 
             renderYearFilter();
             renderMasterlist();
