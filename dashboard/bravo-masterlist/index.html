@@ -348,6 +348,23 @@
             transform: scale(1) translateY(0);
         }
 
+        /* Priority container – fills available height */
+        .priority-full-height {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0; /* Allow flex shrink */
+        }
+        .priority-full-height .bg-white.rounded-xl {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .priority-full-height .overflow-x-auto {
+            flex: 1;
+            overflow-y: auto;
+        }
+
         @media (max-width: 768px) {
             .left-rail-full {
                 width: 56px;
@@ -530,7 +547,7 @@
                     <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">🏷️ Priority Groups</h2>
                     <p class="text-xs text-slate-500 mt-0.5" id="priorityInfo">Entries grouped by priority level.</p>
                 </div>
-                <div id="priority-content">
+                <div id="priority-content" class="priority-full-height">
                     <div class="text-center text-slate-400 text-sm py-8">⏳ Loading...</div>
                 </div>
             </div>
@@ -626,30 +643,63 @@
         return dateStr;
     }
 
+    // Enhanced date parser – handles many formats
     function parseDateFlexible(dateStr) {
         if (!dateStr) return null;
-        // Try "YYYY-MM-DD"
-        let match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+        const cleaned = dateStr.trim();
+
+        // Try YYYY-MM-DD
+        let match = cleaned.match(/(\d{4})-(\d{2})-(\d{2})/);
         if (match) return new Date(parseInt(match[1]), parseInt(match[2])-1, parseInt(match[3]));
-        // Try "March 19, 2019"
-        match = dateStr.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
+
+        // Try Month DD, YYYY (with optional comma)
+        match = cleaned.match(/(\w+)\s+(\d{1,2}),?\s*(\d{4})/);
         if (match) {
-            const monthMap = {
-                'January':0,'February':1,'March':2,'April':3,'May':4,'June':5,
-                'July':6,'August':7,'September':8,'October':9,'November':10,'December':11
-            };
-            const month = monthMap[match[1]];
+            const monthMap = { 'january':0,'february':1,'march':2,'april':3,'may':4,'june':5,'july':6,'august':7,'september':8,'october':9,'november':10,'december':11 };
+            const month = monthMap[match[1].toLowerCase()];
+            if (month !== undefined) {
+                return new Date(parseInt(match[3]), month, parseInt(match[2]));
+            }
+        }
+
+        // Try MM/DD/YYYY or DD/MM/YYYY
+        match = cleaned.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (match) {
+            const a = parseInt(match[1]);
+            const b = parseInt(match[2]);
+            const year = parseInt(match[3]);
+            // If first number > 12, treat as DD/MM
+            if (a > 12) {
+                return new Date(year, b-1, a);
+            } else {
+                // Assume MM/DD
+                return new Date(year, a-1, b);
+            }
+        }
+
+        // Try DD-MM-YYYY
+        match = cleaned.match(/(\d{1,2})-(\d{1,2})-(\d{4})/);
+        if (match) {
+            const day = parseInt(match[1]);
+            const month = parseInt(match[2]);
+            const year = parseInt(match[3]);
+            return new Date(year, month-1, day);
+        }
+
+        // Try just "Month DD" (use current year)
+        match = cleaned.match(/(\w+)\s+(\d{1,2})/);
+        if (match) {
+            const monthMap = { 'january':0,'february':1,'march':2,'april':3,'may':4,'june':5,'july':6,'august':7,'september':8,'october':9,'november':10,'december':11 };
+            const month = monthMap[match[1].toLowerCase()];
             if (month !== undefined) {
                 const day = parseInt(match[2]);
-                const year = parseInt(match[3]);
+                const year = new Date().getFullYear();
                 return new Date(year, month, day);
             }
         }
-        // Try "MM/DD/YYYY"
-        match = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-        if (match) {
-            return new Date(parseInt(match[3]), parseInt(match[1])-1, parseInt(match[2]));
-        }
+
+        // If all else fails, return null
+        console.warn('Unable to parse date:', dateStr);
         return null;
     }
 
@@ -893,6 +943,7 @@
             grouped[date].push(row);
         });
 
+        // Sort dates by parsed date (or raw string fallback)
         const dates = Object.keys(grouped).sort((a, b) => {
             const da = parseDateFlexible(a);
             const db = parseDateFlexible(b);
@@ -901,28 +952,64 @@
         });
 
         const yearMap = {};
+        const unknownEntries = [];
+
         dates.forEach(date => {
             const entries = grouped[date] || [];
             const d = parseDateFlexible(date);
-            if (!d || isNaN(d)) return;
+            if (!d || isNaN(d)) {
+                // Group under "Unknown"
+                if (!yearMap['Unknown']) yearMap['Unknown'] = {};
+                if (!yearMap['Unknown']['Unknown']) yearMap['Unknown']['Unknown'] = {};
+                if (!yearMap['Unknown']['Unknown']['Unknown']) yearMap['Unknown']['Unknown']['Unknown'] = [];
+                yearMap['Unknown']['Unknown']['Unknown'].push(...entries);
+                return;
+            }
             const year = d.getFullYear();
             const month = d.getMonth();
             const day = d.getDate();
-
             if (!yearMap[year]) yearMap[year] = {};
             if (!yearMap[year][month]) yearMap[year][month] = {};
             if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
             yearMap[year][month][day] = entries;
         });
 
-        const sortedYears = Object.keys(yearMap).sort((a, b) => b - a);
+        const sortedYears = Object.keys(yearMap).sort((a, b) => {
+            if (a === 'Unknown') return 1;
+            if (b === 'Unknown') return -1;
+            return b - a;
+        });
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
         let html = '';
         sortedYears.forEach(year => {
             const months = yearMap[year];
+            if (year === 'Unknown') {
+                // Render unknown entries as a single group
+                const unknownGroup = months['Unknown']['Unknown']['Unknown'];
+                html += `
+                    <div class="year-section">
+                        <div class="year-header">
+                            <span class="font-bold text-slate-700">📁 Unknown</span>
+                            <span class="text-xs text-slate-400">${unknownGroup.length} entries</span>
+                        </div>
+                        <div class="year-content" style="display:block;">
+                            <div class="grid grid-cols-1 gap-2 ml-2">
+                                ${unknownGroup.map(row => `
+                                    <div class="date-card-compact" onclick="openMasterlistModal('${row.DATE}')">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-semibold text-sm text-slate-700">${esc(row.DATE)}</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">${esc(row.TITLE)}${row.ARTIST ? ' - ' + esc(row.ARTIST) : ''}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
             const sortedMonths = Object.keys(months).sort((a, b) => b - a);
-
             const totalInYear = Object.values(months).reduce((sum, days) => sum + Object.values(days).reduce((s, entries) => s + entries.length, 0), 0);
 
             html += `
@@ -1037,7 +1124,6 @@
                     return d && !isNaN(d) && d.toISOString().split('T')[0] === targetStr;
                 });
                 if (found.length) {
-                    // Group by normalized date to preserve grouping
                     const grouped = {};
                     found.forEach(row => {
                         const d = parseDateFlexible(row.DATE);
@@ -1057,7 +1143,6 @@
             }
         }
 
-        // If entries found via direct match or fallback
         if (entries.length) {
             modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
             renderModalEntries(entries);
@@ -1100,7 +1185,6 @@
 
         let html = '';
 
-        // If a specific priority is selected, ONLY show that group
         if (currentPriority !== 'all') {
             const p = currentPriority;
             const entries = groups[p] || [];
@@ -1125,20 +1209,19 @@
         priorityContent.innerHTML = html;
     }
 
-    // Helper to render a single priority group
     function renderPriorityGroup(priority, entries, label) {
         return `
-            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-                <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm flex flex-col flex-1">
+                <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between shrink-0">
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-bold ${getPriorityClass(priority)} px-3 py-0.5 rounded-full">${label}</span>
                         <span class="text-xs text-slate-400">${entries.length} entries</span>
                     </div>
                     <button onclick="filterPriorityRail('${priority}')" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition">View all →</button>
                 </div>
-                <div class="overflow-x-auto max-h-[250px] overflow-y-auto custom-scrollbar">
+                <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
                     <table class="w-full text-left border-collapse text-sm priority-groups-table">
-                        <thead>
+                        <thead class="sticky top-0 bg-white z-10">
                             <tr>
                                 <th>Title</th>
                                 <th>Artist</th>
@@ -1264,7 +1347,7 @@
         }
     });
 
-    console.log('📋 Bravo Masterlist – Final version with fixed priority & modal');
+    console.log('📋 Bravo Masterlist – Final with full data & priority spacing');
 })();
 </script>
 
