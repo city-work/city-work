@@ -672,6 +672,24 @@
             return new Date(year, month-1, day);
         }
 
+        // Try "Month YYYY"
+        match = cleaned.match(/(\w+)\s+(\d{4})/);
+        if (match) {
+            const monthMap = { 'january':0,'february':1,'march':2,'april':3,'may':4,'june':5,'july':6,'august':7,'september':8,'october':9,'november':10,'december':11 };
+            const month = monthMap[match[1].toLowerCase()];
+            if (month !== undefined) {
+                const year = parseInt(match[2]);
+                return new Date(year, month, 1);
+            }
+        }
+
+        // Try just "YYYY"
+        match = cleaned.match(/^(\d{4})$/);
+        if (match) {
+            const year = parseInt(match[1]);
+            return new Date(year, 0, 1);
+        }
+
         // Try just "Month DD"
         match = cleaned.match(/(\w+)\s+(\d{1,2})/);
         if (match) {
@@ -687,7 +705,6 @@
         return null;
     }
 
-    // Normalize a date string to YYYY-MM-DD
     function getNormalizedDate(dateStr) {
         if (!dateStr) return null;
         const d = parseDateFlexible(dateStr);
@@ -697,13 +714,42 @@
             const day = String(d.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
-        // If parsing fails, return the raw string as fallback (but will be treated as Unknown)
         return null;
     }
 
     function getPriorityClass(p) {
         const map = { 'A': 'priority-a', 'B': 'priority-b', 'C': 'priority-c' };
         return map[p] || '';
+    }
+
+    // ─── PAGINATION HELPER ──────────────────────────────────────────
+    async function fetchAllRows(tableName) {
+        let allData = [];
+        let page = 0;
+        const pageSize = 1000;
+        let more = true;
+
+        while (more) {
+            const { data, error } = await supabaseClient
+                .from(tableName)
+                .select('*')
+                .order('DATE', { ascending: true })
+                .range(page * pageSize, (page + 1) * pageSize - 1);
+
+            if (error) {
+                console.error(`Error fetching ${tableName}:`, error);
+                throw error;
+            }
+
+            if (!data || data.length === 0) {
+                more = false;
+            } else {
+                allData = allData.concat(data);
+                page++;
+                if (data.length < pageSize) more = false;
+            }
+        }
+        return allData;
     }
 
     // ─── AUTH ──────────────────────────────────────────────────────
@@ -775,26 +821,22 @@
         }
     }
 
-    // ─── FETCH DATA ──────────────────────────────────────────────
+    // ─── FETCH ALL DATA (with pagination) ──────────────────────────
     async function fetchAllData() {
         if (!supabaseClient) return;
 
         try {
-            const [masterRes, priorityRes, notesRes] = await Promise.all([
-                supabaseClient.from(MASTERLIST_TABLE).select('*').order('DATE', { ascending: true }),
-                supabaseClient.from(PRIORITIZATION_TABLE).select('*').order('DATE', { ascending: true }),
-                supabaseClient.from(DATE_NOTES_TABLE).select('*')
+            const [master, priority, notes] = await Promise.all([
+                fetchAllRows(MASTERLIST_TABLE),
+                fetchAllRows(PRIORITIZATION_TABLE),
+                fetchAllRows(DATE_NOTES_TABLE)
             ]);
 
-            if (masterRes.error) throw masterRes.error;
-            if (priorityRes.error) throw priorityRes.error;
-            if (notesRes.error) throw notesRes.error;
-
-            masterlistData = masterRes.data || [];
-            priorityData = priorityRes.data || [];
+            masterlistData = master || [];
+            priorityData = priority || [];
 
             dateNotes = {};
-            (notesRes.data || []).forEach(n => {
+            (notes || []).forEach(n => {
                 dateNotes[n.DATE] = n.NOTES;
             });
 
@@ -903,7 +945,6 @@
     function renderMasterlist() {
         let filteredData = masterlistData;
 
-        // Year filter
         if (currentYear !== 'all') {
             const yearNum = parseInt(currentYear);
             filteredData = filteredData.filter(e => {
@@ -912,7 +953,6 @@
             });
         }
 
-        // Search
         if (searchTerm) {
             filteredData = filteredData.filter(e => {
                 const title = (e.TITLE || '').toLowerCase();
@@ -930,20 +970,17 @@
             return;
         }
 
-        // Group by normalized date key (YYYY-MM-DD)
         const grouped = {};
         filteredData.forEach(row => {
             const rawDate = row.DATE;
             let key = getNormalizedDate(rawDate);
             if (!key) {
-                // If cannot normalize, use raw date as key (treated as Unknown later)
                 key = rawDate;
             }
             if (!grouped[key]) grouped[key] = [];
             grouped[key].push(row);
         });
 
-        // Sort keys by date (if possible)
         const keys = Object.keys(grouped).sort((a, b) => {
             const da = parseDateFlexible(a);
             const db = parseDateFlexible(b);
@@ -951,10 +988,7 @@
             return a.localeCompare(b);
         });
 
-        // Build yearMap
         const yearMap = {};
-        const unknownKeys = [];
-
         keys.forEach(key => {
             const entries = grouped[key];
             const d = parseDateFlexible(key);
@@ -967,7 +1001,6 @@
                 if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
                 yearMap[year][month][day] = entries;
             } else {
-                // Unknown date
                 if (!yearMap['Unknown']) yearMap['Unknown'] = {};
                 if (!yearMap['Unknown']['Unknown']) yearMap['Unknown']['Unknown'] = {};
                 if (!yearMap['Unknown']['Unknown']['Unknown']) yearMap['Unknown']['Unknown']['Unknown'] = [];
@@ -1112,7 +1145,6 @@
     }
 
     window.openMasterlistModal = function(dateKey) {
-        // Filter entries where normalized date matches the key
         const entries = masterlistData.filter(row => {
             const norm = getNormalizedDate(row.DATE);
             return norm === dateKey;
@@ -1122,7 +1154,6 @@
             modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
             renderModalEntries(entries);
         } else {
-            // If no match, try to parse the key and display a message
             modalTitle.textContent = `📋 ${formatDateDisplay(dateKey)}`;
             modalBody.innerHTML = `<div class="text-center text-slate-400 text-sm py-8">No entries for this date.</div>`;
             modalOverlay.classList.add('open');
@@ -1322,7 +1353,7 @@
         }
     });
 
-    console.log('📋 Bravo Masterlist – Final with normalized grouping & modal');
+    console.log('📋 Bravo Masterlist – Final with pagination');
 })();
 </script>
 
