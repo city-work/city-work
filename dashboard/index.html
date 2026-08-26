@@ -1,192 +1,1569 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard - City Work</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../config.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #0f172a;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .dashboard {
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(16px);
-      border-radius: 40px;
-      padding: 40px;
-      max-width: 600px;
-      width: 100%;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    h1 {
-      color: #fff;
-      font-size: 28px;
-      margin-bottom: 8px;
-    }
-    p {
-      color: rgba(255,255,255,0.7);
-      margin-bottom: 24px;
-    }
-    .user-info {
-      background: rgba(255,255,255,0.05);
-      border-radius: 16px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-    .user-info div {
-      color: rgba(255,255,255,0.8);
-      font-size: 14px;
-      padding: 4px 0;
-    }
-    .user-info strong {
-      color: #fff;
-    }
-    .logout-btn {
-      background: #ef4444;
-      border: none;
-      color: #fff;
-      padding: 14px 28px;
-      border-radius: 16px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: inherit;
-      width: 100%;
-    }
-    .logout-btn:hover {
-      background: #dc2626;
-      transform: translateY(-2px);
-    }
-    .loading {
-      color: rgba(255,255,255,0.6);
-      text-align: center;
-      padding: 40px 0;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>City Work Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    
+    <!-- ═══ LOAD CONFIG FROM ROOT ═══ -->
+    <script src="../config.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            accent: '#3B82F6',
+                            accentHover: '#2563EB',
+                            header: '#E8EDF4',
+                            main: '#EFF2F6',
+                            surface: '#FFFFFF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ─── STATUS BADGE ─── */
+        .status-ok {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+        .status-waiting {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fcd34d;
+        }
+
+        /* ─── SIDEBAR — fully responsive ─── */
+        .sidebar {
+            background: rgba(232, 237, 244, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.05);
+            height: 100dvh;
+            position: sticky;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            z-index: 50;
+            width: 220px;
+        }
+        .sidebar.collapsed {
+            width: 64px;
+        }
+
+        .sidebar-toggle {
+            background: rgba(232, 237, 244, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #475569;
+            font-size: 1rem;
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            z-index: 60;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            display: none;
+        }
+        .sidebar-toggle:hover {
+            background: rgba(59, 130, 246, 0.15);
+            color: #2563EB;
+            transform: scale(1.05);
+        }
+
+        .sidebar-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 8px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        .sidebar-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #475569;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            position: relative;
+            width: 100%;
+            margin-bottom: 2px;
+            white-space: nowrap;
+        }
+        .sidebar-item .icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        .sidebar-item .label {
+            opacity: 1;
+            transition: opacity 0.2s ease;
+            overflow: hidden;
+        }
+        .sidebar.collapsed .sidebar-item .label {
+            opacity: 0;
+            width: 0;
+            display: none;
+        }
+        .sidebar-item:hover {
+            background: rgba(59, 130, 246, 0.12);
+            color: #2563EB;
+        }
+        .sidebar-item:hover .icon {
+            transform: scale(1.1);
+        }
+        .sidebar-item.active {
+            background: rgba(59, 130, 246, 0.18);
+            color: #2563EB;
+        }
+        .sidebar-item.active .icon {
+            transform: scale(1.05);
+        }
+
+        .sidebar-divider {
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            margin: 4px 12px;
+        }
+        .sidebar-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94a3b8;
+            padding: 0.5rem 0.75rem 0.25rem;
+            font-weight: 600;
+            transition: opacity 0.2s ease;
+        }
+        .sidebar.collapsed .sidebar-label {
+            opacity: 0;
+            height: 0;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .brand-city {
+            color: #1e293b;
+        }
+        .brand-work {
+            color: #3B82F6;
+        }
+        .sidebar-brand {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+            min-height: 56px;
+        }
+        .sidebar-brand .brand-text {
+            font-size: 1.125rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            transition: opacity 0.2s ease;
+        }
+        .sidebar.collapsed .sidebar-brand .brand-text {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+        .sidebar-brand .brand-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-signout {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #475569;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            width: 100%;
+            position: relative;
+            white-space: nowrap;
+        }
+        .sidebar-signout .icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        .sidebar-signout .label {
+            opacity: 1;
+            transition: opacity 0.2s ease;
+            overflow: hidden;
+        }
+        .sidebar.collapsed .sidebar-signout .label {
+            opacity: 0;
+            width: 0;
+            display: none;
+        }
+        .sidebar-signout:hover {
+            background: rgba(239, 68, 68, 0.12);
+            color: #dc2626;
+        }
+        .sidebar-signout:hover .icon {
+            transform: scale(1.1);
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            background: #E8EDF4;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .app-container {
+            display: flex;
+            height: 100dvh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            background: #EFF2F6;
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            overflow: hidden;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        header {
+            background: #E8EDF4;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+            padding: 0.5rem 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            min-height: 56px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 0 1 auto;
+            flex-wrap: wrap;
+        }
+
+        .mobile-menu-btn {
+            background: transparent;
+            border: none;
+            color: #475569;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            display: none;
+        }
+        .mobile-menu-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563EB;
+        }
+
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 1.25rem;
+        }
+        .scrollable-content::-webkit-scrollbar {
+            width: 5px;
+        }
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 9999px;
+        }
+
+        .archive-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            min-height: 140px;
+        }
+        .archive-card:hover {
+            border-color: #3B82F6;
+            box-shadow: 0 8px 25px -8px rgba(59, 130, 246, 0.25);
+            transform: translateY(-4px);
+        }
+        .archive-card .icon-wrap {
+            transition: all 0.25s ease;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            margin-bottom: 0.5rem;
+        }
+        .archive-card:hover .icon-wrap {
+            background: #3B82F6 !important;
+            color: white !important;
+        }
+
+        .search-highlight {
+            background: #fef08a;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        .archive-card.search-hidden {
+            display: none !important;
+        }
+        .search-results-count {
+            font-size: 0.65rem;
+            color: #64748b;
+            padding: 0.15rem 0.6rem;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            border: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        .content-panel {
+            display: none;
+            animation: fadeIn 0.2s ease-out;
+        }
+        .content-panel.active {
+            display: block;
+        }
+
+        .btn-retry {
+            background: white;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            padding: 0.3rem 0.9rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            cursor: pointer;
+        }
+        .btn-retry:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .search-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            flex: 0 1 auto;
+            min-width: 120px;
+        }
+        .search-wrapper .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7rem;
+            color: #94a3b8;
+            pointer-events: none;
+        }
+        .search-input {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            padding: 0.3rem 2.2rem 0.3rem 2rem;
+            font-size: 0.8rem;
+            width: 100%;
+            min-width: 120px;
+            max-width: 260px;
+            transition: all 0.2s ease;
+            outline: none;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+        .search-input:focus {
+            border-color: #3B82F6;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            max-width: 300px;
+        }
+        .search-input::placeholder {
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+        .search-clear {
+            position: absolute;
+            right: 2.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.35rem;
+            border-radius: 9999px;
+            transition: all 0.2s ease;
+            display: none;
+            background: transparent;
+            border: none;
+        }
+        .search-clear:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .search-clear.visible {
+            display: block;
+        }
+        .search-kbd {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.55rem;
+            font-weight: 700;
+            color: #94a3b8;
+            background: #f1f5f9;
+            padding: 0.1rem 0.4rem;
+            border-radius: 0.25rem;
+            border: 1px solid #e2e8f0;
+            pointer-events: none;
+            display: none;
+        }
+        @media (min-width: 640px) {
+            .search-kbd {
+                display: block;
+            }
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #3B82F6;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .welcome-card {
+            background: white;
+            border-radius: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            padding: 1.5rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fade-in {
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        /* ─── RESPONSIVE BREAKPOINTS ─── */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 64px;
+            }
+            .sidebar .sidebar-item .label,
+            .sidebar .sidebar-signout .label,
+            .sidebar .sidebar-label,
+            .sidebar .sidebar-brand .brand-text {
+                opacity: 0;
+                width: 0;
+                display: none;
+            }
+            .sidebar .sidebar-brand {
+                justify-content: center;
+                padding: 0.75rem 0.5rem;
+            }
+            .sidebar .sidebar-item {
+                justify-content: center;
+                padding: 0.5rem;
+            }
+            .sidebar .sidebar-signout {
+                justify-content: center;
+                padding: 0.5rem;
+            }
+            .sidebar .sidebar-item .icon {
+                font-size: 1.1rem;
+            }
+            .sidebar .sidebar-signout .icon {
+                font-size: 1.1rem;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+            .sidebar-toggle {
+                display: none !important;
+            }
+
+            .sidebar.mobile-open {
+                width: 220px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                height: 100dvh;
+                box-shadow: 4px 0 40px rgba(0, 0, 0, 0.15);
+                transform: translateX(0);
+                z-index: 100;
+            }
+            .sidebar.mobile-open .sidebar-item .label,
+            .sidebar.mobile-open .sidebar-signout .label,
+            .sidebar.mobile-open .sidebar-label,
+            .sidebar.mobile-open .sidebar-brand .brand-text {
+                opacity: 1;
+                width: auto;
+                display: inline;
+            }
+            .sidebar.mobile-open .sidebar-item {
+                justify-content: flex-start;
+                padding: 0.5rem 0.75rem;
+            }
+            .sidebar.mobile-open .sidebar-signout {
+                justify-content: flex-start;
+                padding: 0.5rem 0.75rem;
+            }
+            .sidebar.mobile-open .sidebar-brand {
+                justify-content: flex-start;
+                padding: 0.75rem 1rem;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.25);
+                z-index: 90;
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+            }
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .sidebar:not(.mobile-open) {
+                width: 64px;
+            }
+
+            .search-input {
+                max-width: 180px;
+                min-width: 100px;
+                font-size: 0.75rem;
+            }
+            .search-input:focus {
+                max-width: 200px;
+            }
+            header {
+                padding: 0.4rem 0.75rem;
+            }
+            .scrollable-content {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .sidebar {
+                width: 56px;
+            }
+            .sidebar .sidebar-item .icon {
+                font-size: 0.95rem;
+            }
+            .sidebar .sidebar-signout .icon {
+                font-size: 0.95rem;
+            }
+            .sidebar .sidebar-brand .brand-icon {
+                font-size: 1rem;
+            }
+            .sidebar.mobile-open {
+                width: 200px;
+            }
+
+            .mobile-menu-btn {
+                font-size: 1rem;
+                padding: 0.2rem 0.4rem;
+            }
+
+            header {
+                padding: 0.35rem 0.6rem;
+                min-height: 48px;
+                gap: 0.35rem;
+            }
+            .header-left {
+                gap: 0.35rem;
+            }
+            .header-right {
+                gap: 0.35rem;
+            }
+
+            .search-wrapper {
+                min-width: 80px;
+                flex: 1 1 auto;
+            }
+            .search-input {
+                min-width: 70px;
+                max-width: 140px;
+                font-size: 0.7rem;
+                padding: 0.25rem 1.8rem 0.25rem 1.6rem;
+            }
+            .search-input:focus {
+                max-width: 160px;
+            }
+            .search-wrapper .search-icon {
+                left: 0.5rem;
+                font-size: 0.6rem;
+            }
+            .search-clear {
+                right: 1.6rem;
+                font-size: 0.55rem;
+            }
+            .search-kbd {
+                display: none !important;
+            }
+
+            .btn-retry {
+                padding: 0.2rem 0.6rem;
+                font-size: 0.65rem;
+            }
+            .btn-retry span {
+                display: none;
+            }
+            .btn-retry i {
+                margin: 0;
+            }
+
+            .status-badge-text {
+                font-size: 0.6rem !important;
+                padding: 0.15rem 0.5rem !important;
+            }
+
+            .scrollable-content {
+                padding: 0.6rem 0.75rem;
+            }
+
+            .archive-card {
+                padding: 0.75rem;
+                min-height: 110px;
+            }
+            .archive-card .icon-wrap {
+                width: 2rem;
+                height: 2rem;
+                font-size: 0.8rem;
+            }
+            .archive-card h3 {
+                font-size: 0.8rem;
+            }
+            .archive-card p {
+                font-size: 0.65rem;
+            }
+
+            .welcome-card {
+                padding: 1rem;
+            }
+            .welcome-card .text-6xl {
+                font-size: 3rem !important;
+            }
+            .welcome-card h2 {
+                font-size: 1rem;
+            }
+
+            .content-panel h1 {
+                font-size: 1.1rem !important;
+            }
+            .content-panel p {
+                font-size: 0.7rem !important;
+            }
+
+            .grid {
+                gap: 0.6rem !important;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .sidebar {
+                width: 48px;
+            }
+            .sidebar .sidebar-item .icon {
+                font-size: 0.85rem;
+                width: 20px;
+            }
+            .sidebar .sidebar-signout .icon {
+                font-size: 0.85rem;
+                width: 20px;
+            }
+            .sidebar.mobile-open {
+                width: 180px;
+            }
+            .sidebar.mobile-open .sidebar-item {
+                font-size: 0.75rem;
+                padding: 0.35rem 0.6rem;
+            }
+            .sidebar.mobile-open .sidebar-signout {
+                font-size: 0.75rem;
+                padding: 0.35rem 0.6rem;
+            }
+
+            .search-input {
+                min-width: 60px;
+                max-width: 110px;
+                font-size: 0.65rem;
+                padding: 0.2rem 1.4rem 0.2rem 1.4rem;
+            }
+            .search-input:focus {
+                max-width: 130px;
+            }
+            .search-wrapper .search-icon {
+                font-size: 0.55rem;
+                left: 0.4rem;
+            }
+            .search-clear {
+                right: 1.2rem;
+                font-size: 0.5rem;
+            }
+
+            .scrollable-content {
+                padding: 0.4rem 0.5rem;
+            }
+            .archive-card {
+                padding: 0.5rem;
+                min-height: 90px;
+            }
+            .archive-card .icon-wrap {
+                width: 1.6rem;
+                height: 1.6rem;
+                font-size: 0.65rem;
+            }
+            .archive-card h3 {
+                font-size: 0.7rem;
+            }
+            .archive-card p {
+                font-size: 0.6rem;
+            }
+
+            header {
+                padding: 0.25rem 0.4rem;
+                min-height: 40px;
+            }
+            .btn-retry {
+                padding: 0.15rem 0.4rem;
+                font-size: 0.55rem;
+            }
+            .status-badge-text {
+                font-size: 0.5rem !important;
+                padding: 0.1rem 0.35rem !important;
+            }
+            .mobile-menu-btn {
+                font-size: 0.85rem;
+                padding: 0.15rem 0.3rem;
+            }
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.25);
+            z-index: 90;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .sidebar-overlay.active {
+            display: block;
+        }
+    </style>
 </head>
+
 <body>
 
-<div class="dashboard" id="dashboard">
-  <div id="loadingState" class="loading">
-    <i class="fa-solid fa-spinner fa-spin"></i>
-    <p style="margin-top: 12px;">Loading your dashboard...</p>
-  </div>
+    <!-- ═══ SIDEBAR OVERLAY (mobile) ═══ -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
-  <div id="contentState" style="display: none;">
-    <h1>🏙️ City Work</h1>
-    <p>Welcome to your dashboard</p>
+    <!-- ═══ FULL PAGE APP ═══ -->
+    <div class="app-container">
 
-    <div class="user-info" id="userInfo">
-      <div><strong>Email:</strong> <span id="userEmail">Loading...</span></div>
-      <div><strong>Role:</strong> <span id="userRole">Loading...</span></div>
+        <!-- ═══ RESPONSIVE SIDEBAR ═══ -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Brand -->
+            <div class="sidebar-brand">
+                <span class="brand-icon">🏙️</span>
+                <span class="brand-text">
+                    <span class="brand-city">City</span><span class="brand-work">Work</span>
+                </span>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="sidebar-scroll" id="sidebarNav">
+                <div class="sidebar-label">Main</div>
+
+                <a href="#" class="sidebar-item active" onclick="showPanel('dashboard')" data-search="dashboard home">
+                    <span class="icon"><i class="fa-solid fa-gauge-high"></i></span>
+                    <span class="label">Dashboard</span>
+                </a>
+
+                <div class="sidebar-divider"></div>
+
+                <a href="#" class="sidebar-item" onclick="showPanel('masterlist')" data-search="masterlist folder">
+                    <span class="icon"><i class="fa-solid fa-folder"></i></span>
+                    <span class="label">Masterlist</span>
+                </a>
+
+                <div class="sidebar-divider"></div>
+
+                <div class="sidebar-label">Modules</div>
+
+                <a href="#" class="sidebar-item" onclick="showPanel('chores')" data-search="daily chores tasks maintenance checklist">
+                    <span class="icon"><i class="fa-solid fa-broom"></i></span>
+                    <span class="label">Daily Chores</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="showPanel('commercial')" data-search="commercial media advertisements archive">
+                    <span class="icon"><i class="fa-solid fa-rectangle-ad"></i></span>
+                    <span class="label">Commercial</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="showPanel('cps')" data-search="cps compliance documents logs">
+                    <span class="icon"><i class="fa-solid fa-shield-halved"></i></span>
+                    <span class="label">CPS</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="showPanel('concert')" data-search="concert schedule music event lineup">
+                    <span class="icon"><i class="fa-solid fa-music"></i></span>
+                    <span class="label">Concert Schedule</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="showPanel('weekly')" data-search="weekly schedule agenda timetable operations">
+                    <span class="icon"><i class="fa-solid fa-calendar-days"></i></span>
+                    <span class="label">Weekly Schedule</span>
+                </a>
+                <a href="#" class="sidebar-item" onclick="showPanel('movies')" data-search="classic movies film schedules programming">
+                    <span class="icon"><i class="fa-solid fa-film"></i></span>
+                    <span class="label">Movie Schedules</span>
+                </a>
+            </nav>
+
+            <!-- Bottom: Sign Out -->
+            <div class="px-2 py-3 border-t border-black/5 flex-shrink-0">
+                <button class="sidebar-signout" id="logoutBtn">
+                    <span class="icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
+                    <span class="label">Sign Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ═══ MAIN CONTENT ═══ -->
+        <div class="main-content" id="mainContent">
+
+            <!-- ═══ HEADER ═══ -->
+            <header>
+                <!-- Left: Mobile menu + Status -->
+                <div class="header-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <span id="statusBadge" class="status-badge-text text-[10px] sm:text-xs font-medium px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border status-waiting flex items-center gap-1 whitespace-nowrap">
+                        <span class="spinner"></span> Connecting...
+                    </span>
+                </div>
+
+                <!-- Right: Search + Retry -->
+                <div class="header-right">
+                    <div class="search-wrapper">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="globalSearchInput" placeholder="Search..." class="search-input" oninput="handleGlobalSearch(this.value)" onfocus="this.select()" autocomplete="off" />
+                        <button id="searchClear" class="search-clear" onclick="clearSearch()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        <span id="searchResultsCount" class="search-results-count hidden">0</span>
+                        <span class="search-kbd">⌘K</span>
+                    </div>
+
+                    <button class="btn-retry" onclick="location.reload()">
+                        <i class="fa-solid fa-rotate-right text-xs"></i>
+                        <span>Retry</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- ═══ SCROLLABLE CONTENT ═══ -->
+            <div class="scrollable-content" id="scrollableContent">
+
+                <!-- ─── MESSAGES ─── -->
+                <div id="messageArea"></div>
+
+                <!-- ═══ DASHBOARD PANEL ═══ -->
+                <div id="panel-dashboard" class="content-panel active" data-panel="dashboard">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">📦 City Work Directory</h1>
+                        <p class="text-xs text-slate-500 mt-0.5" id="userInfo">Checking session...</p>
+                    </div>
+                    <div class="mt-4 sm:mt-6">
+                        <div class="welcome-card text-center">
+                            <div class="text-5xl sm:text-6xl mb-3 sm:mb-4">🏗️</div>
+                            <h2 class="text-base sm:text-lg font-bold text-slate-700">Welcome to City Work</h2>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-1">Select a module from the sidebar to get started.</p>
+                            <div class="mt-3 sm:mt-4 flex flex-wrap gap-1.5 sm:gap-2 justify-center">
+                                <span class="text-[10px] sm:text-xs bg-[#EFF2F6] px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-slate-200 text-slate-600">📋 Masterlist</span>
+                                <span class="text-[10px] sm:text-xs bg-[#EFF2F6] px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-slate-200 text-slate-600">📅 Schedules</span>
+                                <span class="text-[10px] sm:text-xs bg-[#EFF2F6] px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-slate-200 text-slate-600">📁 Archives</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ MASTERLIST PANEL ═══ -->
+                <div id="panel-masterlist" class="content-panel" data-panel="masterlist">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">📋 Masterlist</h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Complete database and operational records</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 mt-4 sm:mt-6" id="masterlistCards">
+                        <!-- LG Masterlist Card -->
+                        <a href="./dashboard/lg-masterlist/index.html" class="archive-card fade-in" data-search="lg masterlist complete database operational roster">
+                            <div>
+                                <div class="icon-wrap bg-emerald-50 text-emerald-600">
+                                    <i class="fa-solid fa-list-check"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-slate-900">LG Masterlist</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Complete database and operational roster for LG.</p>
+                            </div>
+                            <div class="mt-2 sm:mt-3 flex items-center text-xs font-semibold text-emerald-600">
+                                <span>Open</span>
+                                <i class="fa-solid fa-arrow-right ml-2 transition-transform"></i>
+                            </div>
+                        </a>
+
+                        <!-- Bravo Masterlist Card -->
+                        <a href="./dashboard/bravo-masterlist/index.html" class="archive-card fade-in" data-search="bravo masterlist roster logs tracking operations">
+                            <div>
+                                <div class="icon-wrap bg-indigo-50 text-indigo-600">
+                                    <i class="fa-solid fa-clipboard-list"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-slate-900">Bravo Masterlist</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Roster, logs, and tracking for Bravo operations.</p>
+                            </div>
+                            <div class="mt-2 sm:mt-3 flex items-center text-xs font-semibold text-indigo-600">
+                                <span>Open</span>
+                                <i class="fa-solid fa-arrow-right ml-2 transition-transform"></i>
+                            </div>
+                        </a>
+
+                        <!-- TGIRJ Masterlist Card -->
+                        <a href="./dashboard/tgirj-masterlist/index.html" class="archive-card fade-in" data-search="tgirj masterlist database records">
+                            <div>
+                                <div class="icon-wrap bg-purple-50 text-purple-600">
+                                    <i class="fa-solid fa-database"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-slate-900">TGIRJ Masterlist</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Master database records for TGIRJ.</p>
+                            </div>
+                            <div class="mt-2 sm:mt-3 flex items-center text-xs font-semibold text-purple-600">
+                                <span>Open</span>
+                                <i class="fa-solid fa-arrow-right ml-2 transition-transform"></i>
+                            </div>
+                        </a>
+
+                        <!-- Let's Groove Card -->
+                        <a href="./dashboard/lets-groove/index.html" class="archive-card fade-in" data-search="lets groove music entertainment records schedules">
+                            <div>
+                                <div class="icon-wrap bg-rose-50 text-rose-600">
+                                    <i class="fa-solid fa-music"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-slate-900">Let's Groove</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Music and entertainment records and schedules.</p>
+                            </div>
+                            <div class="mt-2 sm:mt-3 flex items-center text-xs font-semibold text-rose-600">
+                                <span>Open</span>
+                                <i class="fa-solid fa-arrow-right ml-2 transition-transform"></i>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ═══ DAILY CHORES PANEL ═══ -->
+                <div id="panel-chores" class="content-panel" data-panel="chores">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">🧹 Daily Chores</h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Daily task checklists and maintenance tracking.</p>
+                    </div>
+                    <div class="mt-6 text-center text-slate-500 text-sm">Daily Chores content goes here.</div>
+                </div>
+
+                <!-- ═══ COMMERCIAL PANEL ═══ -->
+                <div id="panel-commercial" class="content-panel" data-panel="commercial">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">📢 Commercial</h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Commercial archives, media, and advertisements.</p>
+                    </div>
+                    <div class="mt-6 text-center text-slate-500 text-sm">Commercial content goes here.</div>
+                </div>
+
+                <!-- ═══ CPS PANEL ═══ -->
+                <div id="panel-cps" class="content-panel" data-panel="cps">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">🛡️ CPS</h1>
+                        <p class="text-xs text-slate-500 mt-0.5">CPS documents, logs, and compliance records.</p>
+                    </div>
+                    <div class="mt-6 text-center text-slate-500 text-sm">CPS content goes here.</div>
+                </div>
+
+                <!-- ═══ CONCERT PANEL ═══ -->
+                <div id="panel-concert" class="content-panel" data-panel="concert">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">🎵 Choice Concert Schedule</h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Concert lineups, dates, and event schedules.</p>
+                    </div>
+                    <div class="mt-6 text-center text-slate-500 text-sm">Concert schedule content goes here.</div>
+                </div>
+
+                <!-- ═══ WEEKLY PANEL ═══ -->
+                <div id="panel-weekly" class="content-panel" data-panel="weekly">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">📅 Weekly Schedule</h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Weekly operational agendas and timetables.</p>
+                    </div>
+                    <div class="mt-6 text-center text-slate-500 text-sm">Weekly schedule content goes here.</div>
+                </div>
+
+                <!-- ═══ MOVIES PANEL ═══ -->
+                <div id="panel-movies" class="content-panel" data-panel="movies">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">🎬 Classic Movie Schedules</h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Schedules and programming for classic movies.</p>
+                    </div>
+                    <div class="mt-6 text-center text-slate-500 text-sm">Classic movie schedules content goes here.</div>
+                </div>
+
+            </div>
+        </div>
     </div>
 
-    <button class="logout-btn" id="logoutBtn">
-      <i class="fa-solid fa-sign-out-alt"></i> Logout
-    </button>
-  </div>
-</div>
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        //  CITY WORK DASHBOARD — Supabase Auth (admin panel removed)
+        //  FIXED: Now uses config.js for Supabase credentials
+        // ═══════════════════════════════════════════════════════════════════
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        (function() {
+            'use strict';
 
-<script>
-  (function() {
-    // Read config
-    let SUPABASE_URL, SUPABASE_ANON_KEY;
-    try {
-      if (typeof design !== 'undefined' && design.supabase) {
-        SUPABASE_URL = design.supabase.url;
-        SUPABASE_ANON_KEY = design.supabase.anonKey;
-      } else {
-        throw new Error('Config not loaded');
-      }
-    } catch (e) {
-      document.body.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;font-family:Inter,sans-serif;">
-          <div style="background:rgba(255,255,255,0.05);border-radius:40px;padding:40px;text-align:center;border:1px solid rgba(255,255,255,0.1);">
-            <h2 style="color:#f59e0b;">⚠️ Configuration Error</h2>
-            <p style="color:rgba(255,255,255,0.6);margin-top:8px;">Please check config.js</p>
-          </div>
-        </div>
-      `;
-      return;
-    }
+            console.log('🚀 [CITY WORK] Starting...');
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            // ─── READ SUPABASE CONFIG FROM config.js ──────────────────
+            let SUPABASE_URL, SUPABASE_ANON_KEY;
+            try {
+                if (typeof design !== 'undefined' && design.supabase) {
+                    SUPABASE_URL = design.supabase.url;
+                    SUPABASE_ANON_KEY = design.supabase.anonKey;
+                    console.log('✅ [CONFIG] Loaded from config.js');
+                } else {
+                    throw new Error('design.supabase not found');
+                }
+            } catch (e) {
+                console.error('❌ [CONFIG] Failed to load Supabase config:', e);
+                // Show error in the UI
+                document.body.innerHTML = `
+                    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;padding:20px;font-family:Inter,sans-serif;">
+                        <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#f59e0b;margin-bottom:12px;"></i>
+                            <h2 style="font-size:20px;font-weight:700;color:#fff;">Configuration Error</h2>
+                            <p style="color:rgba(255,255,255,0.6);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#90e0ef;">config.js</code>.</p>
+                            <p style="color:rgba(255,255,255,0.4);margin-top:12px;font-size:12px;">Make sure build-config.js ran successfully on Vercel.</p>
+                            <a href="../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#3B82F6;color:white;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
 
-    const loadingState = document.getElementById('loadingState');
-    const contentState = document.getElementById('contentState');
-    const userEmail = document.getElementById('userEmail');
-    const userRole = document.getElementById('userRole');
-    const logoutBtn = document.getElementById('logoutBtn');
+            // ─── DOM REFS ──────────────────────────────────────────────────
+            const $ = id => document.getElementById(id);
+            const statusBadge = $('statusBadge');
+            const messageArea = $('messageArea');
+            const userInfo = $('userInfo');
+            const logoutBtn = $('logoutBtn');
+            const searchInput = $('globalSearchInput');
+            const sidebar = $('sidebar');
+            const mobileMenuBtn = $('mobileMenuBtn');
+            const sidebarOverlay = $('sidebarOverlay');
 
-    // Check session
-    async function checkSession() {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error || !data.session) {
-          window.location.href = '../index.html';
-          return;
-        }
+            // ─── SUPABASE CLIENT ──────────────────────────────────────────
+            let supabase = null;
+            try {
+                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('✅ [SUPABASE] Client created');
+                } else {
+                    console.warn('⚠️ [SUPABASE] Supabase library not loaded');
+                }
+            } catch (e) {
+                console.warn('⚠️ [SUPABASE] Failed to create client:', e.message);
+            }
 
-        const user = data.session.user;
-        userEmail.textContent = user.email || 'No email';
+            // ─── STATE ─────────────────────────────────────────────────────
+            let userRole = 'user';
+            let isMobileOpen = false;
 
-        // Fetch role from profiles
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
+            // ─── MOBILE SIDEBAR TOGGLE ───────────────────────────────────
+            function toggleMobileSidebar() {
+                isMobileOpen = !isMobileOpen;
+                if (isMobileOpen) {
+                    sidebar.classList.add('mobile-open');
+                    sidebarOverlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    sidebar.classList.remove('mobile-open');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
 
-        if (profileError) {
-          console.warn('Profile fetch error:', profileError);
-          userRole.textContent = 'user';
-        } else {
-          userRole.textContent = profile?.role || 'user';
-        }
+            function closeMobileSidebar() {
+                if (isMobileOpen) {
+                    isMobileOpen = false;
+                    sidebar.classList.remove('mobile-open');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
 
-        loadingState.style.display = 'none';
-        contentState.style.display = 'block';
+            // ─── HELPERS ──────────────────────────────────────────────────
+            function setStatus(text, type) {
+                statusBadge.className = 'status-badge-text text-[10px] sm:text-xs font-medium px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border flex items-center gap-1 whitespace-nowrap';
+                statusBadge.innerHTML = text;
+                if (type === 'ok') statusBadge.classList.add('status-ok');
+                else if (type === 'error') statusBadge.classList.add('status-error');
+                else statusBadge.classList.add('status-waiting');
+            }
 
-      } catch (err) {
-        console.error('Session check error:', err);
-        window.location.href = '../index.html';
-      }
-    }
+            function showMessage(text, type) {
+                const colors = {
+                    info: 'bg-blue-50 border-blue-200 text-blue-700',
+                    success: 'bg-green-50 border-green-200 text-green-700',
+                    error: 'bg-red-50 border-red-200 text-red-700',
+                    warning: 'bg-amber-50 border-amber-200 text-amber-700'
+                };
+                messageArea.innerHTML = `
+                        <div class="rounded-xl border px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm ${colors[type] || colors.info} flex items-center justify-between fade-in">
+                            <span>${text}</span>
+                            <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 ml-4">✕</button>
+                        </div>
+                    `;
+            }
 
-    // Logout
-    async function logout() {
-      try {
-        await supabase.auth.signOut();
-        localStorage.removeItem('citywork_user');
-        window.location.href = '../index.html';
-      } catch (err) {
-        console.error('Logout error:', err);
-        alert('Failed to logout. Please try again.');
-      }
-    }
+            function getRoleDisplay(role) {
+                return role === 'admin' ? '👑 Admin' : '👤 User';
+            }
 
-    logoutBtn.addEventListener('click', logout);
-    checkSession();
-  })();
-</script>
+            // ─── AUTH ──────────────────────────────────────────────────────
+            async function checkSession() {
+                if (!supabase) {
+                    setStatus('⚠️ Auth disabled', 'error');
+                    userInfo.textContent = 'ℹ️ Local mode – Supabase not available';
+                    showMessage('Running in local mode – authentication is disabled.', 'warning');
+                    return;
+                }
+
+                setStatus('<span class="spinner"></span> Connecting...', 'waiting');
+
+                try {
+                    const { data, error } = await supabase.auth.getSession();
+                    if (error) throw error;
+                    const session = data?.session;
+
+                    if (!session || !session.user) {
+                        setStatus('🔓 Not logged in', 'error');
+                        userInfo.textContent = 'Please log in';
+                        showMessage('You are not logged in. Redirecting...', 'warning');
+                        localStorage.removeItem('citywork_user');
+                        setTimeout(() => { window.location.href = '../index.html'; }, 1500);
+                        return;
+                    }
+
+                    // ─── Valid session ─────────────────────────────────────
+                    let role = 'user';
+                    try {
+                        const { data: profile, error: profileError } = await supabase
+                            .from('profiles')
+                            .select('role')
+                            .eq('id', session.user.id)
+                            .maybeSingle();
+
+                        if (!profileError && profile?.role) {
+                            role = profile.role;
+                        } else if (!profile) {
+                            await supabase.from('profiles').insert({
+                                id: session.user.id,
+                                email: session.user.email,
+                                role: 'user'
+                            });
+                            console.log('✅ [AUTH] Created missing profile');
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ [AUTH] Profile fetch error:', e.message);
+                    }
+
+                    userRole = role;
+
+                    localStorage.setItem('citywork_user', JSON.stringify({
+                        id: session.user.id,
+                        email: session.user.email,
+                        role: role,
+                        session: session
+                    }));
+
+                    const roleDisplay = getRoleDisplay(role);
+                    setStatus(`✅ ${roleDisplay}`, 'ok');
+                    userInfo.textContent = `Logged in as ${roleDisplay}`;
+
+                    showMessage(`✅ Welcome back, ${roleDisplay}`, 'success');
+
+                    console.log('✅ [AUTH] Session valid – role:', role);
+
+                } catch (err) {
+                    console.error('❌ [AUTH] Error:', err.message);
+                    setStatus('❌ Connection error', 'error');
+                    showMessage('Failed to connect: ' + err.message + ' – click Retry', 'error');
+                }
+            }
+
+            // ─── LOGOUT ────────────────────────────────────────────────────
+            async function logoutUser() {
+                try {
+                    if (supabase) await supabase.auth.signOut();
+                } catch (_) {}
+                localStorage.removeItem('citywork_user');
+                window.location.href = '../index.html';
+            }
+
+            // ─── PANEL SWITCHING ──────────────────────────────────────────
+            function showPanel(panelId) {
+                document.querySelectorAll('.content-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+
+                const target = document.getElementById('panel-' + panelId);
+                if (target) {
+                    target.classList.add('active');
+                }
+
+                document.querySelectorAll('.sidebar-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                document.querySelectorAll('.sidebar-item').forEach(item => {
+                    const onclickAttr = item.getAttribute('onclick');
+                    if (onclickAttr && onclickAttr.includes("'" + panelId + "'")) {
+                        item.classList.add('active');
+                    }
+                });
+
+                closeMobileSidebar();
+            }
+
+            // ─── GLOBAL SEARCH ────────────────────────────────────────────
+            const searchableItems = [];
+
+            function buildSearchIndex() {
+                document.querySelectorAll('#sidebarNav .sidebar-item').forEach(item => {
+                    const text = item.getAttribute('data-search') || item.textContent.trim();
+                    const label = item.querySelector('.label')?.textContent || text;
+                    searchableItems.push({
+                        element: item,
+                        type: 'sidebar',
+                        text: label,
+                        searchData: text,
+                        panel: item.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || null
+                    });
+                });
+
+                document.querySelectorAll('.archive-card').forEach(card => {
+                    const title = card.querySelector('h3')?.textContent || '';
+                    const desc = card.querySelector('p')?.textContent || '';
+                    const searchData = card.dataset.search || title + ' ' + desc;
+                    const panel = card.closest('.content-panel');
+                    const panelId = panel?.dataset.panel || null;
+                    searchableItems.push({
+                        element: card,
+                        type: 'card',
+                        text: title + ' ' + desc,
+                        searchData: searchData,
+                        panel: panelId,
+                        title: title
+                    });
+                });
+            }
+
+            function highlightText(text, query) {
+                if (!query || !text) return text;
+                const regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                return text.replace(regex, '<span class="search-highlight">$1</span>');
+            }
+
+            function handleGlobalSearch(query) {
+                const q = query.trim().toLowerCase();
+                const hasQuery = q.length > 0;
+
+                const searchClear = document.getElementById('searchClear');
+                const resultsCount = document.getElementById('searchResultsCount');
+
+                if (hasQuery) {
+                    searchClear.classList.add('visible');
+                } else {
+                    searchClear.classList.remove('visible');
+                }
+
+                resetSearch();
+
+                if (!hasQuery) {
+                    resultsCount.classList.add('hidden');
+                    return;
+                }
+
+                const matches = [];
+                searchableItems.forEach(item => {
+                    const searchStr = (item.searchData + ' ' + item.text).toLowerCase();
+                    if (searchStr.includes(q)) {
+                        matches.push(item);
+                    }
+                });
+
+                if (matches.length > 0) {
+                    resultsCount.textContent = matches.length;
+                    resultsCount.classList.remove('hidden');
+                } else {
+                    resultsCount.textContent = '0';
+                    resultsCount.classList.remove('hidden');
+                }
+
+                if (matches.length === 0) {
+                    document.querySelectorAll('.archive-card').forEach(c => c.classList.add('search-hidden'));
+                    return;
+                }
+
+                const panels = new Set(matches.map(m => m.panel).filter(p => p !== null));
+
+                if (panels.size === 1 && panels.has('masterlist')) {
+                    showPanel('masterlist');
+                } else if (panels.size === 1 && panels.has('dashboard')) {
+                    showPanel('dashboard');
+                } else if (panels.size === 1) {
+                    const panelId = panels.values().next().value;
+                    if (panelId) showPanel(panelId);
+                } else if (panels.size > 1) {
+                    if (panels.has('masterlist')) showPanel('masterlist');
+                    else showPanel(panels.values().next().value);
+                }
+
+                document.querySelectorAll('.archive-card').forEach(card => {
+                    const cardTitle = card.querySelector('h3')?.textContent || '';
+                    const cardDesc = card.querySelector('p')?.textContent || '';
+                    const searchStr = (card.dataset.search || cardTitle + ' ' + cardDesc).toLowerCase();
+                    if (searchStr.includes(q)) {
+                        card.classList.remove('search-hidden');
+                        const titleEl = card.querySelector('h3');
+                        if (titleEl) {
+                            const originalText = titleEl.textContent;
+                            titleEl.innerHTML = highlightText(originalText, q);
+                        }
+                    } else {
+                        card.classList.add('search-hidden');
+                    }
+                });
+
+                document.querySelectorAll('#sidebarNav .sidebar-item').forEach(item => {
+                    const searchData = item.getAttribute('data-search') || '';
+                    const label = item.querySelector('.label')?.textContent || '';
+                    const searchStr = (searchData + ' ' + label).toLowerCase();
+                    if (searchStr.includes(q)) {
+                        item.style.color = '#2563EB';
+                    } else {
+                        item.style.color = '';
+                    }
+                });
+            }
+
+            function resetSearch() {
+                document.querySelectorAll('.archive-card').forEach(card => {
+                    card.classList.remove('search-hidden');
+                    const titleEl = card.querySelector('h3');
+                    if (titleEl) {
+                        const originalText = titleEl.textContent;
+                        titleEl.innerHTML = originalText;
+                    }
+                });
+
+                document.querySelectorAll('#sidebarNav .sidebar-item').forEach(item => {
+                    item.style.color = '';
+                });
+
+                const resultsCount = document.getElementById('searchResultsCount');
+                resultsCount.classList.add('hidden');
+            }
+
+            function clearSearch() {
+                const searchInput = document.getElementById('globalSearchInput');
+                const searchClear = document.getElementById('searchClear');
+                const resultsCount = document.getElementById('searchResultsCount');
+                searchInput.value = '';
+                searchClear.classList.remove('visible');
+                resultsCount.classList.add('hidden');
+                resetSearch();
+                searchInput.focus();
+            }
+
+            // ─── KEYBOARD SHORTCUTS ──────────────────────────────────────
+            document.addEventListener('keydown', function(e) {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault();
+                    if (searchInput) { searchInput.focus();
+                        searchInput.select(); }
+                }
+                if (e.key === 'Escape') {
+                    if (searchInput) searchInput.blur();
+                    closeMobileSidebar();
+                }
+            });
+
+            // ─── RESIZE HANDLER ───────────────────────────────────────────
+            function handleResize() {
+                if (window.innerWidth > 1024 && isMobileOpen) {
+                    closeMobileSidebar();
+                }
+                if (window.innerWidth > 1024) {
+                    sidebarOverlay.classList.remove('active');
+                }
+            }
+
+            // ─── INIT ────────────────────────────────────────────────────
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('📄 [DOM] Ready – initializing...');
+
+                logoutBtn.addEventListener('click', logoutUser);
+                mobileMenuBtn.addEventListener('click', toggleMobileSidebar);
+                sidebarOverlay.addEventListener('click', closeMobileSidebar);
+                window.addEventListener('resize', handleResize);
+
+                buildSearchIndex();
+
+                setTimeout(() => {
+                    checkSession();
+                }, 100);
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        if (document.activeElement === searchInput) {
+                            searchInput.blur();
+                            clearSearch();
+                        }
+                    }
+                });
+
+                console.log('✅ [INIT] City Work Dashboard ready (admin panel removed)');
+            });
+
+            window.showPanel = showPanel;
+            window.handleGlobalSearch = handleGlobalSearch;
+            window.clearSearch = clearSearch;
+            window.toggleMobileSidebar = toggleMobileSidebar;
+            window.closeMobileSidebar = closeMobileSidebar;
+
+        })();
+    </script>
 
 </body>
 </html>
