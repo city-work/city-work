@@ -79,7 +79,7 @@
             border-color: #fcd34d;
         }
 
-        /* ═══ SIDEBAR (Copied from Dashboard) ═══ */
+        /* ═══ SIDEBAR ═══ */
         .sidebar {
             background: rgba(232, 237, 244, 0.65);
             backdrop-filter: blur(20px);
@@ -901,7 +901,6 @@
                 </div>
 
                 <!-- ═══ MOVIES PANEL ═══ (REMOVED - Replaced by Classics) -->
-                <!-- The "Classic Movie Schedules" panel has been removed and replaced with the working Classics link in the sidebar -->
 
             </div>
         </div>
@@ -1058,10 +1057,9 @@
 
                     if (role === 'admin') {
                         adminPanel.classList.remove('hidden');
-                        showMessage('👑 Welcome Admin! Full access granted.', 'success');
+                        // Removed the welcome message
                     } else {
                         adminPanel.classList.add('hidden');
-                        showMessage(`✅ Welcome back, ${roleDisplay}`, 'success');
                     }
 
                     console.log('✅ [AUTH] Session valid – role:', role);
