@@ -1,11 +1,1038 @@
-let SUPABASE_URL, SUPABASE_ANON_KEY;
-try {
-  if (typeof design !== 'undefined' && design.supabase) {
-    SUPABASE_URL = design.supabase.url;
-    SUPABASE_ANON_KEY = design.supabase.anonKey;
-  } else {
-    throw new Error('design.supabase not found');
-  }
-} catch (e) {
-  // Shows friendly error message
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>City Work – Login</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+  
+  <!-- Supabase + Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      background-image: url('https://yffqtbqnzrcctfnjibbo.supabase.co/storage/v1/object/public/cats/FB_IMG_1787604930204.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #0f172a;
+      padding: 20px;
+    }
+
+    /* ---------- LOADING SPINNER ---------- */
+    #loadingSpinner {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #loadingSpinner i {
+      font-size: 2.5rem;
+      color: #00b4d8;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    #loadingSpinner p {
+      margin-top: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    /* ---------- 1. BOTTOM TRIGGER BAR ---------- */
+    .trigger-bar {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 40px);
+      max-width: 400px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 60px;
+      padding: 18px 24px;
+      text-align: center;
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      transition: all 0.3s ease;
+      z-index: 20;
+      opacity: 0;
+      transform: translateX(-50%) translateY(20px);
+      animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .trigger-bar:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateX(-50%) scale(1.02);
+    }
+    .trigger-bar:active {
+      transform: translateX(-50%) scale(0.96);
+    }
+    .trigger-bar.hidden {
+      opacity: 0 !important;
+      transform: translateX(-50%) translateY(30px) !important;
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    @keyframes fadeUp {
+      0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    .trigger-bar .arrow {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    /* ---------- 2. DARK OVERLAY ---------- */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 25;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    .overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ---------- 3. CENTERED LOGIN MODAL ---------- */
+    .login-sheet {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 90%;
+      max-width: 420px;
+      min-height: 380px;
+      max-height: 85vh;
+      background: rgba(255, 255, 255, 0.10);
+      backdrop-filter: blur(32px) saturate(1.6);
+      -webkit-backdrop-filter: blur(32px) saturate(1.6);
+      border-radius: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+      padding: 32px 28px 28px;
+      z-index: 30;
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.92);
+      transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+      overflow-y: auto;
+    }
+
+    .login-sheet::-webkit-scrollbar {
+      width: 0;
+      background: transparent;
+    }
+
+    .login-sheet.active {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      pointer-events: all;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.12);
+      border: none;
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* ---------- 4. FORM ---------- */
+    .login-card {
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 300px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .sub-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .input-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 5px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.10);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      font-size: 15px;
+      color: #ffffff;
+      transition: all 0.25s ease;
+      outline: none;
+    }
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.35);
+    }
+    input:focus {
+      border-color: #00b4d8;
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.15);
+    }
+
+    .input-error {
+      border-color: #f87171 !important;
+      background: rgba(248, 113, 113, 0.12) !important;
+      box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.2) !important;
+      animation: shake 0.45s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-12px); }
+      40% { transform: translateX(12px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+
+    .forgot-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 4px 0 22px;
+    }
+    .forgot-row label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+    }
+    .forgot-row label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #00b4d8;
+      padding: 0;
+      margin: 0;
+    }
+    .forgot-link {
+      font-size: 14px;
+      font-weight: 600;
+      color: #90e0ef;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.2s;
+      font-family: inherit;
+    }
+    .forgot-link:hover {
+      color: #ffffff;
+    }
+
+    button.login-btn {
+      width: 100%;
+      padding: 16px;
+      background: #00b4d8;
+      border: none;
+      border-radius: 16px;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 6px 20px rgba(0, 180, 216, 0.35);
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    button.login-btn:hover {
+      background: #0284c7;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0, 180, 216, 0.45);
+    }
+    button.login-btn:active {
+      transform: scale(0.97);
+    }
+    button.login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .toggle-wrapper {
+      display: flex;
+      gap: 8px;
+      margin-top: 18px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 40px;
+      padding: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .toggle-option {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      border-radius: 32px;
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      user-select: none;
+    }
+    .toggle-option.active {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .toggle-option:not(.active):hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* ---------- FORM ERROR ---------- */
+    .form-error {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      display: none;
+    }
+    .form-error.show {
+      display: block;
+    }
+    .form-error.error {
+      color: #f87171;
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+    }
+    .form-error.success {
+      color: #4ade80;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.2);
+    }
+    .form-error i {
+      margin-right: 6px;
+    }
+
+    /* ---------- AUTH TOGGLE ---------- */
+    .auth-toggle {
+      text-align: center;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 16px;
+    }
+    .auth-toggle button {
+      background: none;
+      border: none;
+      color: #90e0ef;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      transition: color 0.2s;
+    }
+    .auth-toggle button:hover {
+      color: #ffffff;
+    }
+
+    /* ---------- 5. SUCCESS STATE ---------- */
+    #successContent {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 10px 0;
+    }
+
+    .success-wrapper {
+      text-align: center;
+      width: 100%;
+      padding: 0 10px;
+    }
+
+    .success-circle {
+      width: 80px;
+      height: 80px;
+      background: #22c55e;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      position: relative;
+    }
+
+    .success-circle .checkmark {
+      position: relative;
+      width: 40px;
+      height: 40px;
+    }
+
+    .success-circle .checkmark::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -60%) rotate(45deg);
+      width: 20px;
+      height: 36px;
+      border: solid white;
+      border-width: 0 5px 5px 0;
+      border-radius: 2px;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .success-wrapper h2 {
+      color: #22c55e;
+      font-weight: 700;
+      font-size: 24px;
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+
+    .success-wrapper p {
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 15px;
+      margin-top: 0;
+      word-break: break-word;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 480px) {
+      .trigger-bar {
+        bottom: 30px;
+        padding: 16px 20px;
+        font-size: 16px;
+        width: calc(100% - 30px);
+      }
+      .login-sheet {
+        padding: 28px 20px 24px;
+        border-radius: 32px;
+        max-height: 80vh;
+        min-height: 320px;
+      }
+      h1 {
+        font-size: 24px;
+      }
+      .sub-text {
+        font-size: 13px;
+        margin-bottom: 20px;
+      }
+      input {
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+      .close-btn {
+        top: 14px;
+        right: 16px;
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+      }
+      .success-circle {
+        width: 70px;
+        height: 70px;
+      }
+      .success-circle .checkmark {
+        width: 34px;
+        height: 34px;
+      }
+      .success-circle .checkmark::after {
+        width: 16px;
+        height: 30px;
+        border-width: 0 4px 4px 0;
+      }
+      .success-wrapper h2 {
+        font-size: 20px;
+      }
+    }
+
+    @media (max-height: 640px) {
+      .login-sheet {
+        padding: 20px 18px 18px;
+        max-height: 92vh;
+        min-height: 280px;
+      }
+      .sub-text {
+        margin-bottom: 14px;
+      }
+      .input-group {
+        margin-bottom: 12px;
+      }
+      .forgot-row {
+        margin-bottom: 14px;
+      }
+      button.login-btn {
+        padding: 14px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      .success-circle {
+        width: 60px;
+        height: 60px;
+      }
+      .success-circle .checkmark {
+        width: 28px;
+        height: 28px;
+      }
+      .success-circle .checkmark::after {
+        width: 14px;
+        height: 24px;
+        border-width: 0 3px 3px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADING SPINNER -->
+  <div id="loadingSpinner">
+    <i class="fa-solid fa-spinner"></i>
+    <p>Checking session...</p>
+  </div>
+
+  <!-- 1. BOTTOM TRIGGER BAR -->
+  <div class="trigger-bar" id="triggerBar">
+    Log In <span class="arrow">↑</span>
+  </div>
+
+  <!-- 2. OVERLAY -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- 3. CENTERED LOGIN MODAL -->
+  <div class="login-sheet" id="loginSheet">
+    <button class="close-btn" id="closeBtn">✕</button>
+
+    <div class="login-card" id="loginCard">
+      <!-- Form Content -->
+      <div id="formContent">
+        <h1 id="formTitle">Welcome Back!</h1>
+        <p id="formSubtitle" class="sub-text">
+          Sign in to your City Work account
+        </p>
+
+        <form id="loginForm" novalidate>
+          <div class="input-group">
+            <label for="email" id="emailLabel">Email</label>
+            <input type="email" id="email" placeholder="you@example.com" autocomplete="off" />
+          </div>
+
+          <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••" />
+          </div>
+
+          <div class="forgot-row">
+            <label>
+              <input type="checkbox" id="rememberMe" checked />
+              Remember Me
+            </label>
+            <button type="button" id="forgotPasswordBtn" class="forgot-link">Forgot Password?</button>
+          </div>
+
+          <button type="submit" id="loginBtn" class="login-btn">
+            <span>Login</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+
+          <div id="formError" class="form-error">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="formErrorText">Invalid email or password.</span>
+          </div>
+        </form>
+
+        <!-- TOGGLE WRAPPER (Email/Phone) -->
+        <div class="toggle-wrapper" id="toggleWrapper">
+          <div class="toggle-option active" data-type="email">Email</div>
+          <div class="toggle-option" data-type="phone">Phone</div>
+        </div>
+
+        <!-- AUTH TOGGLE (Login / Signup) -->
+        <div class="auth-toggle">
+          <span id="authPromptText">Don't have an account?</span>
+          <button id="toggleAuthModeBtn">Create one</button>
+        </div>
+      </div>
+
+      <!-- SUCCESS STATE -->
+      <div id="successContent" class="hidden">
+        <div class="success-wrapper">
+          <div class="success-circle">
+            <div class="checkmark"></div>
+          </div>
+          <h2>Welcome to City Work!</h2>
+          <p>Redirecting you to your dashboard...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <script>
+    (function() {
+      'use strict';
+
+      // ─── READ SUPABASE CONFIG FROM config.js ──────────────────────
+      let SUPABASE_URL, SUPABASE_ANON_KEY;
+      try {
+        if (typeof design !== 'undefined' && design.supabase) {
+          SUPABASE_URL = design.supabase.url;
+          SUPABASE_ANON_KEY = design.supabase.anonKey;
+          console.log('✅ [CONFIG] Loaded from config.js');
+        } else {
+          throw new Error('design.supabase not found');
+        }
+      } catch (e) {
+        console.error('❌ [CONFIG] Failed to load Supabase config:', e);
+        document.body.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;padding:20px;font-family:Inter,sans-serif;">
+            <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);">
+              <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#f59e0b;margin-bottom:12px;"></i>
+              <h2 style="font-size:20px;font-weight:700;color:#fff;">Configuration Error</h2>
+              <p style="color:rgba(255,255,255,0.6);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#90e0ef;">config.js</code>.</p>
+              <p style="color:rgba(255,255,255,0.4);margin-top:12px;font-size:12px;">Make sure build-config.js ran successfully on Vercel.</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // ─── DOM REFS ──────────────────────────────────────────────
+      const form = document.getElementById('loginForm');
+      const formTitle = document.getElementById('formTitle');
+      const formSubtitle = document.getElementById('formSubtitle');
+      const toggleAuthModeBtn = document.getElementById('toggleAuthModeBtn');
+      const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+      const authPromptText = document.getElementById('authPromptText');
+      const email = document.getElementById('email');
+      const password = document.getElementById('password');
+      const formError = document.getElementById('formError');
+      const formErrorText = document.getElementById('formErrorText');
+      const loginBtn = document.getElementById('loginBtn');
+      const rememberMe = document.getElementById('rememberMe');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const emailLabel = document.getElementById('emailLabel');
+
+      // Modal elements
+      const triggerBar = document.getElementById('triggerBar');
+      const overlay = document.getElementById('overlay');
+      const loginSheet = document.getElementById('loginSheet');
+      const closeBtn = document.getElementById('closeBtn');
+      const formContent = document.getElementById('formContent');
+      const successContent = document.getElementById('successContent');
+
+      // Toggle elements (Email/Phone)
+      const toggleOptions = document.querySelectorAll('.toggle-option');
+
+      let isSignupMode = false;
+
+      // ─── MODAL CONTROLS ──────────────────────────────────────────
+      function openModal() {
+        triggerBar.classList.add('hidden');
+        overlay.classList.add('active');
+        loginSheet.classList.add('active');
+        successContent.classList.add('hidden');
+        formContent.classList.remove('hidden');
+        email.classList.remove('input-error');
+        password.classList.remove('input-error');
+        formError.classList.remove('show', 'error', 'success');
+      }
+
+      function closeModal() {
+        triggerBar.classList.remove('hidden');
+        overlay.classList.remove('active');
+        loginSheet.classList.remove('active');
+        successContent.classList.add('hidden');
+        formContent.classList.remove('hidden');
+        email.classList.remove('input-error');
+        password.classList.remove('input-error');
+        formError.classList.remove('show', 'error', 'success');
+      }
+
+      triggerBar.addEventListener('click', openModal);
+      closeBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', closeModal);
+
+      // ─── EMAIL/PHONE TOGGLE ──────────────────────────────────
+      toggleOptions.forEach(opt => {
+        opt.addEventListener('click', function() {
+          toggleOptions.forEach(o => o.classList.remove('active'));
+          this.classList.add('active');
+          if (this.dataset.type === 'phone') {
+            email.placeholder = 'e.g. +62 812 3456 7890';
+            emailLabel.textContent = 'Phone Number';
+          } else {
+            email.placeholder = 'you@example.com';
+            emailLabel.textContent = 'Email';
+          }
+          email.classList.remove('input-error');
+          password.classList.remove('input-error');
+          formError.classList.remove('show', 'error', 'success');
+        });
+      });
+
+      // ─── CHECK SESSION ──────────────────────────────────────────
+      (async function checkSession() {
+        loadingSpinner.style.display = 'flex';
+        try {
+          // Check localStorage first
+          const saved = localStorage.getItem('citywork_user');
+          if (saved) {
+            const userData = JSON.parse(saved);
+            if (userData.session && userData.session.access_token) {
+              const { data } = await supabase.auth.setSession({
+                access_token: userData.session.access_token,
+                refresh_token: userData.session.refresh_token
+              });
+              if (data.user) {
+                window.location.href = 'dashboard/index.html';
+                return;
+              }
+            } else if (userData.id) {
+              const { data } = await supabase.auth.getSession();
+              if (data.session) {
+                window.location.href = 'dashboard/index.html';
+                return;
+              }
+            }
+          }
+
+          // Check active session
+          const { data } = await supabase.auth.getSession();
+          if (data && data.session) {
+            window.location.href = 'dashboard/index.html';
+            return;
+          }
+        } catch (e) {
+          console.warn('⚠️ [AUTH] Session check warning:', e);
+        } finally {
+          loadingSpinner.style.display = 'none';
+        }
+      })();
+
+      // ─── REAL‑TIME VALIDATION ──────────────────────────────────
+      email.addEventListener('input', function() {
+        if (this.value.trim().length > 0) {
+          this.classList.remove('input-error');
+          formError.classList.remove('show', 'error', 'success');
+        }
+      });
+      password.addEventListener('input', function() {
+        if (this.value.trim().length > 0) {
+          this.classList.remove('input-error');
+          formError.classList.remove('show', 'error', 'success');
+        }
+      });
+
+      function setFormError(message, isSuccess = false) {
+        if (message) {
+          formErrorText.textContent = message;
+          formError.classList.add('show');
+          formError.classList.remove('error', 'success');
+          formError.classList.add(isSuccess ? 'success' : 'error');
+          const icon = formError.querySelector('i');
+          if (icon) {
+            icon.className = isSuccess ? 'fa-regular fa-circle-check' : 'fa-solid fa-circle-exclamation';
+          }
+        } else {
+          formError.classList.remove('show', 'error', 'success');
+        }
+      }
+
+      async function fetchUserRole(userId) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', userId)
+            .maybeSingle();
+          if (error) throw error;
+          return data?.role || 'user';
+        } catch (err) {
+          console.warn('⚠️ [AUTH] Role fetch error:', err);
+          return 'user';
+        }
+      }
+
+      async function ensureProfileExists(userId, email) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
+        if (error && error.code !== 'PGRST116') throw error;
+        if (!data) {
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({ id: userId, email: email, role: 'user' });
+          if (insertError) throw insertError;
+        }
+      }
+
+      function updateUIMode() {
+        if (isSignupMode) {
+          formTitle.textContent = 'Create Account';
+          formSubtitle.textContent = 'Sign up to get started with City Work';
+          loginBtn.innerHTML = '<span>Sign Up</span><i class="fa-solid fa-arrow-right"></i>';
+          authPromptText.textContent = 'Already have an account?';
+          toggleAuthModeBtn.textContent = 'Sign in';
+          forgotPasswordBtn.style.display = 'none';
+        } else {
+          formTitle.textContent = 'Welcome Back!';
+          formSubtitle.textContent = 'Sign in to your City Work account';
+          loginBtn.innerHTML = '<span>Login</span><i class="fa-solid fa-arrow-right"></i>';
+          authPromptText.textContent = "Don't have an account?";
+          toggleAuthModeBtn.textContent = 'Create one';
+          forgotPasswordBtn.style.display = 'inline-block';
+        }
+        setFormError('');
+      }
+
+      toggleAuthModeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        isSignupMode = !isSignupMode;
+        updateUIMode();
+      });
+
+      // ─── FORGOT PASSWORD ──────────────────────────────────────
+      forgotPasswordBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        if (forgotPasswordBtn.style.display === 'none') return;
+
+        const emailVal = email.value.trim();
+        if (!emailVal) {
+          setFormError('Please enter your email address first.');
+          return;
+        }
+
+        forgotPasswordBtn.disabled = true;
+        forgotPasswordBtn.textContent = 'Sending...';
+
+        try {
+          const origin = window.location.origin;
+          const path = window.location.pathname.replace(/index\.html$/, '') + 'reset-password.html';
+          const resetUrl = origin + path;
+
+          const { error } = await supabase.auth.resetPasswordForEmail(emailVal, {
+            redirectTo: resetUrl,
+          });
+          if (error) throw error;
+          setFormError('✅ Password reset email sent! Check your inbox.', true);
+          setTimeout(() => setFormError(''), 6000);
+        } catch (err) {
+          setFormError(err.message || 'Failed to send reset email.');
+        } finally {
+          forgotPasswordBtn.disabled = false;
+          forgotPasswordBtn.textContent = 'Forgot Password?';
+        }
+      });
+
+      // ─── HANDLE LOGIN ──────────────────────────────────────────
+      async function handleLogin(emailVal, passwordVal) {
+        const persistSession = rememberMe.checked ? 'local' : 'session';
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: emailVal,
+          password: passwordVal,
+          options: { persistSession: persistSession === 'local' }
+        });
+        if (error) throw error;
+
+        await ensureProfileExists(data.user.id, data.user.email);
+        const role = await fetchUserRole(data.user.id);
+        const userData = {
+          id: data.user.id,
+          email: data.user.email,
+          role: role,
+          session: data.session
+        };
+        localStorage.setItem('citywork_user', JSON.stringify(userData));
+        return userData;
+      }
+
+      // ─── HANDLE SIGNUP ──────────────────────────────────────────
+      async function handleSignup(emailVal, passwordVal) {
+        if (passwordVal.length < 6) {
+          throw new Error('Password must be at least 6 characters.');
+        }
+        const { data, error } = await supabase.auth.signUp({
+          email: emailVal,
+          password: passwordVal,
+        });
+        if (error) throw error;
+        if (!data.user) throw new Error('Signup failed. Please try again.');
+        await ensureProfileExists(data.user.id, data.user.email);
+        return data;
+      }
+
+      // ─── FORM SUBMIT ──────────────────────────────────────────
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        formError.classList.remove('show', 'error', 'success');
+        email.classList.remove('input-error');
+        password.classList.remove('input-error');
+
+        const emailVal = email.value.trim();
+        const passwordVal = password.value.trim();
+
+        let valid = true;
+        if (!emailVal) {
+          email.classList.add('input-error');
+          valid = false;
+        }
+        if (!passwordVal) {
+          password.classList.add('input-error');
+          valid = false;
+        }
+        if (!valid) {
+          setTimeout(() => {
+            email.classList.remove('shake');
+            password.classList.remove('shake');
+          }, 500);
+          return;
+        }
+
+        loginBtn.innerHTML = isSignupMode
+          ? '<span>Creating...</span><i class="fa-solid fa-spinner fa-spin"></i>'
+          : '<span>Logging in...</span><i class="fa-solid fa-spinner fa-spin"></i>';
+        loginBtn.disabled = true;
+
+        try {
+          if (isSignupMode) {
+            await handleSignup(emailVal, passwordVal);
+            setFormError('✅ Account created! Check your email to confirm.', true);
+            setTimeout(() => {
+              isSignupMode = false;
+              updateUIMode();
+              password.value = '';
+              setFormError('');
+            }, 3000);
+          } else {
+            await handleLogin(emailVal, passwordVal);
+            formContent.classList.add('hidden');
+            successContent.classList.remove('hidden');
+            setTimeout(() => {
+              window.location.href = 'dashboard/index.html';
+            }, 1500);
+          }
+        } catch (err) {
+          console.error('❌ [AUTH] Error:', err);
+          let message = err.message || 'Something went wrong.';
+          if (err.message.includes('Email not confirmed')) {
+            message = 'Please confirm your email before logging in.';
+          } else if (err.message.includes('Invalid login credentials')) {
+            message = 'Incorrect email or password. Please try again.';
+          } else if (err.message.includes('rate limit')) {
+            message = 'Too many attempts. Please wait a moment.';
+          }
+          setFormError(message);
+          form.classList.add('shake');
+          setTimeout(() => form.classList.remove('shake'), 500);
+        } finally {
+          loginBtn.innerHTML = isSignupMode
+            ? '<span>Sign Up</span><i class="fa-solid fa-arrow-right"></i>'
+            : '<span>Login</span><i class="fa-solid fa-arrow-right"></i>';
+          loginBtn.disabled = false;
+        }
+      });
+
+      // ─── ENTER KEY SUPPORT ──────────────────────────────────
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && loginSheet.classList.contains('active')) {
+          loginBtn.click();
+        }
+      });
+
+      // ─── INIT ──────────────────────────────────────────────────
+      updateUIMode();
+      email.focus();
+    })();
+  </script>
+</body>
+</html>
