@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - City Work</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f172a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .dashboard {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(16px);
+      border-radius: 40px;
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    h1 {
+      color: #fff;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    p {
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 24px;
+    }
+    .user-info {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .user-info div {
+      color: rgba(255,255,255,0.8);
+      font-size: 14px;
+      padding: 4px 0;
+    }
+    .user-info strong {
+      color: #fff;
+    }
+    .logout-btn {
+      background: #ef4444;
+      border: none;
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      width: 100%;
+    }
+    .logout-btn:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
+    }
+    .loading {
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+      padding: 40px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard" id="dashboard">
+  <div id="loadingState" class="loading">
+    <i class="fa-solid fa-spinner fa-spin"></i>
+    <p style="margin-top: 12px;">Loading your dashboard...</p>
+  </div>
+
+  <div id="contentState" style="display: none;">
+    <h1>🏙️ City Work</h1>
+    <p>Welcome to your dashboard</p>
+
+    <div class="user-info" id="userInfo">
+      <div><strong>Email:</strong> <span id="userEmail">Loading...</span></div>
+      <div><strong>Role:</strong> <span id="userRole">Loading...</span></div>
+    </div>
+
+    <button class="logout-btn" id="logoutBtn">
+      <i class="fa-solid fa-sign-out-alt"></i> Logout
+    </button>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<script>
+  (function() {
+    // Read config
+    let SUPABASE_URL, SUPABASE_ANON_KEY;
+    try {
+      if (typeof design !== 'undefined' && design.supabase) {
+        SUPABASE_URL = design.supabase.url;
+        SUPABASE_ANON_KEY = design.supabase.anonKey;
+      } else {
+        throw new Error('Config not loaded');
+      }
+    } catch (e) {
+      document.body.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;font-family:Inter,sans-serif;">
+          <div style="background:rgba(255,255,255,0.05);border-radius:40px;padding:40px;text-align:center;border:1px solid rgba(255,255,255,0.1);">
+            <h2 style="color:#f59e0b;">⚠️ Configuration Error</h2>
+            <p style="color:rgba(255,255,255,0.6);margin-top:8px;">Please check config.js</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const loadingState = document.getElementById('loadingState');
+    const contentState = document.getElementById('contentState');
+    const userEmail = document.getElementById('userEmail');
+    const userRole = document.getElementById('userRole');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // Check session
+    async function checkSession() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error || !data.session) {
+          window.location.href = '../index.html';
+          return;
+        }
+
+        const user = data.session.user;
+        userEmail.textContent = user.email || 'No email';
+
+        // Fetch role from profiles
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.warn('Profile fetch error:', profileError);
+          userRole.textContent = 'user';
+        } else {
+          userRole.textContent = profile?.role || 'user';
+        }
+
+        loadingState.style.display = 'none';
+        contentState.style.display = 'block';
+
+      } catch (err) {
+        console.error('Session check error:', err);
+        window.location.href = '../index.html';
+      }
+    }
+
+    // Logout
+    async function logout() {
+      try {
+        await supabase.auth.signOut();
+        localStorage.removeItem('citywork_user');
+        window.location.href = '../index.html';
+      } catch (err) {
+        console.error('Logout error:', err);
+        alert('Failed to logout. Please try again.');
+      }
+    }
+
+    logoutBtn.addEventListener('click', logout);
+    checkSession();
+  })();
+</script>
+
+</body>
+</html>
