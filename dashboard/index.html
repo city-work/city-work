@@ -45,8 +45,8 @@
             box-sizing: border-box;
         }
 
-        /* ─── FULL PAGE ─── */
-        html, body {
+        html,
+        body {
             width: 100%;
             height: 100%;
             overflow: hidden;
@@ -54,7 +54,7 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        /* ─── APP CONTAINER — FULL SCREEN ─── */
+        /* ─── APP CONTAINER ─── */
         .app-container {
             display: flex;
             width: 100vw;
@@ -63,11 +63,23 @@
         }
 
         /* ─── STATUS BADGE ─── */
-        .status-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
-        .status-error { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
-        .status-waiting { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+        .status-ok {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+        .status-waiting {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fcd34d;
+        }
 
-        /* ─── GRAY GLASSMORPHIC SIDEBAR ─── */
+        /* ═══ SIDEBAR (Copied from Dashboard) ═══ */
         .sidebar {
             background: rgba(232, 237, 244, 0.65);
             backdrop-filter: blur(20px);
@@ -81,9 +93,9 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
+            overflow: hidden;
         }
 
-        /* ─── HIDE SCROLLBAR ─── */
         .sidebar-scroll {
             flex: 1;
             overflow-y: auto;
@@ -136,7 +148,6 @@
             transform: scale(1.1);
         }
 
-        /* ─── TOOLTIP ─── */
         .sidebar-item .tooltip {
             position: absolute;
             left: calc(100% + 12px);
@@ -169,17 +180,27 @@
             opacity: 1;
         }
 
-        /* ─── SIDEBAR DIVIDER ─── */
         .sidebar-divider {
             border-top: 1px solid rgba(0, 0, 0, 0.06);
             margin: 4px 12px;
         }
 
-        /* ─── SIDEBAR BRAND ─── */
-        .brand-city { color: #1e293b; }
-        .brand-work { color: #3B82F6; }
+        .sidebar-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94a3b8;
+            padding: 0.5rem 0.75rem 0.25rem;
+            font-weight: 600;
+        }
 
-        /* ─── SIGN OUT IN SIDEBAR ─── */
+        .brand-city {
+            color: #1e293b;
+        }
+        .brand-work {
+            color: #3B82F6;
+        }
+
         .sidebar-signout {
             transition: all 0.2s ease;
             cursor: pointer;
@@ -214,7 +235,6 @@
             transform: scale(1.15);
         }
 
-        /* ─── TOOLTIP FOR SIGN OUT ─── */
         .sidebar-signout .tooltip {
             position: absolute;
             left: calc(100% + 12px);
@@ -258,7 +278,6 @@
             overflow: hidden;
         }
 
-        /* ─── HEADER ─── */
         header {
             background: #E8EDF4;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -272,7 +291,6 @@
             gap: 0.5rem;
         }
 
-        /* ─── SCROLLABLE CONTENT ─── */
         .scrollable-content {
             flex: 1;
             overflow-y: auto;
@@ -337,7 +355,6 @@
         /* ─── CONTENT PANELS ─── */
         .content-panel {
             display: none;
-            height: 100%;
         }
         .content-panel.active {
             display: block;
@@ -423,7 +440,9 @@
             flex-shrink: 0;
         }
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* ─── WELCOME CARD ─── */
@@ -434,9 +453,85 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
-        .hidden { display: none !important; }
+        /* ─── ADMIN PANEL ─── */
+        .admin-panel {
+            background: rgba(99, 102, 241, 0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(99, 102, 241, 0.12);
+            border-radius: 1.5rem;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .admin-panel .admin-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .admin-panel .admin-icon {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 0.75rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .admin-panel .admin-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #a5b4fc;
+        }
+        .admin-panel .admin-desc {
+            font-size: 0.75rem;
+            color: rgba(165, 180, 252, 0.6);
+        }
+        .admin-panel .admin-btn {
+            background: #6366f1;
+            border: none;
+            border-radius: 9999px;
+            padding: 0.4rem 1.25rem;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+        .admin-panel .admin-btn:hover {
+            background: #4f46e5;
+            transform: scale(1.02);
+        }
+
+        .hidden {
+            display: none !important;
+        }
 
         /* ─── RESPONSIVE ─── */
+        @media (max-width: 1024px) {
+            .sidebar {
+                min-width: 50px;
+                max-width: 50px;
+            }
+            .sidebar-item .icon {
+                font-size: 0.95rem;
+            }
+            .sidebar-signout .icon {
+                font-size: 0.95rem;
+            }
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 min-width: 50px;
@@ -444,13 +539,28 @@
                 backdrop-filter: blur(12px);
                 -webkit-backdrop-filter: blur(12px);
             }
-            .sidebar-item .icon { font-size: 0.95rem; }
-            .sidebar-signout .icon { font-size: 0.95rem; }
-            .search-input { width: 140px; font-size: 0.7rem; }
-            .search-input:focus { width: 180px; }
-            header { padding: 0.5rem 1rem; min-height: 56px; }
-            .scrollable-content { padding: 1rem; }
+            .sidebar-item .icon {
+                font-size: 0.95rem;
+            }
+            .sidebar-signout .icon {
+                font-size: 0.95rem;
+            }
+            .search-input {
+                width: 140px;
+                font-size: 0.7rem;
+            }
+            .search-input:focus {
+                width: 180px;
+            }
+            header {
+                padding: 0.5rem 1rem;
+                min-height: 56px;
+            }
+            .scrollable-content {
+                padding: 1rem;
+            }
         }
+
         @media (max-width: 480px) {
             .sidebar {
                 min-width: 44px;
@@ -458,23 +568,59 @@
                 backdrop-filter: blur(8px);
                 -webkit-backdrop-filter: blur(8px);
             }
-            .sidebar-item { padding: 0.35rem; }
-            .sidebar-item .icon { font-size: 0.85rem; width: 20px; }
-            .sidebar-signout { padding: 0.35rem; }
-            .sidebar-signout .icon { font-size: 0.85rem; width: 20px; }
-            .brand-city, .brand-work { font-size: 0.8rem; }
-            .btn-retry span { display: none; }
-            .btn-retry i { margin: 0; }
+            .sidebar-item {
+                padding: 0.35rem;
+            }
+            .sidebar-item .icon {
+                font-size: 0.85rem;
+                width: 20px;
+            }
+            .sidebar-signout {
+                padding: 0.35rem;
+            }
+            .sidebar-signout .icon {
+                font-size: 0.85rem;
+                width: 20px;
+            }
+            .brand-city,
+            .brand-work {
+                font-size: 0.8rem;
+            }
+            .btn-retry span {
+                display: none;
+            }
+            .btn-retry i {
+                margin: 0;
+            }
             .search-input {
                 width: 100px;
                 font-size: 0.65rem;
                 padding: 0.25rem 1.6rem 0.25rem 1.4rem;
             }
-            .search-input:focus { width: 130px; }
-            .search-clear { right: 1.8rem; font-size: 0.6rem; }
-            header { padding: 0.4rem 0.75rem; min-height: 48px; }
-            .scrollable-content { padding: 0.75rem; }
-            .archive-card { padding: 0.75rem; }
+            .search-input:focus {
+                width: 130px;
+            }
+            .search-clear {
+                right: 1.8rem;
+                font-size: 0.6rem;
+            }
+            header {
+                padding: 0.4rem 0.75rem;
+                min-height: 48px;
+            }
+            .scrollable-content {
+                padding: 0.75rem;
+            }
+            .archive-card {
+                padding: 0.75rem;
+            }
+            .admin-panel {
+                padding: 0.75rem;
+                border-radius: 1rem;
+            }
+            .admin-panel .admin-desc {
+                display: none;
+            }
         }
 
         /* ─── FADE IN ─── */
@@ -482,8 +628,14 @@
             animation: fadeIn 0.25s ease-out;
         }
         @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(6px); }
-            100% { opacity: 1; transform: translateY(0); }
+            0% {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -545,10 +697,12 @@
                     <span class="label">Weekly Schedule</span>
                     <span class="tooltip">Weekly Schedule</span>
                 </a>
-                <a href="#" class="sidebar-item" onclick="showPanel('movies')" data-search="classic movies film schedules programming">
-                    <span class="icon"><i class="fa-solid fa-film"></i></span>
-                    <span class="label">Classic Movie Schedules</span>
-                    <span class="tooltip">Classic Movie Schedules</span>
+
+                <!-- ✅ CLASSICS (replaces Classic Movie Schedules) -->
+                <a href="../classics/index.html" class="sidebar-item" data-search="classics collection movies shows episodes">
+                    <span class="icon"><i class="fa-solid fa-clapperboard"></i></span>
+                    <span class="label">Classics</span>
+                    <span class="tooltip">Classics Collection</span>
                 </a>
             </nav>
 
@@ -598,6 +752,18 @@
 
                 <!-- ─── MESSAGES ─── -->
                 <div id="messageArea"></div>
+
+                <!-- ─── ADMIN PANEL ─── -->
+                <div id="adminPanel" class="admin-panel hidden">
+                    <div class="admin-left">
+                        <div class="admin-icon"><i class="fa-solid fa-users-cog"></i></div>
+                        <div>
+                            <div class="admin-title">Admin Panel</div>
+                            <div class="admin-desc">Manage users, roles, and system settings.</div>
+                        </div>
+                    </div>
+                    <a href="#" class="admin-btn">Go to Admin →</a>
+                </div>
 
                 <!-- ═══ DASHBOARD PANEL ═══ -->
                 <div id="panel-dashboard" class="content-panel active" data-panel="dashboard">
@@ -734,14 +900,8 @@
                     <div class="mt-6 text-center text-slate-500 text-sm">Weekly schedule content goes here.</div>
                 </div>
 
-                <!-- ═══ MOVIES PANEL ═══ -->
-                <div id="panel-movies" class="content-panel" data-panel="movies">
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">🎬 Classic Movie Schedules</h1>
-                        <p class="text-xs text-slate-500 mt-0.5">Schedules and programming for classic movies.</p>
-                    </div>
-                    <div class="mt-6 text-center text-slate-500 text-sm">Classic movie schedules content goes here.</div>
-                </div>
+                <!-- ═══ MOVIES PANEL ═══ (REMOVED - Replaced by Classics) -->
+                <!-- The "Classic Movie Schedules" panel has been removed and replaced with the working Classics link in the sidebar -->
 
             </div>
         </div>
@@ -787,6 +947,7 @@
             const statusBadge = $('statusBadge');
             const messageArea = $('messageArea');
             const userInfo = $('userInfo');
+            const adminPanel = $('adminPanel');
             const logoutBtn = $('logoutBtn');
             const searchInput = $('globalSearchInput');
 
@@ -895,7 +1056,13 @@
                     setStatus(`✅ ${roleDisplay}`, 'ok');
                     userInfo.textContent = `Logged in as ${roleDisplay}`;
 
-                    showMessage(`✅ Welcome back, ${roleDisplay}`, 'success');
+                    if (role === 'admin') {
+                        adminPanel.classList.remove('hidden');
+                        showMessage('👑 Welcome Admin! Full access granted.', 'success');
+                    } else {
+                        adminPanel.classList.add('hidden');
+                        showMessage(`✅ Welcome back, ${roleDisplay}`, 'success');
+                    }
 
                     console.log('✅ [AUTH] Session valid – role:', role);
 
@@ -1112,7 +1279,7 @@
                     checkSession();
                 }, 100);
 
-                console.log('✅ [INIT] City Work Dashboard ready (full screen)');
+                console.log('✅ [INIT] City Work Dashboard ready (with Classics link)');
             });
 
             // Expose functions globally
