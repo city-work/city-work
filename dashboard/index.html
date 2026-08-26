@@ -38,6 +38,30 @@
     </script>
 
     <style>
+        /* ─── RESET ─── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ─── FULL PAGE ─── */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #E8EDF4;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* ─── APP CONTAINER — FULL SCREEN ─── */
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
         /* ─── STATUS BADGE ─── */
         .status-ok { background: #dcfce7; color: #166534; border-color: #86efac; }
         .status-error { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
@@ -54,10 +78,9 @@
             transition: all 0.3s ease;
             box-shadow: 4px 0 30px rgba(0, 0, 0, 0.05);
             height: 100vh;
-            position: sticky;
-            top: 0;
             display: flex;
             flex-direction: column;
+            flex-shrink: 0;
         }
 
         /* ─── HIDE SCROLLBAR ─── */
@@ -224,23 +247,7 @@
             opacity: 1;
         }
 
-        /* ─── FULL PAGE LAYOUT ─── */
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-        }
-        body {
-            background: #E8EDF4;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-        .app-container {
-            display: flex;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-        }
+        /* ─── MAIN CONTENT ─── */
         .main-content {
             flex: 1;
             min-width: 0;
@@ -257,6 +264,12 @@
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             flex-shrink: 0;
             padding: 0.75rem 1.5rem;
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         /* ─── SCROLLABLE CONTENT ─── */
@@ -264,6 +277,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 1.5rem;
+            min-height: 0;
         }
         .scrollable-content::-webkit-scrollbar {
             width: 5px;
@@ -323,6 +337,7 @@
         /* ─── CONTENT PANELS ─── */
         .content-panel {
             display: none;
+            height: 100%;
         }
         .content-panel.active {
             display: block;
@@ -350,6 +365,11 @@
         }
 
         /* ─── SEARCH INPUT ─── */
+        .search-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
         .search-input {
             background: white;
             border: 1px solid #e2e8f0;
@@ -428,7 +448,7 @@
             .sidebar-signout .icon { font-size: 0.95rem; }
             .search-input { width: 140px; font-size: 0.7rem; }
             .search-input:focus { width: 180px; }
-            header { padding: 0.5rem 1rem; }
+            header { padding: 0.5rem 1rem; min-height: 56px; }
             .scrollable-content { padding: 1rem; }
         }
         @media (max-width: 480px) {
@@ -452,7 +472,7 @@
             }
             .search-input:focus { width: 130px; }
             .search-clear { right: 1.8rem; font-size: 0.6rem; }
-            header { padding: 0.4rem 0.75rem; }
+            header { padding: 0.4rem 0.75rem; min-height: 48px; }
             .scrollable-content { padding: 0.75rem; }
             .archive-card { padding: 0.75rem; }
         }
@@ -474,7 +494,7 @@
     <div class="app-container">
 
         <!-- ═══ GRAY GLASS SIDEBAR ═══ -->
-        <aside class="sidebar flex-shrink-0 h-full flex flex-col overflow-hidden">
+        <aside class="sidebar">
             <!-- Brand -->
             <div class="px-2 py-4 border-b border-black/5 flex items-center justify-center flex-shrink-0">
                 <span class="text-lg font-extrabold tracking-tight whitespace-nowrap">
@@ -483,7 +503,7 @@
             </div>
 
             <!-- Navigation -->
-            <nav class="sidebar-scroll flex-1" id="sidebarNav">
+            <nav class="sidebar-scroll" id="sidebarNav">
                 <a href="#" class="sidebar-item active" onclick="showPanel('dashboard')" data-search="dashboard home">
                     <span class="icon"><i class="fa-solid fa-gauge-high"></i></span>
                     <span class="label">Dashboard</span>
@@ -546,7 +566,7 @@
         <div class="main-content">
 
             <!-- ═══ HEADER ═══ -->
-            <header class="flex flex-wrap items-center justify-between gap-2">
+            <header>
                 <!-- Left: Status -->
                 <div class="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
                     <span id="statusBadge" class="status-badge-text text-[10px] sm:text-xs font-medium px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border status-waiting flex items-center gap-1 whitespace-nowrap">
@@ -556,7 +576,7 @@
 
                 <!-- Right: Search + Retry -->
                 <div class="flex items-center gap-1.5 sm:gap-3 flex-wrap">
-                    <div class="relative">
+                    <div class="search-wrapper">
                         <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
                         <input type="text" id="globalSearchInput" placeholder="Search everything..." class="search-input" oninput="handleGlobalSearch(this.value)" onfocus="this.select()" autocomplete="off" />
                         <span id="searchClear" class="search-clear" onclick="clearSearch()">
@@ -729,7 +749,7 @@
 
     <script>
         // ═══════════════════════════════════════════════════════════════════
-        //  CITY WORK DASHBOARD — Clean UI + Working Auth
+        //  CITY WORK DASHBOARD — Full Screen + Clean UI + Working Auth
         // ═══════════════════════════════════════════════════════════════════
 
         (function() {
@@ -750,15 +770,15 @@
             } catch (e) {
                 console.error('❌ [CONFIG] Failed to load Supabase config:', e);
                 document.body.innerHTML = `
-                    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;padding:20px;font-family:Inter,sans-serif;">
-                        <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);">
-                            <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#f59e0b;margin-bottom:12px;"></i>
-                            <h2 style="font-size:20px;font-weight:700;color:#fff;">Configuration Error</h2>
-                            <p style="color:rgba(255,255,255,0.6);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#90e0ef;">config.js</code>.</p>
-                            <a href="../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#3B82F6;color:white;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a>
+                        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;padding:20px;font-family:Inter,sans-serif;">
+                            <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);">
+                                <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#f59e0b;margin-bottom:12px;"></i>
+                                <h2 style="font-size:20px;font-weight:700;color:#fff;">Configuration Error</h2>
+                                <p style="color:rgba(255,255,255,0.6);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#90e0ef;">config.js</code>.</p>
+                                <a href="../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#3B82F6;color:white;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
                 return;
             }
 
@@ -1092,7 +1112,7 @@
                     checkSession();
                 }, 100);
 
-                console.log('✅ [INIT] City Work Dashboard ready');
+                console.log('✅ [INIT] City Work Dashboard ready (full screen)');
             });
 
             // Expose functions globally
