@@ -621,8 +621,9 @@
             font-size: 0.7rem;
             border-bottom: 1px solid #f1f5f9;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
         .schedule-day:last-child {
             border-bottom: none;
@@ -890,6 +891,15 @@
 
                 <div class="sidebar-label">Shows</div>
                 <div id="showButtons"></div>
+
+                <div class="sidebar-divider"></div>
+
+                <!-- Add New Show Button -->
+                <button class="sidebar-item" onclick="addNewShow()" style="color:#22c55e;">
+                    <span class="icon"><i class="fa-solid fa-plus"></i></span>
+                    <span class="label">Add Show</span>
+                    <span class="tooltip">Add New Show</span>
+                </button>
             </nav>
 
             <!-- Sign Out -->
@@ -984,10 +994,19 @@
                         </div>
                     </div>
 
-                    <!-- Calendar -->
+                    <!-- Calendar with Week Navigation -->
                     <div class="overview-section">
                         <div class="section-title">📅 Weekly Calendar</div>
                         <div class="section-card">
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 1rem;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+                                <button onclick="changeWeek(-1)" style="background:transparent;border:none;cursor:pointer;color:#94a3b8;padding:0.25rem 0.5rem;border-radius:0.25rem;transition:all 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#94a3b8'">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <span style="font-size:0.7rem;font-weight:600;color:#475569;" id="weekLabel">Loading...</span>
+                                <button onclick="changeWeek(1)" style="background:transparent;border:none;cursor:pointer;color:#94a3b8;padding:0.25rem 0.5rem;border-radius:0.25rem;transition:all 0.2s;" onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#94a3b8'">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
                             <div class="calendar-grid" id="calendarGrid"></div>
                         </div>
                     </div>
@@ -1061,7 +1080,7 @@
 
     <script>
         // ═══════════════════════════════════════════════════════════════════
-        //  CLASSICS COLLECTION — In-Page Editing
+        //  CLASSICS COLLECTION — Final Complete Version
         // ═══════════════════════════════════════════════════════════════════
 
         (function() {
@@ -1126,6 +1145,7 @@
             let currentView = 'overview';
             let currentShow = null;
             let editingCell = null;
+            let calendarWeekOffset = 0;
 
             // ─── HELPERS ──────────────────────────────────────────────
             function setStatus(text, type) {
@@ -1259,7 +1279,6 @@
             window.switchView = function(view, showTitle) {
                 currentView = view;
 
-                // Update sidebar
                 document.querySelectorAll('.sidebar-item').forEach(btn => {
                     btn.classList.remove('active');
                 });
@@ -1288,7 +1307,6 @@
 
             // ─── RENDER OVERVIEW ──────────────────────────────────────
             window.renderOverview = function() {
-                // Stats
                 const totalShows = allShows.length;
                 let nextExpire = '—';
                 let nextExpireShow = null;
@@ -1305,7 +1323,6 @@
                     $('statNextExpire').textContent = '—';
                 }
 
-                // Table
                 if (!allShows.length) {
                     overviewTableBody.innerHTML =
                         `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>`;
@@ -1320,13 +1337,8 @@
                         `).join('');
                 }
 
-                // Schedule
                 renderSchedule('scheduleSat', 'scheduleSun', weekendData);
-
-                // Turnovers
                 renderTurnovers('turnoversContainer', turnoverData);
-
-                // Calendar
                 renderCalendar('calendarGrid', allEpisodes);
             }
 
@@ -1335,7 +1347,6 @@
                 const show = allShows.find(s => s.title === showTitle);
                 if (!show) { showMessage('Show not found', 'error'); return; }
 
-                // Header
                 $('showViewTitle').textContent = show.title;
                 const showEpisodes = allEpisodes.filter(ep => ep.show_title === showTitle);
                 const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done').length;
@@ -1349,7 +1360,6 @@
                 $('showViewCount').textContent = `${done}/${total}`;
                 $('showViewProgressFill').style.width = `${percent}%`;
 
-                // Episodes Table
                 if (!showEpisodes.length) {
                     showViewTableBody.innerHTML =
                         `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">No episodes for this show.</td></tr>`;
@@ -1378,17 +1388,13 @@
                         `).join('');
                 }
 
-                // Schedule (filtered + editable)
                 const filteredSchedule = weekendData.filter(item => item.title && item.title.toLowerCase() === showTitle
                     .toLowerCase());
                 renderEditableSchedule('showScheduleSat', 'showScheduleSun', filteredSchedule);
 
-                // Turnovers (filtered + editable)
                 const filteredTurnovers = turnoverData.filter(item => item.title && item.title.toLowerCase() === showTitle
                     .toLowerCase());
                 renderEditableTurnovers('showTurnoversContainer', filteredTurnovers);
-
-                // Calendar removed from Show View
             }
 
             // ─── RENDER SCHEDULE (Read-Only for Overview) ────────────
@@ -1417,21 +1423,89 @@
 
                 const satEl = document.getElementById(satId);
                 const sunEl = document.getElementById(sunId);
-                if (satEl) {
-                    satEl.innerHTML = satItems.length ? satItems.map(item =>
-                        `<div class="schedule-day">
-                                <span class="time editable-cell" onclick="editScheduleCell(this, 'time_slot', '${item.id}')" title="Click to edit time">${esc(item.time_slot)} <span class="edit-icon">✏️</span></span>
-                                <span class="title editable-cell" onclick="editScheduleCell(this, 'title', '${item.id}')" title="Click to edit title">${esc(item.title)} <span class="edit-icon">✏️</span></span>
-                            </div>`
-                    ).join('') : '<div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div>';
-                }
-                if (sunEl) {
-                    sunEl.innerHTML = sunItems.length ? sunItems.map(item =>
-                        `<div class="schedule-day">
-                                <span class="time editable-cell" onclick="editScheduleCell(this, 'time_slot', '${item.id}')" title="Click to edit time">${esc(item.time_slot)} <span class="edit-icon">✏️</span></span>
-                                <span class="title editable-cell" onclick="editScheduleCell(this, 'title', '${item.id}')" title="Click to edit title">${esc(item.title)} <span class="edit-icon">✏️</span></span>
-                            </div>`
-                    ).join('') : '<div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div>';
+                const renderDayItems = (items) => {
+                    if (!items.length) {
+                        return '<div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div>';
+                    }
+                    return items.map(item => `
+                            <div class="schedule-day">
+                                <span class="day-label editable-cell" onclick="editScheduleDay(this, '${item.id}')" title="Click to edit day">
+                                    ${esc(item.day)} <span class="edit-icon">✏️</span>
+                                </span>
+                                <span class="time editable-cell" onclick="editScheduleCell(this, 'time_slot', '${item.id}')" title="Click to edit time">
+                                    ${esc(item.time_slot)} <span class="edit-icon">✏️</span>
+                                </span>
+                                <span class="title editable-cell" onclick="editScheduleCell(this, 'title', '${item.id}')" title="Click to edit title">
+                                    ${esc(item.title)} <span class="edit-icon">✏️</span>
+                                </span>
+                            </div>
+                        `).join('');
+                };
+
+                if (satEl) satEl.innerHTML = renderDayItems(satItems);
+                if (sunEl) sunEl.innerHTML = renderDayItems(sunItems);
+            }
+
+            // ─── EDIT SCHEDULE DAY ──────────────────────────────────
+            window.editScheduleDay = function(el, scheduleId) {
+                if (editingCell) return;
+                const currentValue = el.textContent.replace('✏️', '').trim();
+
+                const select = document.createElement('select');
+                select.className = 'edit-input';
+                select.style.width = 'auto';
+                select.style.minWidth = '80px';
+
+                const options = ['Saturday', 'Sunday'];
+                options.forEach(day => {
+                    const option = document.createElement('option');
+                    option.value = day;
+                    option.textContent = day;
+                    if (day === currentValue) option.selected = true;
+                    select.appendChild(option);
+                });
+
+                el.textContent = '';
+                el.appendChild(select);
+                select.focus();
+                editingCell = { el, scheduleId, oldValue: currentValue, type: 'scheduleDay' };
+
+                select.addEventListener('change', function() {
+                    saveScheduleDay(el, scheduleId, select.value);
+                });
+                select.addEventListener('blur', function() {
+                    saveScheduleDay(el, scheduleId, select.value);
+                });
+                select.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        el.textContent = currentValue;
+                        editingCell = null;
+                    }
+                });
+            }
+
+            async function saveScheduleDay(el, scheduleId, newValue) {
+                if (editingCell) {
+                    const oldValue = editingCell.oldValue;
+                    editingCell = null;
+                    if (newValue === oldValue) {
+                        el.textContent = oldValue;
+                        return;
+                    }
+                    el.textContent = newValue;
+                    try {
+                        const { error } = await supabaseClient
+                            .from('classic_schedule')
+                            .update({ day: newValue })
+                            .eq('id', scheduleId);
+                        if (error) throw error;
+                        showMessage(`✅ Updated day to "${newValue}"`, 'success');
+                        await loadAllData();
+                        if (currentShow) renderShowView(currentShow);
+                    } catch (err) {
+                        showMessage('❌ Failed to update: ' + err.message, 'error');
+                        el.textContent = oldValue;
+                    }
                 }
             }
 
@@ -1517,22 +1591,37 @@
             function renderEditableTurnovers(containerId, data) {
                 const container = document.getElementById(containerId);
                 if (!container) return;
-                if (!data || !data.length) {
-                    container.innerHTML =
-                        `<div style="padding:0.5rem 0.75rem;font-size:0.7rem;color:#94a3b8;">No turnovers</div>`;
-                    return;
-                }
-                container.innerHTML = data.map(item => `
-                        <div class="turnover-item">
-                            <span class="turnover-title editable-cell" onclick="editTurnoverCell(this, 'title', '${item.id}')" title="Click to edit title">${esc(item.title)} <span class="edit-icon">✏️</span></span>
-                            <span class="turnover-dates editable-cell" onclick="editTurnoverCell(this, 'dates', '${item.id}')" title="Click to edit dates">
-                                ${esc(item.start_date || '—')} — ${esc(item.end_date || '—')} <span class="edit-icon">✏️</span>
-                            </span>
-                            <span class="turnover-notes editable-cell" onclick="editTurnoverCell(this, 'notes', '${item.id}')" title="Click to edit notes">
-                                ${item.notes ? esc(item.notes) : 'Add notes...'} <span class="edit-icon">✏️</span>
-                            </span>
+
+                let html = `
+                        <div style="padding:0.25rem 0.75rem;display:flex;justify-content:flex-end;border-bottom:1px solid #e2e8f0;">
+                            <button class="btn-add-episode" onclick="addTurnover()" style="font-size:0.55rem;padding:0.15rem 0.6rem;">
+                                <i class="fa-solid fa-plus"></i> Add Turnover
+                            </button>
                         </div>
-                    `).join('');
+                    `;
+
+                if (!data || !data.length) {
+                    html += `<div style="padding:0.5rem 0.75rem;font-size:0.7rem;color:#94a3b8;">No turnovers</div>`;
+                } else {
+                    html += data.map(item => `
+                            <div class="turnover-item" data-id="${item.id}">
+                                <span class="turnover-title editable-cell" onclick="editTurnoverCell(this, 'title', '${item.id}')" title="Click to edit title">
+                                    ${esc(item.title)} <span class="edit-icon">✏️</span>
+                                </span>
+                                <span class="turnover-dates editable-cell" onclick="editTurnoverCell(this, 'dates', '${item.id}')" title="Click to edit dates">
+                                    ${esc(item.start_date || '—')} — ${esc(item.end_date || '—')} <span class="edit-icon">✏️</span>
+                                </span>
+                                <span class="turnover-notes editable-cell" onclick="editTurnoverCell(this, 'notes', '${item.id}')" title="Click to edit notes">
+                                    ${item.notes ? esc(item.notes) : 'Add notes...'} <span class="edit-icon">✏️</span>
+                                </span>
+                                <button class="btn-delete-episode" onclick="deleteTurnover('${item.id}')" title="Delete turnover" style="margin-left:auto;">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        `).join('');
+                }
+
+                container.innerHTML = html;
             }
 
             // ─── EDIT TURNOVER CELL ──────────────────────────────────
@@ -1603,14 +1692,102 @@
                 }
             }
 
-            // ─── RENDER CALENDAR ──────────────────────────────────────
+            // ─── ADD TURNOVER ───────────────────────────────────────────
+            window.addTurnover = async function() {
+                if (!currentShow) {
+                    showMessage('Please select a show first.', 'warning');
+                    return;
+                }
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('classic_turnovers')
+                        .insert({
+                            title: currentShow,
+                            start_date: null,
+                            end_date: null,
+                            notes: ''
+                        })
+                        .select();
+                    if (error) throw error;
+                    showMessage(`✅ Added new turnover for "${currentShow}"`, 'success');
+                    await loadAllData();
+                    if (currentShow) renderShowView(currentShow);
+                } catch (err) {
+                    showMessage('❌ Failed to add turnover: ' + err.message, 'error');
+                }
+            }
+
+            // ─── DELETE TURNOVER ────────────────────────────────────────
+            window.deleteTurnover = async function(turnoverId) {
+                if (!confirm('Are you sure you want to delete this turnover?')) return;
+                try {
+                    const { error } = await supabaseClient
+                        .from('classic_turnovers')
+                        .delete()
+                        .eq('id', turnoverId);
+                    if (error) throw error;
+                    showMessage('✅ Turnover deleted', 'success');
+                    await loadAllData();
+                    if (currentShow) renderShowView(currentShow);
+                } catch (err) {
+                    showMessage('❌ Failed to delete turnover: ' + err.message, 'error');
+                }
+            }
+
+            // ─── ADD NEW SHOW ───────────────────────────────────────────
+            window.addNewShow = async function() {
+                const showName = prompt('Enter the name of the new show:');
+                if (!showName || showName.trim() === '') return;
+
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('classic_titles')
+                        .insert({
+                            title: showName.trim(),
+                            total_episodes: 0,
+                            available_episodes: 0,
+                            status: 'Active'
+                        })
+                        .select();
+
+                    if (error) throw error;
+
+                    showMessage(`✅ Added new show: "${showName.trim()}"`, 'success');
+                    await loadAllData();
+
+                    if (data && data[0]) {
+                        switchView('show', data[0].title);
+                    }
+                } catch (err) {
+                    showMessage('❌ Failed to add show: ' + err.message, 'error');
+                }
+            }
+
+            // ─── CALENDAR WITH WEEK NAVIGATION ────────────────────────
+            window.changeWeek = function(direction) {
+                calendarWeekOffset += direction;
+                renderCalendar('calendarGrid', allEpisodes);
+                updateWeekLabel();
+            }
+
+            function updateWeekLabel() {
+                const today = new Date();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (calendarWeekOffset * 7));
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                const label = `${formatDate(startOfWeek)} – ${formatDate(endOfWeek)}`;
+                document.getElementById('weekLabel').textContent = label;
+            }
+
             function renderCalendar(gridId, episodes) {
                 const grid = document.getElementById(gridId);
                 if (!grid) return;
+
                 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
                 const today = new Date();
                 const startOfWeek = new Date(today);
-                startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+                startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (calendarWeekOffset * 7));
 
                 grid.innerHTML = daysOfWeek.map((day, idx) => {
                     const date = new Date(startOfWeek);
@@ -1627,9 +1804,11 @@
                             </div>
                         `;
                 }).join('');
+
+                updateWeekLabel();
             }
 
-            // ─── EDIT CELL ─────────────────────────────────────────────
+            // ─── EDIT CELL (Episodes) ──────────────────────────────────
             window.editCell = function(td, field, episodeId) {
                 if (editingCell) return;
                 const currentValue = td.textContent.replace('✏️', '').trim();
@@ -1774,12 +1953,12 @@
                 }
             });
 
-            // Make functions globally accessible
+            // ─── EXPOSE FUNCTIONS GLOBALLY ────────────────────────────
             window.renderOverview = renderOverview;
             window.renderShowView = renderShowView;
             window.loadAllData = loadAllData;
 
-            console.log('📽️ [CLASSICS] In-Page Editing Ready!');
+            console.log('📽️ [CLASSICS] Complete version ready!');
         })();
     </script>
 
