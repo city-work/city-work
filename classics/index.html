@@ -338,65 +338,54 @@
         }
 
         /* ─── CLASSICS CONTENT ─── */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-        }
-        @media (max-width: 640px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .stat-card {
+        .stats-stacked {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
             background: white;
             border: 1px solid #e2e8f0;
             border-radius: 0.75rem;
-            padding: 0.6rem 1rem;
-            transition: box-shadow 0.2s;
+            padding: 0.75rem 1rem;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.15rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-row .stat-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #64748b;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
-        .stat-card:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+        .stat-row .stat-value {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #0f172a;
         }
-        .stat-card .stat-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-        }
-        .stat-card .stat-icon.blue {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-        .stat-card .stat-icon.amber {
-            background: #fffbeb;
-            color: #d97706;
-        }
-        .stat-card .stat-info {
-            display: flex;
-            flex-direction: column;
-        }
-        .stat-card .stat-label {
-            font-size: 0.55rem;
+
+        .section-title {
+            font-size: 0.65rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.3px;
             color: #94a3b8;
-        }
-        .stat-card .stat-value {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: #0f172a;
-            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .section-card {
@@ -406,6 +395,7 @@
             overflow: hidden;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         }
+
         .section-card .section-header {
             padding: 0.5rem 1rem;
             font-weight: 700;
@@ -455,6 +445,12 @@
             color: #94a3b8;
             border-bottom: 2px solid #e2e8f0;
             background: #f8fafc;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .table-wrap th:hover {
+            color: #2563eb;
         }
         .table-wrap td {
             padding: 0.4rem 0.6rem;
@@ -545,19 +541,52 @@
             transform: scale(1.1);
         }
 
-        .btn-edit-cell {
-            background: transparent;
+        .edit-icon {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            font-size: 0.6rem;
             color: #94a3b8;
-            border: none;
-            padding: 0.1rem 0.3rem;
-            border-radius: 0.25rem;
-            font-size: 0.65rem;
-            cursor: pointer;
-            transition: all 0.2s;
+            margin-left: 0.25rem;
         }
-        .btn-edit-cell:hover {
-            color: #2563eb;
-            background: #eff6ff;
+
+        .editable-cell:hover .edit-icon {
+            opacity: 1;
+        }
+
+        .editable-cell {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .editable-cell:hover {
+            background: #f8fafc;
+        }
+
+        .table-scroll-container {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: auto;
+            position: relative;
+        }
+        .table-scroll-container thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f8fafc;
+        }
+        .table-scroll-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        .table-scroll-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 999px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 999px;
+        }
+        .table-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
 
         .progress-bar-container {
@@ -602,10 +631,14 @@
             font-weight: 600;
             color: #94a3b8;
             font-size: 0.6rem;
+            min-width: 80px;
         }
         .schedule-day .title {
             font-weight: 500;
             color: #0f172a;
+            flex: 1;
+            text-align: left;
+            padding-left: 0.5rem;
         }
         .schedule-day .day-label {
             font-size: 0.6rem;
@@ -613,12 +646,17 @@
             text-transform: uppercase;
             color: #94a3b8;
             letter-spacing: 0.3px;
+            min-width: 70px;
         }
 
         .turnover-item {
             padding: 0.3rem 0.75rem;
             border-bottom: 1px solid #f1f5f9;
             font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
         .turnover-item:last-child {
             border-bottom: none;
@@ -626,6 +664,17 @@
         .turnover-item .turnover-title {
             font-weight: 600;
             color: #0f172a;
+            min-width: 100px;
+        }
+        .turnover-item .turnover-dates {
+            font-size: 0.6rem;
+            color: #64748b;
+        }
+        .turnover-item .turnover-notes {
+            font-size: 0.6rem;
+            color: #94a3b8;
+            flex: 1;
+            min-width: 120px;
         }
 
         .calendar-grid {
@@ -762,6 +811,13 @@
             font-size: 0.875rem;
         }
 
+        .overview-section {
+            margin-bottom: 1.5rem;
+        }
+        .overview-section:last-child {
+            margin-bottom: 0;
+        }
+
         @media (max-width: 1024px) {
             .sidebar {
                 min-width: 50px;
@@ -794,6 +850,15 @@
             }
             .scrollable-content {
                 padding: 0.75rem;
+            }
+            .stats-stacked {
+                padding: 0.5rem 0.75rem;
+            }
+            .stat-row .stat-label {
+                font-size: 0.55rem;
+            }
+            .stat-row .stat-value {
+                font-size: 0.65rem;
             }
         }
     </style>
@@ -863,52 +928,45 @@
 
                 <!-- ─── OVERVIEW PANEL ─── -->
                 <div id="overviewPanel">
-                    <!-- Stats -->
-                    <div class="stats-grid" id="statsRow">
-                        <div class="stat-card">
-                            <div class="stat-icon blue"><i class="fa-solid fa-film"></i></div>
-                            <div class="stat-info">
-                                <div class="stat-label">Total Shows</div>
-                                <div class="stat-value" id="statTotalShows">0</div>
-                            </div>
+
+                    <!-- Stats (Stacked) -->
+                    <div class="stats-stacked">
+                        <div class="stat-row">
+                            <span class="stat-label"><i class="fa-solid fa-film" style="color:#2563eb;"></i> Total Shows</span>
+                            <span class="stat-value" id="statTotalShows">0</span>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-icon amber"><i class="fa-regular fa-clock"></i></div>
-                            <div class="stat-info">
-                                <div class="stat-label">Next Expiration</div>
-                                <div class="stat-value" id="statNextExpire" style="font-size:0.9rem;">—</div>
-                            </div>
+                        <div class="stat-row">
+                            <span class="stat-label"><i class="fa-regular fa-clock" style="color:#d97706;"></i> Next Expiration</span>
+                            <span class="stat-value" id="statNextExpire">—</span>
                         </div>
                     </div>
 
                     <!-- Titles Table -->
-                    <div class="section-card" style="margin-top:1rem;">
-                        <div class="section-header">
-                            <i class="fa-solid fa-list"></i>
-                            <span>TITLES</span>
-                            <span class="badge-pill">read-only</span>
-                        </div>
-                        <div class="table-wrap">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Title</th>
-                                        <th class="text-center">Total</th>
-                                        <th class="text-center">Available</th>
-                                        <th class="text-right">Available Until</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="overviewTableBody">
-                                    <tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
-                                </tbody>
-                            </table>
+                    <div class="overview-section">
+                        <div class="section-title">📋 Titles</div>
+                        <div class="section-card">
+                            <div class="table-wrap">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th class="text-center">Total</th>
+                                            <th class="text-center">Available</th>
+                                            <th class="text-right">Available Until</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="overviewTableBody">
+                                        <tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Schedule & Turnovers -->
-                    <div class="two-col" style="margin-top:1rem;">
+                    <!-- Schedule -->
+                    <div class="overview-section">
+                        <div class="section-title">📅 Schedule</div>
                         <div class="section-card">
-                            <div class="section-header"><i class="fa-regular fa-calendar"></i> SCHEDULE</div>
                             <div id="scheduleContainer">
                                 <div class="schedule-day"><span class="day-label">Saturday</span></div>
                                 <div id="scheduleSat"><div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div></div>
@@ -916,17 +974,24 @@
                                 <div id="scheduleSun"><div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div></div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Turnovers -->
+                    <div class="overview-section">
+                        <div class="section-title">📝 Turnovers</div>
                         <div class="section-card">
-                            <div class="section-header"><i class="fa-regular fa-note-sticky"></i> TURNOVERS</div>
                             <div id="turnoversContainer"></div>
                         </div>
                     </div>
 
                     <!-- Calendar -->
-                    <div class="section-card" style="margin-top:1rem;">
-                        <div class="section-header"><i class="fa-regular fa-calendar-circle-plus"></i> WEEKLY CALENDAR</div>
-                        <div class="calendar-grid" id="calendarGrid"></div>
+                    <div class="overview-section">
+                        <div class="section-title">📅 Weekly Calendar</div>
+                        <div class="section-card">
+                            <div class="calendar-grid" id="calendarGrid"></div>
+                        </div>
                     </div>
+
                 </div>
 
                 <!-- ─── SHOW VIEW PANEL (Editable) ─── -->
@@ -946,7 +1011,7 @@
                     </div>
 
                     <!-- Episodes Table (Editable) -->
-                    <div class="section-card">
+                    <div class="section-card" style="margin-bottom:1.5rem;">
                         <div class="section-header">
                             <i class="fa-solid fa-list"></i>
                             <span>EPISODES</span>
@@ -954,7 +1019,7 @@
                                 <i class="fa-solid fa-plus"></i> Add Episode
                             </button>
                         </div>
-                        <div class="table-wrap">
+                        <div class="table-scroll-container">
                             <table>
                                 <thead>
                                     <tr>
@@ -971,28 +1036,23 @@
                         </div>
                     </div>
 
-                    <!-- Schedule & Turnovers (Editable) -->
-                    <div class="two-col" style="margin-top:1rem;">
-                        <div class="section-card">
-                            <div class="section-header"><i class="fa-regular fa-calendar"></i> SCHEDULE</div>
-                            <div id="showScheduleContainer">
-                                <div class="schedule-day"><span class="day-label">Saturday</span></div>
-                                <div id="showScheduleSat"><div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div></div>
-                                <div class="schedule-day" style="border-top:1px solid #f1f5f9;"><span class="day-label">Sunday</span></div>
-                                <div id="showScheduleSun"><div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div></div>
-                            </div>
-                        </div>
-                        <div class="section-card">
-                            <div class="section-header"><i class="fa-regular fa-note-sticky"></i> TURNOVERS</div>
-                            <div id="showTurnoversContainer"></div>
+                    <!-- Schedule (Editable) -->
+                    <div class="section-card" style="margin-bottom:1.5rem;">
+                        <div class="section-header"><i class="fa-regular fa-calendar"></i> SCHEDULE <span style="font-size:0.5rem;font-weight:400;color:#94a3b8;margin-left:0.5rem;">(click to edit)</span></div>
+                        <div id="showScheduleContainer">
+                            <div class="schedule-day"><span class="day-label">Saturday</span></div>
+                            <div id="showScheduleSat"><div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div></div>
+                            <div class="schedule-day" style="border-top:1px solid #f1f5f9;"><span class="day-label">Sunday</span></div>
+                            <div id="showScheduleSun"><div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div></div>
                         </div>
                     </div>
 
-                    <!-- Calendar -->
-                    <div class="section-card" style="margin-top:1rem;">
-                        <div class="section-header"><i class="fa-regular fa-calendar-circle-plus"></i> WEEKLY CALENDAR</div>
-                        <div class="calendar-grid" id="showCalendarGrid"></div>
+                    <!-- Turnovers (Editable) -->
+                    <div class="section-card">
+                        <div class="section-header"><i class="fa-regular fa-note-sticky"></i> TURNOVERS <span style="font-size:0.5rem;font-weight:400;color:#94a3b8;margin-left:0.5rem;">(click to edit)</span></div>
+                        <div id="showTurnoversContainer"></div>
                     </div>
+
                 </div>
 
             </div>
@@ -1151,7 +1211,7 @@
                 try {
                     const [titlesRes, episodesRes, weekendRes, turnoversRes] = await Promise.all([
                         supabaseClient.from('classic_titles').select('*').order('title'),
-                        supabaseClient.from('classic_episodes').select('*').order('air_date'),
+                        supabaseClient.from('classic_episodes').select('*').order('air_date', { ascending: true }),
                         supabaseClient.from('classic_schedule').select('*').order('day', { ascending: false }),
                         supabaseClient.from('classic_turnovers').select('*').order('start_date')
                     ]);
@@ -1231,13 +1291,19 @@
                 // Stats
                 const totalShows = allShows.length;
                 let nextExpire = '—';
+                let nextExpireShow = null;
                 allShows.forEach(show => {
                     if (show.available_until && (nextExpire === '—' || show.available_until < nextExpire)) {
                         nextExpire = show.available_until;
+                        nextExpireShow = show.title;
                     }
                 });
                 $('statTotalShows').textContent = totalShows;
-                $('statNextExpire').textContent = formatDate(nextExpire);
+                if (nextExpireShow) {
+                    $('statNextExpire').textContent = `${nextExpireShow} — ${formatDate(nextExpire)}`;
+                } else {
+                    $('statNextExpire').textContent = '—';
+                }
 
                 // Table
                 if (!allShows.length) {
@@ -1275,7 +1341,11 @@
                 const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done').length;
                 const total = show.total_episodes || showEpisodes.length || 1;
                 const percent = Math.round((done / total) * 100);
-                $('showViewInfo').textContent = `${total} episodes total`;
+                let infoText = `${total} episodes total`;
+                if (show.available_until) {
+                    infoText += ` · Expires: ${formatDate(show.available_until)}`;
+                }
+                $('showViewInfo').textContent = infoText;
                 $('showViewCount').textContent = `${done}/${total}`;
                 $('showViewProgressFill').style.width = `${percent}%`;
 
@@ -1286,11 +1356,13 @@
                 } else {
                     showViewTableBody.innerHTML = showEpisodes.map(ep => `
                             <tr data-episode-id="${ep.id}">
-                                <td onclick="editCell(this, 'air_date', '${ep.id}')" style="cursor:pointer;" title="Click to edit">
+                                <td onclick="editCell(this, 'air_date', '${ep.id}')" class="editable-cell" title="Click to edit">
                                     ${esc(ep.air_date || '—')}
+                                    <span class="edit-icon">✏️</span>
                                 </td>
-                                <td onclick="editCell(this, 'episode_name', '${ep.id}')" style="cursor:pointer;" title="Click to edit">
+                                <td onclick="editCell(this, 'episode_name', '${ep.id}')" class="editable-cell" title="Click to edit">
                                     ${esc(ep.episode_name || '—')}
+                                    <span class="edit-icon">✏️</span>
                                 </td>
                                 <td class="text-center" onclick="toggleStatus('${ep.id}', ${ep.status === true || ep.status === 'Done'})" style="cursor:pointer;">
                                     <span class="${ep.status === true || ep.status === 'Done' ? 'badge-done' : 'badge-toair'}">
@@ -1306,21 +1378,20 @@
                         `).join('');
                 }
 
-                // Schedule (filtered)
+                // Schedule (filtered + editable)
                 const filteredSchedule = weekendData.filter(item => item.title && item.title.toLowerCase() === showTitle
                     .toLowerCase());
-                renderSchedule('showScheduleSat', 'showScheduleSun', filteredSchedule);
+                renderEditableSchedule('showScheduleSat', 'showScheduleSun', filteredSchedule);
 
-                // Turnovers (filtered)
+                // Turnovers (filtered + editable)
                 const filteredTurnovers = turnoverData.filter(item => item.title && item.title.toLowerCase() === showTitle
                     .toLowerCase());
-                renderTurnovers('showTurnoversContainer', filteredTurnovers);
+                renderEditableTurnovers('showTurnoversContainer', filteredTurnovers);
 
-                // Calendar (filtered)
-                renderCalendar('showCalendarGrid', showEpisodes);
+                // Calendar removed from Show View
             }
 
-            // ─── RENDER SCHEDULE ──────────────────────────────────────
+            // ─── RENDER SCHEDULE (Read-Only for Overview) ────────────
             function renderSchedule(satId, sunId, data) {
                 const satItems = data.filter(w => w.day === 'Saturday');
                 const sunItems = data.filter(w => w.day === 'Sunday');
@@ -1339,7 +1410,90 @@
                 }
             }
 
-            // ─── RENDER TURNOVERS ─────────────────────────────────────
+            // ─── RENDER EDITABLE SCHEDULE (Show View) ────────────────
+            function renderEditableSchedule(satId, sunId, data) {
+                const satItems = data.filter(w => w.day === 'Saturday');
+                const sunItems = data.filter(w => w.day === 'Sunday');
+
+                const satEl = document.getElementById(satId);
+                const sunEl = document.getElementById(sunId);
+                if (satEl) {
+                    satEl.innerHTML = satItems.length ? satItems.map(item =>
+                        `<div class="schedule-day">
+                                <span class="time editable-cell" onclick="editScheduleCell(this, 'time_slot', '${item.id}')" title="Click to edit time">${esc(item.time_slot)} <span class="edit-icon">✏️</span></span>
+                                <span class="title editable-cell" onclick="editScheduleCell(this, 'title', '${item.id}')" title="Click to edit title">${esc(item.title)} <span class="edit-icon">✏️</span></span>
+                            </div>`
+                    ).join('') : '<div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div>';
+                }
+                if (sunEl) {
+                    sunEl.innerHTML = sunItems.length ? sunItems.map(item =>
+                        `<div class="schedule-day">
+                                <span class="time editable-cell" onclick="editScheduleCell(this, 'time_slot', '${item.id}')" title="Click to edit time">${esc(item.time_slot)} <span class="edit-icon">✏️</span></span>
+                                <span class="title editable-cell" onclick="editScheduleCell(this, 'title', '${item.id}')" title="Click to edit title">${esc(item.title)} <span class="edit-icon">✏️</span></span>
+                            </div>`
+                    ).join('') : '<div class="schedule-day"><span class="time">—</span><span class="title">No items</span></div>';
+                }
+            }
+
+            // ─── EDIT SCHEDULE CELL ──────────────────────────────────
+            window.editScheduleCell = function(el, field, scheduleId) {
+                if (editingCell) return;
+                const currentValue = el.textContent.replace('✏️', '').trim();
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue === '—' ? '' : currentValue;
+                input.className = 'edit-input';
+                el.textContent = '';
+                el.appendChild(input);
+                input.focus();
+                input.select();
+                editingCell = { el, field, scheduleId, oldValue: currentValue, type: 'schedule' };
+
+                input.addEventListener('blur', function() {
+                    saveScheduleEdit(el, field, scheduleId, input.value);
+                });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveScheduleEdit(el, field, scheduleId, input.value);
+                    }
+                    if (e.key === 'Escape') {
+                        el.textContent = currentValue === '' ? '—' : currentValue;
+                        editingCell = null;
+                    }
+                });
+            }
+
+            async function saveScheduleEdit(el, field, scheduleId, newValue) {
+                if (editingCell) {
+                    const oldValue = editingCell.oldValue;
+                    editingCell = null;
+                    if (newValue === oldValue || (newValue === '' && oldValue === '—')) {
+                        el.textContent = oldValue === '' ? '—' : oldValue;
+                        return;
+                    }
+                    const finalValue = newValue.trim() || '—';
+                    el.textContent = finalValue;
+                    try {
+                        const updateData = {};
+                        if (field === 'time_slot') updateData.time_slot = finalValue === '—' ? '' : finalValue;
+                        else if (field === 'title') updateData.title = finalValue === '—' ? '' : finalValue;
+                        const { error } = await supabaseClient
+                            .from('classic_schedule')
+                            .update(updateData)
+                            .eq('id', scheduleId);
+                        if (error) throw error;
+                        showMessage(`✅ Updated ${field} to "${finalValue}"`, 'success');
+                        await loadAllData();
+                        if (currentShow) renderShowView(currentShow);
+                    } catch (err) {
+                        showMessage('❌ Failed to update: ' + err.message, 'error');
+                        el.textContent = oldValue === '' ? '—' : oldValue;
+                    }
+                }
+            }
+
+            // ─── RENDER TURNOVERS (Read-Only for Overview) ───────────
             function renderTurnovers(containerId, data) {
                 const container = document.getElementById(containerId);
                 if (!container) return;
@@ -1351,12 +1505,102 @@
                 container.innerHTML = data.map(item => `
                         <div class="turnover-item">
                             <div class="turnover-title">${esc(item.title)}</div>
-                            <div style="font-size:0.6rem;color:#64748b;">
+                            <div class="turnover-dates">
                                 ${esc(item.start_date || '—')} — ${esc(item.end_date || '—')}
-                                ${item.notes ? `<span style="color:#94a3b8;"> · ${esc(item.notes)}</span>` : ''}
                             </div>
+                            ${item.notes ? `<div class="turnover-notes">${esc(item.notes)}</div>` : ''}
                         </div>
                     `).join('');
+            }
+
+            // ─── RENDER EDITABLE TURNOVERS (Show View) ──────────────
+            function renderEditableTurnovers(containerId, data) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                if (!data || !data.length) {
+                    container.innerHTML =
+                        `<div style="padding:0.5rem 0.75rem;font-size:0.7rem;color:#94a3b8;">No turnovers</div>`;
+                    return;
+                }
+                container.innerHTML = data.map(item => `
+                        <div class="turnover-item">
+                            <span class="turnover-title editable-cell" onclick="editTurnoverCell(this, 'title', '${item.id}')" title="Click to edit title">${esc(item.title)} <span class="edit-icon">✏️</span></span>
+                            <span class="turnover-dates editable-cell" onclick="editTurnoverCell(this, 'dates', '${item.id}')" title="Click to edit dates">
+                                ${esc(item.start_date || '—')} — ${esc(item.end_date || '—')} <span class="edit-icon">✏️</span>
+                            </span>
+                            <span class="turnover-notes editable-cell" onclick="editTurnoverCell(this, 'notes', '${item.id}')" title="Click to edit notes">
+                                ${item.notes ? esc(item.notes) : 'Add notes...'} <span class="edit-icon">✏️</span>
+                            </span>
+                        </div>
+                    `).join('');
+            }
+
+            // ─── EDIT TURNOVER CELL ──────────────────────────────────
+            window.editTurnoverCell = function(el, field, turnoverId) {
+                if (editingCell) return;
+                let currentValue = el.textContent.replace('✏️', '').trim();
+                if (currentValue === 'Add notes...') currentValue = '';
+                if (currentValue === '—') currentValue = '';
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue;
+                input.className = 'edit-input';
+                el.textContent = '';
+                el.appendChild(input);
+                input.focus();
+                input.select();
+                editingCell = { el, field, turnoverId, oldValue: currentValue || '—', type: 'turnover' };
+
+                input.addEventListener('blur', function() {
+                    saveTurnoverEdit(el, field, turnoverId, input.value);
+                });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveTurnoverEdit(el, field, turnoverId, input.value);
+                    }
+                    if (e.key === 'Escape') {
+                        el.textContent = currentValue === '' ? '—' : currentValue;
+                        editingCell = null;
+                    }
+                });
+            }
+
+            async function saveTurnoverEdit(el, field, turnoverId, newValue) {
+                if (editingCell) {
+                    const oldValue = editingCell.oldValue;
+                    editingCell = null;
+                    if (newValue === oldValue || (newValue === '' && oldValue === '—')) {
+                        el.textContent = oldValue === '' ? '—' : oldValue;
+                        return;
+                    }
+                    const finalValue = newValue.trim() || '—';
+                    el.textContent = finalValue;
+                    try {
+                        const updateData = {};
+                        if (field === 'title') updateData.title = finalValue === '—' ? '' : finalValue;
+                        else if (field === 'dates') {
+                            const parts = finalValue.split('—').map(s => s.trim());
+                            updateData.start_date = parts[0] === '—' || parts[0] === '' ? null : parts[0];
+                            updateData.end_date = parts[1] === '—' || parts[1] === '' ? null : parts[1];
+                            if (!parts[0] && !parts[1]) {
+                                updateData.start_date = null;
+                                updateData.end_date = null;
+                            }
+                        } else if (field === 'notes') updateData.notes = finalValue === '—' ? '' : finalValue;
+                        const { error } = await supabaseClient
+                            .from('classic_turnovers')
+                            .update(updateData)
+                            .eq('id', turnoverId);
+                        if (error) throw error;
+                        showMessage(`✅ Updated ${field} to "${finalValue}"`, 'success');
+                        await loadAllData();
+                        if (currentShow) renderShowView(currentShow);
+                    } catch (err) {
+                        showMessage('❌ Failed to update: ' + err.message, 'error');
+                        el.textContent = oldValue === '' ? '—' : oldValue;
+                    }
+                }
             }
 
             // ─── RENDER CALENDAR ──────────────────────────────────────
@@ -1388,16 +1632,16 @@
             // ─── EDIT CELL ─────────────────────────────────────────────
             window.editCell = function(td, field, episodeId) {
                 if (editingCell) return;
-                const currentValue = td.textContent.trim();
+                const currentValue = td.textContent.replace('✏️', '').trim();
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.value = currentValue === '—' ? '' : currentValue;
                 input.className = 'edit-input';
-                td.innerHTML = '';
+                td.textContent = '';
                 td.appendChild(input);
                 input.focus();
                 input.select();
-                editingCell = { td, field, episodeId, oldValue: currentValue };
+                editingCell = { td, field, episodeId, oldValue: currentValue, type: 'episode' };
 
                 input.addEventListener('blur', function() {
                     saveEdit(td, field, episodeId, input.value);
@@ -1424,7 +1668,6 @@
                     }
                     const finalValue = newValue.trim() || '—';
                     td.textContent = finalValue;
-                    // Save to Supabase
                     try {
                         const updateData = {};
                         if (field === 'air_date') updateData.air_date = finalValue === '—' ? null : finalValue;
@@ -1435,7 +1678,6 @@
                             .eq('id', episodeId);
                         if (error) throw error;
                         showMessage(`✅ Updated ${field} to "${finalValue}"`, 'success');
-                        // Reload to update everything
                         await loadAllData();
                         if (currentShow) renderShowView(currentShow);
                     } catch (err) {
@@ -1479,7 +1721,6 @@
                     showMessage(`✅ Added new episode to "${currentShow}"`, 'success');
                     await loadAllData();
                     if (currentShow) renderShowView(currentShow);
-                    // Auto-scroll to the new row
                     const rows = document.querySelectorAll('#showViewTableBody tr');
                     if (rows.length) {
                         rows[rows.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
