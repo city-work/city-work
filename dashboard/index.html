@@ -453,67 +453,6 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
-        /* ─── ADMIN PANEL ─── */
-        .admin-panel {
-            background: rgba(99, 102, 241, 0.08);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(99, 102, 241, 0.12);
-            border-radius: 1.5rem;
-            padding: 1rem 1.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-bottom: 1.25rem;
-        }
-        .admin-panel .admin-left {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .admin-panel .admin-icon {
-            width: 2.25rem;
-            height: 2.25rem;
-            border-radius: 0.75rem;
-            background: rgba(99, 102, 241, 0.15);
-            color: #818cf8;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-        }
-        .admin-panel .admin-title {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #a5b4fc;
-        }
-        .admin-panel .admin-desc {
-            font-size: 0.75rem;
-            color: rgba(165, 180, 252, 0.6);
-        }
-        .admin-panel .admin-btn {
-            background: #6366f1;
-            border: none;
-            border-radius: 9999px;
-            padding: 0.4rem 1.25rem;
-            color: #ffffff;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.375rem;
-        }
-        .admin-panel .admin-btn:hover {
-            background: #4f46e5;
-            transform: scale(1.02);
-        }
-
         .hidden {
             display: none !important;
         }
@@ -613,13 +552,6 @@
             }
             .archive-card {
                 padding: 0.75rem;
-            }
-            .admin-panel {
-                padding: 0.75rem;
-                border-radius: 1rem;
-            }
-            .admin-panel .admin-desc {
-                display: none;
             }
         }
 
@@ -752,18 +684,6 @@
 
                 <!-- ─── MESSAGES ─── -->
                 <div id="messageArea"></div>
-
-                <!-- ─── ADMIN PANEL ─── -->
-                <div id="adminPanel" class="admin-panel hidden">
-                    <div class="admin-left">
-                        <div class="admin-icon"><i class="fa-solid fa-users-cog"></i></div>
-                        <div>
-                            <div class="admin-title">Admin Panel</div>
-                            <div class="admin-desc">Manage users, roles, and system settings.</div>
-                        </div>
-                    </div>
-                    <a href="#" class="admin-btn">Go to Admin →</a>
-                </div>
 
                 <!-- ═══ DASHBOARD PANEL ═══ -->
                 <div id="panel-dashboard" class="content-panel active" data-panel="dashboard">
@@ -900,8 +820,6 @@
                     <div class="mt-6 text-center text-slate-500 text-sm">Weekly schedule content goes here.</div>
                 </div>
 
-                <!-- ═══ MOVIES PANEL ═══ (REMOVED - Replaced by Classics) -->
-
             </div>
         </div>
     </div>
@@ -946,7 +864,6 @@
             const statusBadge = $('statusBadge');
             const messageArea = $('messageArea');
             const userInfo = $('userInfo');
-            const adminPanel = $('adminPanel');
             const logoutBtn = $('logoutBtn');
             const searchInput = $('globalSearchInput');
 
@@ -1054,13 +971,6 @@
                     const roleDisplay = getRoleDisplay(role);
                     setStatus(`✅ ${roleDisplay}`, 'ok');
                     userInfo.textContent = `Logged in as ${roleDisplay}`;
-
-                    if (role === 'admin') {
-                        adminPanel.classList.remove('hidden');
-                        // Removed the welcome message
-                    } else {
-                        adminPanel.classList.add('hidden');
-                    }
 
                     console.log('✅ [AUTH] Session valid – role:', role);
 
