@@ -1080,7 +1080,7 @@
 
     <script>
         // ═══════════════════════════════════════════════════════════════════
-        //  CLASSICS COLLECTION — Final Complete Version
+        //  CLASSICS COLLECTION — Fixed Complete Version
         // ═══════════════════════════════════════════════════════════════════
 
         (function() {
@@ -1143,7 +1143,8 @@
             let weekendData = [];
             let turnoverData = [];
             let currentView = 'overview';
-            let currentShow = null;
+            let currentShowTitle = null;   // used for filtering
+            let currentShowObject = null;  // full show object
             let editingCell = null;
             let calendarWeekOffset = 0;
 
@@ -1173,6 +1174,11 @@
             function esc(s) {
                 if (s == null || s === '') return '—';
                 return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            // Escape for use inside JavaScript string in an attribute
+            function jsEscape(s) {
+                return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
             }
 
             function formatDate(dateStr) {
@@ -1248,10 +1254,15 @@
                     renderSidebar();
                     renderOverview();
 
-                    if (currentView === 'overview') {
-                        renderOverview();
-                    } else if (currentShow) {
-                        renderShowView(currentShow);
+                    if (currentView === 'show' && currentShowTitle) {
+                        // find the show object again (in case it changed)
+                        currentShowObject = allShows.find(s => s.title === currentShowTitle) || null;
+                        if (currentShowObject) {
+                            renderShowView(currentShowTitle);
+                        } else {
+                            // show was deleted? switch to overview
+                            switchView('overview');
+                        }
                     }
                 } catch (err) {
                     console.error('Load error:', err);
@@ -1267,7 +1278,7 @@
                     return;
                 }
                 showButtons.innerHTML = allShows.map(show => `
-                        <button class="sidebar-item" onclick="switchView('show', '${show.title}')" data-show="${show.title}">
+                        <button class="sidebar-item" onclick="switchView('show', '${jsEscape(show.title)}')" data-show-title="${esc(show.title)}">
                             <span class="icon"><i class="fa-solid ${getShowIcon(show.title)}"></i></span>
                             <span class="label">${esc(show.title)}</span>
                             <span class="tooltip">${esc(show.title)}</span>
@@ -1284,21 +1295,24 @@
                 });
                 if (view === 'overview') {
                     $('overviewBtn').classList.add('active');
-                } else {
-                    document.querySelectorAll('.sidebar-item').forEach(btn => {
-                        if (btn.dataset.show === showTitle) {
-                            btn.classList.add('active');
-                        }
-                    });
-                }
-
-                if (view === 'overview') {
-                    currentShow = null;
+                    currentShowTitle = null;
+                    currentShowObject = null;
                     overviewPanel.style.display = 'block';
                     showViewPanel.style.display = 'none';
                     renderOverview();
-                } else {
-                    currentShow = showTitle;
+                } else if (view === 'show' && showTitle) {
+                    currentShowTitle = showTitle;
+                    currentShowObject = allShows.find(s => s.title === showTitle);
+                    if (!currentShowObject) {
+                        showMessage('Show not found', 'error');
+                        return;
+                    }
+                    // highlight the active sidebar button
+                    document.querySelectorAll('.sidebar-item[data-show-title]').forEach(btn => {
+                        if (btn.dataset.showTitle === showTitle) {
+                            btn.classList.add('active');
+                        }
+                    });
                     overviewPanel.style.display = 'none';
                     showViewPanel.style.display = 'block';
                     renderShowView(showTitle);
@@ -1306,7 +1320,7 @@
             }
 
             // ─── RENDER OVERVIEW ──────────────────────────────────────
-            window.renderOverview = function() {
+            function renderOverview() {
                 const totalShows = allShows.length;
                 let nextExpire = '—';
                 let nextExpireShow = null;
@@ -1323,18 +1337,34 @@
                     $('statNextExpire').textContent = '—';
                 }
 
+                // Compute episode counts dynamically
+                const episodeCounts = {};
+                const availableCounts = {};
+                allEpisodes.forEach(ep => {
+                    const title = ep.show_title;
+                    if (!title) return;
+                    episodeCounts[title] = (episodeCounts[title] || 0) + 1;
+                    if (ep.status === true || ep.status === 'Done') {
+                        availableCounts[title] = (availableCounts[title] || 0) + 1;
+                    }
+                });
+
                 if (!allShows.length) {
                     overviewTableBody.innerHTML =
                         `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>`;
                 } else {
-                    overviewTableBody.innerHTML = allShows.map(show => `
+                    overviewTableBody.innerHTML = allShows.map(show => {
+                        const total = episodeCounts[show.title] || 0;
+                        const available = availableCounts[show.title] || 0;
+                        return `
                             <tr>
                                 <td class="font-bold">${esc(show.title)}</td>
-                                <td class="text-center font-semibold">${show.total_episodes || 0}</td>
-                                <td class="text-center"><span class="badge-done" style="background:${show.available_episodes > 0 ? '#dcfce7' : '#fee2e2'};color:${show.available_episodes > 0 ? '#166534' : '#991b1b'};">${show.available_episodes || 0}</span></td>
+                                <td class="text-center font-semibold">${total}</td>
+                                <td class="text-center"><span class="badge-done" style="background:${available > 0 ? '#dcfce7' : '#fee2e2'};color:${available > 0 ? '#166534' : '#991b1b'};">${available}</span></td>
                                 <td class="text-right text-slate-500 font-medium">${show.available_until || '—'}</td>
                             </tr>
-                        `).join('');
+                        `;
+                    }).join('');
                 }
 
                 renderSchedule('scheduleSat', 'scheduleSun', weekendData);
@@ -1343,15 +1373,15 @@
             }
 
             // ─── RENDER SHOW VIEW ─────────────────────────────────────
-            window.renderShowView = function(showTitle) {
+            function renderShowView(showTitle) {
                 const show = allShows.find(s => s.title === showTitle);
                 if (!show) { showMessage('Show not found', 'error'); return; }
 
                 $('showViewTitle').textContent = show.title;
                 const showEpisodes = allEpisodes.filter(ep => ep.show_title === showTitle);
                 const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done').length;
-                const total = show.total_episodes || showEpisodes.length || 1;
-                const percent = Math.round((done / total) * 100);
+                const total = showEpisodes.length;
+                const percent = total > 0 ? Math.round((done / total) * 100) : 0;
                 let infoText = `${total} episodes total`;
                 if (show.available_until) {
                     infoText += ` · Expires: ${formatDate(show.available_until)}`;
@@ -1388,10 +1418,12 @@
                         `).join('');
                 }
 
+                // Filter schedule by show title
                 const filteredSchedule = weekendData.filter(item => item.title && item.title.toLowerCase() === showTitle
                     .toLowerCase());
                 renderEditableSchedule('showScheduleSat', 'showScheduleSun', filteredSchedule);
 
+                // Filter turnovers by show title
                 const filteredTurnovers = turnoverData.filter(item => item.title && item.title.toLowerCase() === showTitle
                     .toLowerCase());
                 renderEditableTurnovers('showTurnoversContainer', filteredTurnovers);
@@ -1500,8 +1532,7 @@
                             .eq('id', scheduleId);
                         if (error) throw error;
                         showMessage(`✅ Updated day to "${newValue}"`, 'success');
-                        await loadAllData();
-                        if (currentShow) renderShowView(currentShow);
+                        await loadAllData(); // will re-render show view
                     } catch (err) {
                         showMessage('❌ Failed to update: ' + err.message, 'error');
                         el.textContent = oldValue;
@@ -1559,7 +1590,6 @@
                         if (error) throw error;
                         showMessage(`✅ Updated ${field} to "${finalValue}"`, 'success');
                         await loadAllData();
-                        if (currentShow) renderShowView(currentShow);
                     } catch (err) {
                         showMessage('❌ Failed to update: ' + err.message, 'error');
                         el.textContent = oldValue === '' ? '—' : oldValue;
@@ -1684,7 +1714,6 @@
                         if (error) throw error;
                         showMessage(`✅ Updated ${field} to "${finalValue}"`, 'success');
                         await loadAllData();
-                        if (currentShow) renderShowView(currentShow);
                     } catch (err) {
                         showMessage('❌ Failed to update: ' + err.message, 'error');
                         el.textContent = oldValue === '' ? '—' : oldValue;
@@ -1694,7 +1723,7 @@
 
             // ─── ADD TURNOVER ───────────────────────────────────────────
             window.addTurnover = async function() {
-                if (!currentShow) {
+                if (!currentShowTitle) {
                     showMessage('Please select a show first.', 'warning');
                     return;
                 }
@@ -1702,16 +1731,15 @@
                     const { data, error } = await supabaseClient
                         .from('classic_turnovers')
                         .insert({
-                            title: currentShow,
+                            title: currentShowTitle,
                             start_date: null,
                             end_date: null,
                             notes: ''
                         })
                         .select();
                     if (error) throw error;
-                    showMessage(`✅ Added new turnover for "${currentShow}"`, 'success');
+                    showMessage(`✅ Added new turnover for "${currentShowTitle}"`, 'success');
                     await loadAllData();
-                    if (currentShow) renderShowView(currentShow);
                 } catch (err) {
                     showMessage('❌ Failed to add turnover: ' + err.message, 'error');
                 }
@@ -1728,7 +1756,6 @@
                     if (error) throw error;
                     showMessage('✅ Turnover deleted', 'success');
                     await loadAllData();
-                    if (currentShow) renderShowView(currentShow);
                 } catch (err) {
                     showMessage('❌ Failed to delete turnover: ' + err.message, 'error');
                 }
@@ -1858,7 +1885,6 @@
                         if (error) throw error;
                         showMessage(`✅ Updated ${field} to "${finalValue}"`, 'success');
                         await loadAllData();
-                        if (currentShow) renderShowView(currentShow);
                     } catch (err) {
                         showMessage('❌ Failed to update: ' + err.message, 'error');
                         td.textContent = oldValue === '' ? '—' : oldValue;
@@ -1877,7 +1903,6 @@
                     if (error) throw error;
                     showMessage(`✅ Status updated to ${newStatus ? 'Done' : 'To Air'}`, 'success');
                     await loadAllData();
-                    if (currentShow) renderShowView(currentShow);
                 } catch (err) {
                     showMessage('❌ Failed to update status: ' + err.message, 'error');
                 }
@@ -1885,25 +1910,23 @@
 
             // ─── ADD EPISODE ────────────────────────────────────────────
             window.addEpisode = async function() {
-                if (!currentShow) return;
+                if (!currentShowTitle) return;
                 try {
                     const { data, error } = await supabaseClient
                         .from('classic_episodes')
                         .insert({
-                            show_title: currentShow,
+                            show_title: currentShowTitle,
                             air_date: null,
                             episode_name: 'New Episode',
                             status: false
                         })
                         .select();
                     if (error) throw error;
-                    showMessage(`✅ Added new episode to "${currentShow}"`, 'success');
+                    showMessage(`✅ Added new episode to "${currentShowTitle}"`, 'success');
                     await loadAllData();
-                    if (currentShow) renderShowView(currentShow);
-                    const rows = document.querySelectorAll('#showViewTableBody tr');
-                    if (rows.length) {
-                        rows[rows.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
+                    // scroll to bottom of table
+                    const container = document.querySelector('.table-scroll-container');
+                    if (container) container.scrollTop = container.scrollHeight;
                 } catch (err) {
                     showMessage('❌ Failed to add episode: ' + err.message, 'error');
                 }
@@ -1920,7 +1943,6 @@
                     if (error) throw error;
                     showMessage('✅ Episode deleted', 'success');
                     await loadAllData();
-                    if (currentShow) renderShowView(currentShow);
                 } catch (err) {
                     showMessage('❌ Failed to delete episode: ' + err.message, 'error');
                 }
@@ -1936,8 +1958,8 @@
             // ─── KEYBOARD SHORTCUTS ──────────────────────────────────
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' && editingCell) {
-                    const { td, oldValue } = editingCell;
-                    td.textContent = oldValue === '' ? '—' : oldValue;
+                    const { el, oldValue } = editingCell;
+                    el.textContent = oldValue === '' ? '—' : oldValue;
                     editingCell = null;
                     e.preventDefault();
                 }
@@ -1958,7 +1980,7 @@
             window.renderShowView = renderShowView;
             window.loadAllData = loadAllData;
 
-            console.log('📽️ [CLASSICS] Complete version ready!');
+            console.log('📽️ [CLASSICS] Fixed version ready!');
         })();
     </script>
 
