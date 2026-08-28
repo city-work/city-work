@@ -5,8 +5,8 @@
 
 const design = {
   supabase: {
-    url: "https://yffqtbqnzrcctfnjibbo.supabase.co",
-    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZnF0YnFuenJjY3RmbmppYmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwOTM0ODUsImV4cCI6MjEwMTY2OTQ4NX0.sDW6Emj2esXIsg8QGQ30A6DKqMJZ2aYunuTdOP8iiDE"
+    url: "https://kqombshcwbqgtwszfycv.supabase.co",
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtxb21ic2hjd2JxZ3R3c3pmeWN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTY1ODMsImV4cCI6MjEwMzMzMjU4M30.F90RlAyc7DSJPjeJ9zpTKlMP5aPa8Nzgwxmw23hZ3qM"
   }
 };
 
