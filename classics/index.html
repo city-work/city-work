@@ -493,6 +493,20 @@
         .badge-toair:hover {
             transform: scale(1.05);
         }
+        .badge-overdue {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 0.05rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .badge-overdue:hover {
+            transform: scale(1.05);
+        }
 
         .edit-input {
             background: white;
@@ -523,6 +537,25 @@
         }
         .btn-add-episode:hover {
             background: #1d4ed8;
+            transform: scale(1.02);
+        }
+
+        .btn-sort {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .btn-sort:hover {
+            background: #e2e8f0;
             transform: scale(1.02);
         }
 
@@ -616,7 +649,7 @@
             }
         }
 
-        /* ─── SCHEDULE STYLES (UPDATED) ─── */
+        /* ─── SCHEDULE STYLES ─── */
         .schedule-day {
             padding: 0.4rem 0.75rem;
             font-size: 0.7rem;
@@ -652,6 +685,12 @@
             flex: 1;
             text-align: left;
             padding-left: 0.5rem;
+        }
+        .schedule-day .available-until {
+            font-size: 0.7rem;
+            color: #2563eb;
+            min-width: 100px;
+            font-weight: 600;
         }
         .schedule-day .editable-cell {
             cursor: pointer;
@@ -833,6 +872,24 @@
             margin-bottom: 0;
         }
 
+        /* Progress bar for overview table */
+        .mini-progress {
+            width: 60px;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+        .mini-progress .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2563eb, #22c55e);
+            border-radius: 999px;
+            transition: width 0.6s ease;
+        }
+
         @media (max-width: 1024px) {
             .sidebar {
                 min-width: 50px;
@@ -974,8 +1031,8 @@
                                     <thead>
                                         <tr>
                                             <th>Title</th>
-                                            <th class="text-center">Total</th>
-                                            <th class="text-center">Available</th>
+                                            <th class="text-center">Progress</th>
+                                            <th class="text-center">Schedule</th>
                                             <th class="text-right">Available Until</th>
                                         </tr>
                                     </thead>
@@ -1045,6 +1102,9 @@
                         <div class="section-header">
                             <i class="fa-solid fa-list"></i>
                             <span>EPISODES</span>
+                            <button class="btn-sort" onclick="sortEpisodes()" title="Sort by date">
+                                <i class="fa-solid fa-arrow-up-wide-short"></i> Sort
+                            </button>
                             <button class="btn-add-episode" onclick="addEpisode()">
                                 <i class="fa-solid fa-plus"></i> Add Episode
                             </button>
@@ -1066,7 +1126,7 @@
                         </div>
                     </div>
 
-                    <!-- Schedule (Editable) - SIMPLIFIED -->
+                    <!-- Schedule (Editable) -->
                     <div class="section-card" style="margin-bottom:1.5rem;">
                         <div class="section-header">
                             <i class="fa-regular fa-calendar"></i> 
@@ -1101,7 +1161,7 @@
 
     <script>
         // ═══════════════════════════════════════════════════════════════════
-        //  CLASSICS COLLECTION — Complete Fixed Version with Simple Schedule
+        //  CLASSICS COLLECTION — Complete Updated Version
         // ═══════════════════════════════════════════════════════════════════
 
         (function() {
@@ -1172,6 +1232,7 @@
             let editingCell = null;
             let calendarWeekOffset = 0;
             let loadDataPromise = null;
+            let sortDirection = 'asc';
 
             // ─── HELPERS ──────────────────────────────────────────────
             function setStatus(text, type) {
@@ -1194,7 +1255,6 @@
                         <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 ml-4">✕</button>
                     </div>
                 `;
-                // Auto-dismiss after 3 seconds
                 setTimeout(() => {
                     if (messageArea.firstChild) {
                         messageArea.firstChild.remove();
@@ -1234,6 +1294,41 @@
                 return icons[title] || 'fa-tv';
             }
 
+            function isOverdue(episode) {
+                if (episode.status === true || episode.status === 'Done') return false;
+                if (!episode.air_date) return false;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const airDate = new Date(episode.air_date);
+                airDate.setHours(0, 0, 0, 0);
+                return airDate < today;
+            }
+
+            function calculateAvailableUntil(showTitle) {
+                const showEpisodes = allEpisodes.filter(ep => ep.show_title === showTitle);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const futureToAir = showEpisodes.filter(ep => {
+                    if (ep.status === true || ep.status === 'Done') return false;
+                    if (!ep.air_date) return false;
+                    const airDate = new Date(ep.air_date);
+                    airDate.setHours(0, 0, 0, 0);
+                    return airDate >= today;
+                });
+                
+                if (futureToAir.length === 0) {
+                    return null;
+                }
+                
+                const latestDate = futureToAir
+                    .map(ep => ep.air_date)
+                    .sort()
+                    .pop();
+                
+                return latestDate;
+            }
+
             // ─── AUTH ──────────────────────────────────────────────────
             async function checkSession() {
                 setStatus('Checking...', 'waiting');
@@ -1262,7 +1357,7 @@
                 }
             }
 
-            // ─── LOAD DATA (with race condition protection) ─────────
+            // ─── LOAD DATA ──────────────────────────────────────────
             async function loadAllData() {
                 if (loadDataPromise) {
                     return loadDataPromise;
@@ -1363,21 +1458,32 @@
             // ─── RENDER OVERVIEW ──────────────────────────────────────
             function renderOverview() {
                 const totalShows = allShows.length;
-                let nextExpire = '—';
-                let nextExpireShow = null;
+                
+                // Calculate available until for each show
+                const availableUntilMap = {};
                 allShows.forEach(show => {
-                    if (show.available_until && (nextExpire === '—' || show.available_until < nextExpire)) {
-                        nextExpire = show.available_until;
-                        nextExpireShow = show.title;
+                    availableUntilMap[show.title] = calculateAvailableUntil(show.title);
+                });
+                
+                // Find next expiration
+                let nextExpire = null;
+                let nextExpireShow = null;
+                Object.keys(availableUntilMap).forEach(title => {
+                    const date = availableUntilMap[title];
+                    if (date && (!nextExpire || date < nextExpire)) {
+                        nextExpire = date;
+                        nextExpireShow = title;
                     }
                 });
+                
                 $('statTotalShows').textContent = totalShows;
-                if (nextExpireShow) {
+                if (nextExpireShow && nextExpire) {
                     $('statNextExpire').textContent = `${nextExpireShow} — ${formatDate(nextExpire)}`;
                 } else {
                     $('statNextExpire').textContent = '—';
                 }
 
+                // Compute episode counts
                 const episodeCounts = {};
                 const availableCounts = {};
                 allEpisodes.forEach(ep => {
@@ -1389,29 +1495,40 @@
                     }
                 });
 
+                // Render titles table
                 if (!allShows.length) {
                     overviewTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>`;
                 } else {
                     overviewTableBody.innerHTML = allShows.map(show => {
                         const total = episodeCounts[show.title] || 0;
                         const available = availableCounts[show.title] || 0;
+                        const percent = total > 0 ? Math.round((available / total) * 100) : 0;
+                        const schedule = weekendData.filter(w => w.title === show.title);
+                        const scheduleText = schedule.length > 0 
+                            ? schedule.map(s => `${s.day.substring(0,3)} ${s.time_slot}`).join(', ')
+                            : '—';
+                        const availableUntil = availableUntilMap[show.title];
+                        
                         return `
-                            <tr>
+                            <tr onclick="switchView('show', '${jsEscape(show.title)}')" style="cursor:pointer;" title="Click to view ${esc(show.title)}">
                                 <td class="font-bold">${esc(show.title)}</td>
-                                <td class="text-center font-semibold">${total}</td>
-                                <td class="text-center"><span class="badge-done" style="background:${available > 0 ? '#dcfce7' : '#fee2e2'};color:${available > 0 ? '#166534' : '#991b1b'};">${available}</span></td>
-                                <td class="text-right text-slate-500 font-medium">${show.available_until || '—'}</td>
+                                <td class="text-center">
+                                    <span class="mini-progress"><span class="fill" style="width:${percent}%;"></span></span>
+                                    <span class="font-semibold">${available}/${total}</span>
+                                </td>
+                                <td class="text-center text-slate-500">${esc(scheduleText)}</td>
+                                <td class="text-right text-slate-500 font-medium">${availableUntil ? formatDate(availableUntil) : '—'}</td>
                             </tr>
                         `;
                     }).join('');
                 }
 
                 renderScheduleOverview('scheduleItems', weekendData);
-                renderTurnovers('turnoversContainer', turnoverData);
+                renderOverviewTurnovers('turnoversContainer', turnoverData);
                 renderCalendar('calendarGrid', allEpisodes);
             }
 
-            // ─── RENDER SCHEDULE OVERVIEW (Read-Only) ────────────────
+            // ─── RENDER SCHEDULE OVERVIEW ────────────────────────────
             function renderScheduleOverview(containerId, data) {
                 const container = document.getElementById(containerId);
                 if (!container) return;
@@ -1430,6 +1547,47 @@
                 `).join('');
             }
 
+            // ─── RENDER OVERVIEW TURNOVERS (Grouped by Show) ────────
+            function renderOverviewTurnovers(containerId, data) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                
+                if (!data.length) {
+                    container.innerHTML = `<div style="padding:0.5rem 0.75rem;font-size:0.7rem;color:#94a3b8;">No turnovers</div>`;
+                    return;
+                }
+                
+                // Group by show
+                const grouped = {};
+                data.forEach(item => {
+                    if (!grouped[item.title]) {
+                        grouped[item.title] = [];
+                    }
+                    grouped[item.title].push(item);
+                });
+                
+                let html = '';
+                Object.keys(grouped).forEach(showTitle => {
+                    html += `
+                        <div style="padding:0.5rem 0.75rem;font-weight:600;font-size:0.7rem;color:#475569;background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                            ${esc(showTitle)}
+                        </div>
+                    `;
+                    grouped[showTitle].forEach(item => {
+                        html += `
+                            <div class="turnover-item">
+                                <div class="turnover-dates">
+                                    ${esc(item.start_date || '—')} — ${esc(item.end_date || '—')}
+                                </div>
+                                ${item.notes ? `<div class="turnover-notes">${esc(item.notes)}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                });
+                
+                container.innerHTML = html;
+            }
+
             // ─── RENDER SHOW VIEW ─────────────────────────────────────
             function renderShowView(showTitle) {
                 const show = allShows.find(s => s.title === showTitle);
@@ -1440,19 +1598,44 @@
                 const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done').length;
                 const total = showEpisodes.length;
                 const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-                let infoText = `${total} episodes total`;
-                if (show.available_until) {
-                    infoText += ` · Expires: ${formatDate(show.available_until)}`;
-                }
-                $('showViewInfo').textContent = infoText;
+                
+                // Calculate available until
+                const availableUntil = calculateAvailableUntil(showTitle);
+                
+                $('showViewInfo').innerHTML = `
+                    <span style="display:flex;align-items:center;gap:0.5rem;">
+                        <i class="fa-regular fa-calendar" style="color:#2563eb;"></i>
+                        Available Until: <strong>${availableUntil ? formatDate(availableUntil) : 'No upcoming episodes'}</strong>
+                    </span>
+                `;
                 $('showViewCount').textContent = `${done}/${total}`;
                 $('showViewProgressFill').style.width = `${percent}%`;
 
-                // Render episodes
-                if (!showEpisodes.length) {
+                // Render episodes with current sort
+                renderEpisodesTable(showEpisodes);
+
+                // Render schedule
+                const filteredSchedule = weekendData.filter(item => item.title && item.title.toLowerCase() === showTitle.toLowerCase());
+                renderShowSchedule('showScheduleItems', filteredSchedule);
+
+                // Render turnovers
+                const filteredTurnovers = turnoverData.filter(item => item.title && item.title.toLowerCase() === showTitle.toLowerCase());
+                renderEditableTurnovers('showTurnoversContainer', filteredTurnovers);
+            }
+
+            // ─── RENDER EPISODES TABLE ────────────────────────────────
+            function renderEpisodesTable(episodes) {
+                if (!episodes.length) {
                     showViewTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">No episodes for this show.</td></tr>`;
-                } else {
-                    showViewTableBody.innerHTML = showEpisodes.map(ep => `
+                    return;
+                }
+                
+                showViewTableBody.innerHTML = episodes.map(ep => {
+                    const overdue = isOverdue(ep);
+                    const statusClass = ep.status === true || ep.status === 'Done' ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
+                    const statusText = ep.status === true || ep.status === 'Done' ? '✅ Done' : (overdue ? '⚠️ Overdue' : '⏳ To Air');
+                    
+                    return `
                         <tr data-episode-id="${ep.id}">
                             <td onclick="editCell(this, 'air_date', '${ep.id}')" class="editable-cell" title="Click to edit">
                                 ${esc(ep.air_date || '—')}
@@ -1463,8 +1646,8 @@
                                 <span class="edit-icon">✏️</span>
                             </td>
                             <td class="text-center" onclick="toggleStatus('${ep.id}', ${ep.status === true || ep.status === 'Done'})" style="cursor:pointer;">
-                                <span class="${ep.status === true || ep.status === 'Done' ? 'badge-done' : 'badge-toair'}">
-                                    ${ep.status === true || ep.status === 'Done' ? '✅ Done' : '⏳ To Air'}
+                                <span class="${statusClass}">
+                                    ${statusText}
                                 </span>
                             </td>
                             <td class="text-center">
@@ -1473,19 +1656,41 @@
                                 </button>
                             </td>
                         </tr>
-                    `).join('');
-                }
-
-                // Render schedule (filtered by show)
-                const filteredSchedule = weekendData.filter(item => item.title && item.title.toLowerCase() === showTitle.toLowerCase());
-                renderShowSchedule('showScheduleItems', filteredSchedule);
-
-                // Render turnovers (filtered by show)
-                const filteredTurnovers = turnoverData.filter(item => item.title && item.title.toLowerCase() === showTitle.toLowerCase());
-                renderEditableTurnovers('showTurnoversContainer', filteredTurnovers);
+                    `;
+                }).join('');
             }
 
-            // ─── RENDER SHOW SCHEDULE (Editable - Simplified) ────────
+            // ─── SORT EPISODES ────────────────────────────────────────
+            window.sortEpisodes = function() {
+                if (!currentShowTitle) return;
+                
+                const showEpisodes = allEpisodes.filter(ep => ep.show_title === currentShowTitle);
+                
+                // Toggle sort direction
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                
+                // Sort episodes
+                showEpisodes.sort((a, b) => {
+                    if (!a.air_date) return sortDirection === 'asc' ? 1 : -1;
+                    if (!b.air_date) return sortDirection === 'asc' ? -1 : 1;
+                    const dateA = new Date(a.air_date);
+                    const dateB = new Date(b.air_date);
+                    return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+                });
+                
+                // Re-render episodes table
+                renderEpisodesTable(showEpisodes);
+                
+                // Update sort button
+                const sortBtn = document.querySelector('[onclick="sortEpisodes()"]');
+                if (sortBtn) {
+                    sortBtn.innerHTML = sortDirection === 'asc' 
+                        ? '<i class="fa-solid fa-arrow-up-wide-short"></i> Oldest First'
+                        : '<i class="fa-solid fa-arrow-down-short-wide"></i> Newest First';
+                }
+            };
+
+            // ─── RENDER SHOW SCHEDULE ────────────────────────────────
             function renderShowSchedule(containerId, data) {
                 const container = document.getElementById(containerId);
                 if (!container) return;
@@ -1499,6 +1704,8 @@
                     `;
                     return;
                 }
+
+                const availableUntil = calculateAvailableUntil(currentShowTitle);
 
                 container.innerHTML = data.map(item => `
                     <div class="schedule-day" data-schedule-id="${item.id}">
@@ -1514,6 +1721,9 @@
                             ${esc(item.time_slot || '—')} 
                             <span class="edit-icon">✏️</span>
                         </span>
+                        <span class="available-until">
+                            ${availableUntil ? formatDate(availableUntil) : '—'}
+                        </span>
                         <button class="btn-delete-episode" 
                                 onclick="deleteScheduleItem('${item.id}')" 
                                 title="Delete schedule item" 
@@ -1524,7 +1734,7 @@
                 `).join('');
             }
 
-            // ─── EDIT SCHEDULE DAY (with Mon-Sun dropdown) ────────────
+            // ─── EDIT SCHEDULE DAY ──────────────────────────────────
             window.editScheduleDay = function(el, scheduleId) {
                 if (editingCell) return;
                 const currentValue = el.textContent.replace('✏️', '').trim();
@@ -1562,7 +1772,7 @@
                 });
             };
 
-            // ─── EDIT SCHEDULE TIME ───────────────────────────────────
+            // ─── EDIT SCHEDULE TIME ─────────────────────────────────
             window.editScheduleTime = function(el, scheduleId) {
                 if (editingCell) return;
                 const currentValue = el.textContent.replace('✏️', '').trim();
@@ -1592,7 +1802,7 @@
                 });
             };
 
-            // ─── SAVE SCHEDULE DAY ───────────────────────────────────
+            // ─── SAVE SCHEDULE DAY ─────────────────────────────────
             async function saveScheduleDay(el, scheduleId, newValue) {
                 if (editingCell) {
                     const oldValue = editingCell.oldValue;
@@ -1617,7 +1827,7 @@
                 }
             }
 
-            // ─── SAVE SCHEDULE TIME ──────────────────────────────────
+            // ─── SAVE SCHEDULE TIME ────────────────────────────────
             async function saveScheduleTime(el, scheduleId, newValue) {
                 if (editingCell) {
                     const oldValue = editingCell.oldValue;
@@ -1643,7 +1853,7 @@
                 }
             }
 
-            // ─── ADD SCHEDULE ITEM ───────────────────────────────────
+            // ─── ADD SCHEDULE ITEM ─────────────────────────────────
             window.addScheduleItem = async function() {
                 if (!currentShowTitle) {
                     showMessage('Please select a show first.', 'warning');
@@ -1669,7 +1879,7 @@
                 }
             };
 
-            // ─── DELETE SCHEDULE ITEM ────────────────────────────────
+            // ─── DELETE SCHEDULE ITEM ──────────────────────────────
             window.deleteScheduleItem = async function(scheduleId) {
                 if (!confirm('Are you sure you want to delete this schedule item?')) return;
                 
@@ -1688,26 +1898,7 @@
                 }
             };
 
-            // ─── RENDER TURNOVERS (Read-Only for Overview) ───────────
-            function renderTurnovers(containerId, data) {
-                const container = document.getElementById(containerId);
-                if (!container) return;
-                if (!data || !data.length) {
-                    container.innerHTML = `<div style="padding:0.5rem 0.75rem;font-size:0.7rem;color:#94a3b8;">No turnovers</div>`;
-                    return;
-                }
-                container.innerHTML = data.map(item => `
-                    <div class="turnover-item">
-                        <div class="turnover-title">${esc(item.title)}</div>
-                        <div class="turnover-dates">
-                            ${esc(item.start_date || '—')} — ${esc(item.end_date || '—')}
-                        </div>
-                        ${item.notes ? `<div class="turnover-notes">${esc(item.notes)}</div>` : ''}
-                    </div>
-                `).join('');
-            }
-
-            // ─── RENDER EDITABLE TURNOVERS (Show View) ──────────────
+            // ─── RENDER EDITABLE TURNOVERS ─────────────────────────
             function renderEditableTurnovers(containerId, data) {
                 const container = document.getElementById(containerId);
                 if (!container) return;
@@ -1744,7 +1935,7 @@
                 container.innerHTML = html;
             }
 
-            // ─── EDIT TURNOVER CELL ──────────────────────────────────
+            // ─── EDIT TURNOVER CELL ────────────────────────────────
             window.editTurnoverCell = function(el, field, turnoverId) {
                 if (editingCell) return;
                 let currentValue = el.textContent.replace('✏️', '').trim();
@@ -1773,7 +1964,7 @@
                         editingCell = null;
                     }
                 });
-            }
+            };
 
             async function saveTurnoverEdit(el, field, turnoverId, newValue) {
                 if (editingCell) {
@@ -1811,7 +2002,7 @@
                 }
             }
 
-            // ─── ADD TURNOVER ───────────────────────────────────────────
+            // ─── ADD TURNOVER ───────────────────────────────────────
             window.addTurnover = async function() {
                 if (!currentShowTitle) {
                     showMessage('Please select a show first.', 'warning');
@@ -1833,9 +2024,9 @@
                 } catch (err) {
                     showMessage('❌ Failed to add turnover: ' + err.message, 'error');
                 }
-            }
+            };
 
-            // ─── DELETE TURNOVER ────────────────────────────────────────
+            // ─── DELETE TURNOVER ────────────────────────────────────
             window.deleteTurnover = async function(turnoverId) {
                 if (!confirm('Are you sure you want to delete this turnover?')) return;
                 try {
@@ -1849,9 +2040,9 @@
                 } catch (err) {
                     showMessage('❌ Failed to delete turnover: ' + err.message, 'error');
                 }
-            }
+            };
 
-            // ─── ADD NEW SHOW ───────────────────────────────────────────
+            // ─── ADD NEW SHOW ───────────────────────────────────────
             window.addNewShow = async function() {
                 const showName = prompt('Enter the name of the new show:');
                 if (!showName || showName.trim() === '') return;
@@ -1861,8 +2052,6 @@
                         .from('classic_titles')
                         .insert({
                             title: showName.trim(),
-                            total_episodes: 0,
-                            available_episodes: 0,
                             status: 'Active'
                         })
                         .select();
@@ -1878,14 +2067,14 @@
                 } catch (err) {
                     showMessage('❌ Failed to add show: ' + err.message, 'error');
                 }
-            }
+            };
 
-            // ─── CALENDAR WITH WEEK NAVIGATION ────────────────────────
+            // ─── CALENDAR WITH WEEK NAVIGATION ──────────────────────
             window.changeWeek = function(direction) {
                 calendarWeekOffset += direction;
                 renderCalendar('calendarGrid', allEpisodes);
                 updateWeekLabel();
-            }
+            };
 
             function updateWeekLabel() {
                 const today = new Date();
@@ -1925,7 +2114,7 @@
                 updateWeekLabel();
             }
 
-            // ─── EDIT CELL (Episodes) ──────────────────────────────────
+            // ─── EDIT CELL (Episodes) ────────────────────────────────
             window.editCell = function(td, field, episodeId) {
                 if (editingCell) return;
                 const currentValue = td.textContent.replace('✏️', '').trim();
@@ -1952,7 +2141,7 @@
                         editingCell = null;
                     }
                 });
-            }
+            };
 
             async function saveEdit(td, field, episodeId, newValue) {
                 if (editingCell) {
@@ -1982,7 +2171,7 @@
                 }
             }
 
-            // ─── TOGGLE STATUS ─────────────────────────────────────────
+            // ─── TOGGLE STATUS ───────────────────────────────────────
             window.toggleStatus = async function(episodeId, currentStatus) {
                 const newStatus = !currentStatus;
                 try {
@@ -1996,9 +2185,9 @@
                 } catch (err) {
                     showMessage('❌ Failed to update status: ' + err.message, 'error');
                 }
-            }
+            };
 
-            // ─── ADD EPISODE ────────────────────────────────────────────
+            // ─── ADD EPISODE ─────────────────────────────────────────
             window.addEpisode = async function() {
                 if (!currentShowTitle) return;
                 try {
@@ -2019,9 +2208,9 @@
                 } catch (err) {
                     showMessage('❌ Failed to add episode: ' + err.message, 'error');
                 }
-            }
+            };
 
-            // ─── DELETE EPISODE ─────────────────────────────────────────
+            // ─── DELETE EPISODE ──────────────────────────────────────
             window.deleteEpisode = async function(episodeId) {
                 if (!confirm('Are you sure you want to delete this episode?')) return;
                 try {
@@ -2035,9 +2224,9 @@
                 } catch (err) {
                     showMessage('❌ Failed to delete episode: ' + err.message, 'error');
                 }
-            }
+            };
 
-            // ─── LOGOUT ──────────────────────────────────────────────────
+            // ─── LOGOUT ──────────────────────────────────────────────
             document.getElementById('logoutBtn').addEventListener('click', async function() {
                 try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
                 localStorage.removeItem('citywork_user');
@@ -2054,7 +2243,7 @@
                 }
             });
 
-            // ─── INIT ──────────────────────────────────────────────────
+            // ─── INIT ────────────────────────────────────────────────
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('📄 [DOM] Ready – initializing...');
                 if (supabaseClient) {
@@ -2064,12 +2253,13 @@
                 }
             });
 
-            // ─── EXPOSE FUNCTIONS GLOBALLY ────────────────────────────
+            // ─── EXPOSE FUNCTIONS GLOBALLY ──────────────────────────
             window.renderOverview = renderOverview;
             window.renderShowView = renderShowView;
             window.loadAllData = loadAllData;
+            window.sortEpisodes = sortEpisodes;
 
-            console.log('📽️ [CLASSICS] Fixed version ready!');
+            console.log('📽️ [CLASSICS] Updated version ready!');
         })();
     </script>
 
