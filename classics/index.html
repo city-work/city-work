@@ -1032,12 +1032,11 @@
                                         <tr>
                                             <th>Title</th>
                                             <th class="text-center">Progress</th>
-                                            <th class="text-center">Schedule</th>
                                             <th class="text-right">Available Until</th>
                                         </tr>
                                     </thead>
                                     <tbody id="overviewTableBody">
-                                        <tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
+                                        <tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1497,16 +1496,12 @@
 
                 // Render titles table
                 if (!allShows.length) {
-                    overviewTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>`;
+                    overviewTableBody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>`;
                 } else {
                     overviewTableBody.innerHTML = allShows.map(show => {
                         const total = episodeCounts[show.title] || 0;
                         const available = availableCounts[show.title] || 0;
                         const percent = total > 0 ? Math.round((available / total) * 100) : 0;
-                        const schedule = weekendData.filter(w => w.title === show.title);
-                        const scheduleText = schedule.length > 0 
-                            ? schedule.map(s => `${s.day.substring(0,3)} ${s.time_slot}`).join(', ')
-                            : '—';
                         const availableUntil = availableUntilMap[show.title];
                         
                         return `
@@ -1516,7 +1511,6 @@
                                     <span class="mini-progress"><span class="fill" style="width:${percent}%;"></span></span>
                                     <span class="font-semibold">${available}/${total}</span>
                                 </td>
-                                <td class="text-center text-slate-500">${esc(scheduleText)}</td>
                                 <td class="text-right text-slate-500 font-medium">${availableUntil ? formatDate(availableUntil) : '—'}</td>
                             </tr>
                         `;
