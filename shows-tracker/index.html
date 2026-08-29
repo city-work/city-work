@@ -40,12 +40,17 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
         .header h1 {
             font-size: 24px;
             font-weight: 800;
             color: #0f172a;
         }
-        .header .status {
+        .status {
             font-size: 12px;
             padding: 6px 12px;
             border-radius: 999px;
@@ -115,13 +120,9 @@
             align-items: center;
             justify-content: center;
             font-size: 20px;
-            background: #f3e8ff;
-            color: #9333ea;
+            background: #fef3c7;
+            color: #d97706;
         }
-        .show-icon.dog { background: #fef3c7; color: #d97706; }
-        .show-icon.tv { background: #dcfce7; color: #16a34a; }
-        .show-icon.film { background: #e0f2fe; color: #2563eb; }
-        .show-icon.game { background: #fce7f3; color: #db2777; }
 
         .menu-container {
             position: relative;
@@ -199,10 +200,6 @@
             background: #fef3c7;
             color: #d97706;
         }
-        .tag-normal {
-            background: #e0f2fe;
-            color: #2563eb;
-        }
 
         .show-card-progress {
             display: flex;
@@ -256,11 +253,36 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.06);
             margin-bottom: 20px;
         }
-        .calendar-nav {
+        .calendar-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .calendar-header .legend {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .legend-live {
+            color: #22c55e;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .legend-replay {
+            color: #f59e0b;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .calendar-nav button {
             background: #f1f5f9;
@@ -277,22 +299,24 @@
             color: #2563eb;
         }
         .calendar-nav .week-label {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: #0f172a;
+            min-width: 140px;
+            text-align: center;
         }
 
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
+            gap: 6px;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 640px) {
             .calendar-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
         }
-        @media (max-width: 480px) {
+        @media (max-width: 400px) {
             .calendar-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -302,8 +326,8 @@
             background: #fafafa;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 10px;
-            min-height: 80px;
+            padding: 8px;
+            min-height: 70px;
             position: relative;
         }
         .calendar-day.today {
@@ -318,9 +342,8 @@
             border-color: #f59e0b;
             background: #fffbeb;
         }
-
         .calendar-day .day-name {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -328,18 +351,20 @@
             margin-bottom: 4px;
         }
         .calendar-day .day-number {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: #0f172a;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .calendar-day .day-badge {
-            font-size: 8px;
+            font-size: 7px;
             font-weight: 700;
-            padding: 2px 6px;
+            padding: 2px 5px;
             border-radius: 4px;
             display: inline-block;
             margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
         .badge-live {
             background: #22c55e;
@@ -350,13 +375,13 @@
             color: white;
         }
         .calendar-day .episode-in-day {
-            font-size: 9px;
+            font-size: 8px;
             color: #475569;
             font-weight: 600;
-            padding: 3px 6px;
+            padding: 2px 5px;
             background: white;
             border-radius: 4px;
-            margin-top: 4px;
+            margin-top: 3px;
             border: 1px solid #e2e8f0;
             white-space: nowrap;
             overflow: hidden;
@@ -387,6 +412,22 @@
             font-size: 12px;
             color: #64748b;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .progress-bar-container {
+            width: 100px;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .progress-bar-container .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2563eb, #22c55e);
+            border-radius: 999px;
+            transition: width 0.6s ease;
         }
 
         .episode-list {
@@ -396,6 +437,14 @@
             max-height: 500px;
             overflow-y: auto;
         }
+        .episode-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .episode-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 999px;
+        }
+
         .episode-item {
             display: flex;
             align-items: center;
@@ -414,10 +463,14 @@
             background: #f0fdf4;
             border-color: #bbf7d0;
         }
+        .episode-item.overdue {
+            border-color: #fca5a5;
+            background: #fef2f2;
+        }
 
         .episode-checkbox {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border-radius: 6px;
             border: 2px solid #cbd5e1;
             display: flex;
@@ -426,6 +479,7 @@
             cursor: pointer;
             transition: all 0.2s;
             flex-shrink: 0;
+            font-size: 10px;
         }
         .episode-checkbox.checked {
             background: #22c55e;
@@ -435,6 +489,7 @@
 
         .episode-info {
             flex: 1;
+            min-width: 0;
         }
         .episode-name {
             font-size: 13px;
@@ -442,9 +497,14 @@
             color: #0f172a;
             margin-bottom: 2px;
         }
+        .episode-location {
+            font-size: 11px;
+            color: #64748b;
+        }
         .episode-dates {
             font-size: 11px;
             color: #94a3b8;
+            margin-top: 2px;
         }
         .episode-dates .live {
             color: #22c55e;
@@ -484,7 +544,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div style="display:flex;align-items:center;gap:12px;">
+            <div class="header-left">
                 <button class="btn-back hidden" id="backBtn" onclick="showMainView()">
                     <i class="fa-solid fa-arrow-left"></i> All Shows
                 </button>
@@ -495,19 +555,23 @@
 
         <!-- Main View - Show Cards -->
         <div id="mainView">
-            <div class="shows-grid" id="showsGrid">
-                <!-- Cards will be rendered here -->
-            </div>
+            <div class="shows-grid" id="showsGrid"></div>
         </div>
 
-        <!-- Detail View - Weekly Calendar + Episodes -->
+        <!-- Detail View - DOG SHOW Weekly Calendar -->
         <div id="detailView" class="detail-view">
             <!-- Weekly Calendar -->
             <div class="calendar-card">
-                <div class="calendar-nav">
-                    <button onclick="changeWeek(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                    <span class="week-label" id="weekLabel">Loading...</span>
-                    <button onclick="changeWeek(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                <div class="calendar-header">
+                    <div class="legend">
+                        <span class="legend-live">🎥 LIVE (Wednesday)</span>
+                        <span class="legend-replay">🔄 REPLAY (Saturday)</span>
+                    </div>
+                    <div class="calendar-nav">
+                        <button onclick="changeWeek(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span class="week-label" id="weekLabel">Loading...</span>
+                        <button onclick="changeWeek(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
                 </div>
                 <div class="calendar-grid" id="calendarGrid"></div>
             </div>
@@ -516,7 +580,12 @@
             <div class="episodes-card">
                 <div class="episodes-header">
                     <h2 id="episodesTitle">Available Episodes</h2>
-                    <span class="progress" id="progressText">0/0 Completed</span>
+                    <div class="progress">
+                        <span id="progressText">0/0</span>
+                        <div class="progress-bar-container">
+                            <div class="fill" id="progressFill" style="width:0%;"></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="episode-list" id="episodeList"></div>
             </div>
@@ -524,18 +593,14 @@
     </div>
 
     <script>
-        // Supabase setup
         const SUPABASE_URL = window.design.supabase.url;
         const SUPABASE_ANON_KEY = window.design.supabase.anonKey;
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let allShows = [];
-        let allEpisodes = [];
-        let allSchedule = [];
-        let currentShow = null;
+        let dogShowEpisodes = [];
         let calendarWeekOffset = 0;
+        let currentView = 'main'; // 'main' or 'detail'
 
-        // Set status
         function setStatus(text, type) {
             const badge = document.getElementById('statusBadge');
             const colors = {
@@ -549,65 +614,23 @@
             badge.textContent = text;
         }
 
-        // Format date
         function formatDate(dateStr) {
             if (!dateStr) return '—';
             const d = new Date(dateStr + 'T00:00:00');
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         }
 
-        // Get replay date (3 days after live)
-        function getReplayDate(liveDate) {
-            if (!liveDate) return null;
-            const d = new Date(liveDate + 'T00:00:00');
-            d.setDate(d.getDate() + 3);
-            return d.toISOString().split('T')[0];
-        }
-
-        // Check if show has live/replay pattern
-        function isLiveReplayShow(showTitle) {
-            const schedule = allSchedule.filter(s => s.title === showTitle);
-            const days = schedule.map(s => s.day);
-            return days.includes('Wednesday') && days.includes('Saturday');
-        }
-
-        // Get show icon
-        function getShowIcon(title) {
-            if (title.includes('DOG')) return '🐕';
-            if (title.includes('POPEYE')) return '⚓';
-            if (title.includes('CHARLIE')) return '🎩';
-            if (title.includes('JOHNNY')) return '🎙️';
-            if (title.includes('LINE')) return '🎮';
-            return '📺';
-        }
-
-        // Get icon class
-        function getIconClass(title) {
-            if (title.includes('DOG')) return 'dog';
-            if (title.includes('POPEYE')) return 'tv';
-            if (title.includes('CHARLIE')) return 'film';
-            if (title.includes('LINE')) return 'game';
-            return '';
-        }
-
-        // Load all data
-        async function loadAllData() {
+        async function loadDogShowData() {
             setStatus('⏳ Loading...', 'waiting');
             try {
-                const [titlesRes, episodesRes, scheduleRes] = await Promise.all([
-                    supabaseClient.from('classic_titles').select('*').order('title'),
-                    supabaseClient.from('classic_episodes').select('*').order('air_date', { ascending: true }),
-                    supabaseClient.from('classic_schedule').select('*')
-                ]);
+                const { data, error } = await supabaseClient
+                    .from('dog_show_episodes')
+                    .select('*')
+                    .order('live_date', { ascending: true });
 
-                if (titlesRes.error) throw titlesRes.error;
-                if (episodesRes.error) throw episodesRes.error;
-                if (scheduleRes.error) throw scheduleRes.error;
-
-                allShows = titlesRes.data || [];
-                allEpisodes = episodesRes.data || [];
-                allSchedule = scheduleRes.data || [];
-
+                if (error) throw error;
+                dogShowEpisodes = data || [];
+                
                 renderShowsGrid();
                 setStatus('✅ Live', 'ok');
             } catch (err) {
@@ -616,129 +639,88 @@
             }
         }
 
-        // Render shows grid
         function renderShowsGrid() {
             const grid = document.getElementById('showsGrid');
-            
-            if (!allShows.length) {
-                grid.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;grid-column:1/-1;">No shows yet. Add shows via SQL or Supabase.</div>';
-                return;
-            }
+            const total = dogShowEpisodes.length;
+            const done = dogShowEpisodes.filter(ep => ep.status === true).length;
+            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
-            grid.innerHTML = allShows.map(show => {
-                const showEpisodes = allEpisodes.filter(ep => ep.show_title === show.title);
-                const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done').length;
-                const total = showEpisodes.length;
-                const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-                const schedule = allSchedule.filter(s => s.title === show.title);
-                const liveReplay = isLiveReplayShow(show.title);
-                
-                // Calculate available until (latest future to-air episode)
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const futureToAir = showEpisodes.filter(ep => {
-                    if (ep.status === true || ep.status === 'Done') return false;
-                    if (!ep.air_date) return false;
-                    const airDate = new Date(ep.air_date + 'T00:00:00');
-                    return airDate >= today;
-                });
-                const availableUntil = futureToAir.length > 0 
-                    ? futureToAir.map(ep => ep.air_date).sort().pop() 
-                    : null;
+            // Calculate available until (latest future episode)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const futureEpisodes = dogShowEpisodes.filter(ep => {
+                if (ep.status === true) return false;
+                if (!ep.live_date) return false;
+                const liveDate = new Date(ep.live_date + 'T00:00:00');
+                return liveDate >= today;
+            });
+            const availableUntil = futureEpisodes.length > 0 
+                ? futureEpisodes.map(ep => ep.live_date).sort().pop() 
+                : null;
 
-                return `
-                    <div class="show-card" onclick="openShow('${show.title.replace(/'/g, "\\'")}')">
-                        <div class="show-card-header">
-                            <div class="show-icon ${getIconClass(show.title)}">${getShowIcon(show.title)}</div>
-                            <div class="menu-container" onclick="event.stopPropagation();">
-                                <div class="menu-dots" onclick="toggleMenu(event, this)">•••</div>
-                                <div class="dropdown-menu">
-                                    <div class="dropdown-item" onclick="openShow('${show.title.replace(/'/g, "\\'")}')">View Details</div>
-                                    <div class="dropdown-item delete" onclick="deleteShow('${show.title.replace(/'/g, "\\'")}')">Delete Show</div>
-                                </div>
+            grid.innerHTML = `
+                <div class="show-card" onclick="openDogShow()">
+                    <div class="show-card-header">
+                        <div class="show-icon">🐕</div>
+                        <div class="menu-container" onclick="event.stopPropagation();">
+                            <div class="menu-dots" onclick="toggleMenu(event, this)">•••</div>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-item" onclick="openDogShow()">View Details</div>
                             </div>
-                        </div>
-                        <div class="show-card-title">${show.title}</div>
-                        <div class="show-card-schedule">
-                            ${liveReplay ? `
-                                <span class="schedule-tag tag-live">🎥 LIVE Wed</span>
-                                <span class="schedule-tag tag-replay">🔄 REPLAY Sat</span>
-                            ` : schedule.map(s => `
-                                <span class="schedule-tag tag-normal">${s.day.substring(0,3)} ${s.time_slot || ''}</span>
-                            `).join('')}
-                        </div>
-                        <div class="show-card-progress">
-                            <div class="progress-bar">
-                                <div class="fill" style="width:${percent}%;"></div>
-                            </div>
-                            <span class="progress-text">${done}/${total}</span>
-                        </div>
-                        <div class="show-card-footer">
-                            <span>${total} Episodes</span>
-                            <span class="available-until">${availableUntil ? 'Until ' + formatDate(availableUntil) : 'No upcoming'}</span>
                         </div>
                     </div>
-                `;
-            }).join('');
+                    <div class="show-card-title">DOG SHOW</div>
+                    <div class="show-card-schedule">
+                        <span class="schedule-tag tag-live">🎥 LIVE Wed</span>
+                        <span class="schedule-tag tag-replay">🔄 REPLAY Sat</span>
+                    </div>
+                    <div class="show-card-progress">
+                        <div class="progress-bar">
+                            <div class="fill" style="width:${percent}%;"></div>
+                        </div>
+                        <span class="progress-text">${done}/${total}</span>
+                    </div>
+                    <div class="show-card-footer">
+                        <span>${total} Episodes</span>
+                        <span class="available-until">${availableUntil ? 'Until ' + formatDate(availableUntil) : 'No upcoming'}</span>
+                    </div>
+                </div>
+            `;
         }
 
-        // Toggle dropdown menu
         function toggleMenu(event, el) {
             event.stopPropagation();
             const menu = el.nextElementSibling;
-            // Close all other menus
             document.querySelectorAll('.dropdown-menu.show').forEach(m => {
                 if (m !== menu) m.classList.remove('show');
             });
             menu.classList.toggle('show');
         }
 
-        // Close dropdown when clicking elsewhere
         document.addEventListener('click', function() {
             document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
         });
 
-        // Open show detail
-        function openShow(showTitle) {
-            currentShow = showTitle;
+        function openDogShow() {
+            currentView = 'detail';
             document.getElementById('mainView').classList.add('hidden');
             document.getElementById('detailView').classList.remove('hidden');
             document.getElementById('backBtn').classList.remove('hidden');
-            document.getElementById('pageTitle').textContent = showTitle;
-            document.getElementById('episodesTitle').textContent = `${showTitle} - Available Episodes`;
+            document.getElementById('pageTitle').textContent = '🐕 DOG SHOW Tracker';
             calendarWeekOffset = 0;
             renderCalendar();
             renderEpisodeList();
         }
 
-        // Show main view
         function showMainView() {
-            currentShow = null;
+            currentView = 'main';
             document.getElementById('mainView').classList.remove('hidden');
             document.getElementById('detailView').classList.add('hidden');
             document.getElementById('backBtn').classList.add('hidden');
             document.getElementById('pageTitle').textContent = '📺 Shows Dashboard';
-            renderShowsGrid();
         }
 
-        // Delete show
-        async function deleteShow(showTitle) {
-            if (!confirm(`Are you sure you want to delete "${showTitle}"?`)) return;
-            try {
-                const { error } = await supabaseClient
-                    .from('classic_titles')
-                    .delete()
-                    .eq('title', showTitle);
-                if (error) throw error;
-                await loadAllData();
-            } catch (err) {
-                alert('Failed to delete: ' + err.message);
-            }
-        }
-
-        // Render calendar
         function renderCalendar() {
-            if (!currentShow) return;
             const grid = document.getElementById('calendarGrid');
             const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -751,28 +733,20 @@
             document.getElementById('weekLabel').textContent = 
                 `${formatDate(startOfWeek.toISOString().split('T')[0])} – ${formatDate(endOfWeek.toISOString().split('T')[0])}`;
 
-            const showEpisodes = allEpisodes.filter(ep => ep.show_title === currentShow);
-            const liveReplay = isLiveReplayShow(currentShow);
-
             grid.innerHTML = daysOfWeek.map((day, idx) => {
                 const date = new Date(startOfWeek);
                 date.setDate(startOfWeek.getDate() + idx);
                 const dateStr = date.toISOString().split('T')[0];
                 const dayName = dayNames[idx];
                 
-                const isLiveDay = liveReplay && dayName === 'Wednesday';
-                const isReplayDay = liveReplay && dayName === 'Saturday';
+                const isLiveDay = dayName === 'Wednesday';
+                const isReplayDay = dayName === 'Saturday';
                 
                 let episodesOnThisDay = [];
                 if (isLiveDay) {
-                    episodesOnThisDay = showEpisodes.filter(ep => ep.air_date === dateStr);
+                    episodesOnThisDay = dogShowEpisodes.filter(ep => ep.live_date === dateStr);
                 } else if (isReplayDay) {
-                    episodesOnThisDay = showEpisodes.filter(ep => {
-                        const replayDate = getReplayDate(ep.air_date);
-                        return replayDate === dateStr;
-                    });
-                } else if (!liveReplay) {
-                    episodesOnThisDay = showEpisodes.filter(ep => ep.air_date === dateStr);
+                    episodesOnThisDay = dogShowEpisodes.filter(ep => ep.replay_date === dateStr);
                 }
 
                 const isToday = dateStr === today.toISOString().split('T')[0];
@@ -785,7 +759,7 @@
                         ${isReplayDay ? '<div class="day-badge badge-replay">REPLAY</div>' : ''}
                         ${episodesOnThisDay.map(ep => `
                             <div class="episode-in-day">
-                                ${isLiveDay ? '🎥' : isReplayDay ? '🔄' : '📺'} EP ${ep.episode_name.split(' - ')[0].replace('EPISODE ', '')}
+                                ${isLiveDay ? '🎥' : '🔄'} ${ep.episode_number || 'EP'}
                             </div>
                         `).join('')}
                     </div>
@@ -793,41 +767,36 @@
             }).join('');
         }
 
-        // Render episode list
         function renderEpisodeList() {
-            if (!currentShow) return;
             const list = document.getElementById('episodeList');
-            const showEpisodes = allEpisodes.filter(ep => ep.show_title === currentShow);
-            const completed = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done').length;
-            const total = showEpisodes.length;
-            const liveReplay = isLiveReplayShow(currentShow);
+            const completed = dogShowEpisodes.filter(ep => ep.status === true).length;
+            const total = dogShowEpisodes.length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
             
-            document.getElementById('progressText').textContent = `${completed}/${total} Completed`;
+            document.getElementById('progressText').textContent = `${completed}/${total}`;
+            document.getElementById('progressFill').style.width = `${percent}%`;
+            document.getElementById('episodesTitle').textContent = `Available Episodes`;
 
-            if (!showEpisodes.length) {
-                list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">No episodes found</div>';
+            if (!dogShowEpisodes.length) {
+                list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">No episodes found. Add episodes via SQL.</div>';
                 return;
             }
 
-            list.innerHTML = showEpisodes.map(ep => {
-                const isCompleted = ep.status === true || ep.status === 'Done';
-                const replayDate = liveReplay ? getReplayDate(ep.air_date) : null;
-                const isOverdue = !isCompleted && new Date(ep.air_date + 'T00:00:00') < new Date();
+            list.innerHTML = dogShowEpisodes.map(ep => {
+                const isCompleted = ep.status === true;
+                const isOverdue = !isCompleted && ep.live_date && new Date(ep.live_date + 'T00:00:00') < new Date();
                 
                 return `
-                    <div class="episode-item ${isCompleted ? 'completed' : ''}" onclick="toggleEpisode(${ep.id}, ${isCompleted})">
+                    <div class="episode-item ${isCompleted ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}" onclick="toggleEpisode(${ep.id}, ${isCompleted})">
                         <div class="episode-checkbox ${isCompleted ? 'checked' : ''}">
                             ${isCompleted ? '<i class="fa-solid fa-check"></i>' : ''}
                         </div>
                         <div class="episode-info">
-                            <div class="episode-name">${ep.episode_name || 'Episode'}</div>
+                            <div class="episode-name">${ep.episode_number || ''}${ep.episode_name ? ' - ' + ep.episode_name : ''}</div>
+                            ${ep.location ? `<div class="episode-location">📍 ${ep.location}</div>` : ''}
                             <div class="episode-dates">
-                                ${liveReplay ? `
-                                    <span class="live">🎥 LIVE:</span> ${formatDate(ep.air_date)} 
-                                    | <span class="replay">🔄 REPLAY:</span> ${formatDate(replayDate)}
-                                ` : `
-                                    📅 ${formatDate(ep.air_date)}
-                                `}
+                                <span class="live">🎥 LIVE:</span> ${formatDate(ep.live_date)} 
+                                | <span class="replay">🔄 REPLAY:</span> ${formatDate(ep.replay_date)}
                             </div>
                         </div>
                         <div class="episode-status ${isCompleted ? 'status-done' : (isOverdue ? 'status-overdue' : 'status-pending')}">
@@ -838,36 +807,35 @@
             }).join('');
         }
 
-        // Toggle episode status
         async function toggleEpisode(episodeId, currentStatus) {
             try {
                 const { error } = await supabaseClient
-                    .from('classic_episodes')
+                    .from('dog_show_episodes')
                     .update({ status: !currentStatus })
                     .eq('id', episodeId);
                 
                 if (error) throw error;
-                await loadAllData();
-                // Re-render current view
-                if (currentShow) {
-                    renderCalendar();
-                    renderEpisodeList();
-                }
+                
+                // Update local data
+                const ep = dogShowEpisodes.find(e => e.id === episodeId);
+                if (ep) ep.status = !currentStatus;
+                
+                renderCalendar();
+                renderEpisodeList();
+                renderShowsGrid();
             } catch (err) {
                 console.error('Toggle error:', err);
                 alert('Failed to update episode status');
             }
         }
 
-        // Change week
         function changeWeek(direction) {
             calendarWeekOffset += direction;
             renderCalendar();
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            loadAllData();
+            loadDogShowData();
         });
     </script>
 </body>
