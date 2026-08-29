@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Show Tracker · City Work</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #EFF2F6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .header .status {
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+        .btn-back {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .btn-back:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        /* Main View - Show Cards Grid */
+        .shows-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 16px;
+        }
+        @media (min-width: 640px) {
+            .shows-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 1024px) {
+            .shows-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .show-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+        .show-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .show-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .show-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: #f3e8ff;
+            color: #9333ea;
+        }
+        .show-icon.dog { background: #fef3c7; color: #d97706; }
+        .show-icon.tv { background: #dcfce7; color: #16a34a; }
+        .show-icon.film { background: #e0f2fe; color: #2563eb; }
+        .show-icon.game { background: #fce7f3; color: #db2777; }
+
+        .menu-container {
+            position: relative;
+        }
+        .menu-dots {
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.6;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        .menu-dots:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            opacity: 1;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            padding: 6px 0;
+            min-width: 120px;
+            z-index: 10;
+        }
+        .dropdown-menu.show {
+            display: block;
+        }
+        .dropdown-item {
+            padding: 8px 16px;
+            font-size: 13px;
+            color: #333333;
+            cursor: pointer;
+            white-space: nowrap;
+            text-align: left;
+        }
+        .dropdown-item:hover {
+            background-color: #f4f6f9;
+        }
+        .dropdown-item.delete {
+            color: #ef4444;
+        }
+        .dropdown-item.delete:hover {
+            background-color: #fee2e2;
+        }
+
+        .show-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+        .show-card-schedule {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .schedule-tag {
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .tag-live {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .tag-replay {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .tag-normal {
+            background: #e0f2fe;
+            color: #2563eb;
+        }
+
+        .show-card-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            border-radius: 999px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2563eb, #22c55e);
+            border-radius: 999px;
+            transition: width 0.6s ease;
+        }
+        .progress-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .show-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .available-until {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        /* Detail View - Weekly Calendar */
+        .detail-view {
+            display: none;
+        }
+
+        .calendar-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .calendar-nav button {
+            background: #f1f5f9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .calendar-nav button:hover {
+            background: #e2e8f0;
+            color: #2563eb;
+        }
+        .calendar-nav .week-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        @media (max-width: 768px) {
+            .calendar-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .calendar-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .calendar-day {
+            background: #fafafa;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px;
+            min-height: 80px;
+            position: relative;
+        }
+        .calendar-day.today {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .calendar-day.live-day {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+        .calendar-day.replay-day {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .calendar-day .day-name {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        .calendar-day .day-number {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .calendar-day .day-badge {
+            font-size: 8px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+        .badge-live {
+            background: #22c55e;
+            color: white;
+        }
+        .badge-replay {
+            background: #f59e0b;
+            color: white;
+        }
+        .calendar-day .episode-in-day {
+            font-size: 9px;
+            color: #475569;
+            font-weight: 600;
+            padding: 3px 6px;
+            background: white;
+            border-radius: 4px;
+            margin-top: 4px;
+            border: 1px solid #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Episode Checklist */
+        .episodes-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .episodes-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .episodes-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .episodes-header .progress {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .episode-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .episode-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .episode-item:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        .episode-item.completed {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .episode-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .episode-checkbox.checked {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: white;
+        }
+
+        .episode-info {
+            flex: 1;
+        }
+        .episode-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+        .episode-dates {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .episode-dates .live {
+            color: #22c55e;
+            font-weight: 600;
+        }
+        .episode-dates .replay {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        .episode-status {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        .status-done {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-pending {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+        .status-overdue {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <button class="btn-back hidden" id="backBtn" onclick="showMainView()">
+                    <i class="fa-solid fa-arrow-left"></i> All Shows
+                </button>
+                <h1 id="pageTitle">📺 Shows Dashboard</h1>
+            </div>
+            <span id="statusBadge" class="status" style="background:#fef3c7;color:#92400e;">⏳ Connecting...</span>
+        </div>
+
+        <!-- Main View - Show Cards -->
+        <div id="mainView">
+            <div class="shows-grid" id="showsGrid">
+                <!-- Cards will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Detail View - Weekly Calendar + Episodes -->
+        <div id="detailView" class="detail-view">
+            <!-- Weekly Calendar -->
+            <div class="calendar-card">
+                <div class="calendar-nav">
+                    <button onclick="changeWeek(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span class="week-label" id="weekLabel">Loading...</span>
+                    <button onclick="changeWeek(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <!-- Episode Checklist -->
+            <div class="episodes-card">
+                <div class="episodes-header">
+                    <h2 id="episodesTitle">Available Episodes</h2>
+                    <span class="progress" id="progressText">0/0 Completed</span>
+                </div>
+                <div class="episode-list" id="episodeList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase setup
+        const SUPABASE_URL = window.design.supabase.url;
+        const SUPABASE_ANON_KEY = window.design.supabase.anonKey;
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let allShows = [];
+        let allEpisodes = [];
+        let allSchedule = [];
+        let currentShow = null;
+        let calendarWeekOffset = 0;
+
+        // Set status
+        function setStatus(text, type) {
+            const badge = document.getElementById('statusBadge');
+            const colors = {
+                ok: { bg: '#dcfce7', color: '#166534' },
+                error: { bg: '#fee2e2', color: '#991b1b' },
+                waiting: { bg: '#fef3c7', color: '#92400e' }
+            };
+            const s = colors[type] || colors.waiting;
+            badge.style.background = s.bg;
+            badge.style.color = s.color;
+            badge.textContent = text;
+        }
+
+        // Format date
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Get replay date (3 days after live)
+        function getReplayDate(liveDate) {
+            if (!liveDate) return null;
+            const d = new Date(liveDate + 'T00:00:00');
+            d.setDate(d.getDate() + 3);
+            return d.toISOString().split('T')[0];
+        }
+
+        // Check if show has live/replay pattern
+        function isLiveReplayShow(showTitle) {
+            const schedule = allSchedule.filter(s => s.title === showTitle);
+            const days = schedule.map(s => s.day);
+            return days.includes('Wednesday') && days.includes('Saturday');
+        }
+
+        // Get show icon
+        function getShowIcon(title) {
+            if (title.includes('DOG')) return '🐕';
+            if (title.includes('POPEYE')) return '⚓';
+            if (title.includes('CHARLIE')) return '🎩';
+            if (title.includes('JOHNNY')) return '🎙️';
+            if (title.includes('LINE')) return '🎮';
+            return '📺';
+        }
+
+        // Get icon class
+        function getIconClass(title) {
+            if (title.includes('DOG')) return 'dog';
+            if (title.includes('POPEYE')) return 'tv';
+            if (title.includes('CHARLIE')) return 'film';
+            if (title.includes('LINE')) return 'game';
+            return '';
+        }
+
+        // Load all data
+        async function loadAllData() {
+            setStatus('⏳ Loading...', 'waiting');
+            try {
+                const [titlesRes, episodesRes, scheduleRes] = await Promise.all([
+                    supabaseClient.from('classic_titles').select('*').order('title'),
+                    supabaseClient.from('classic_episodes').select('*').order('air_date', { ascending: true }),
+                    supabaseClient.from('classic_schedule').select('*')
+                ]);
+
+                if (titlesRes.error) throw titlesRes.error;
+                if (episodesRes.error) throw episodesRes.error;
+                if (scheduleRes.error) throw scheduleRes.error;
+
+                allShows = titlesRes.data || [];
+                allEpisodes = episodesRes.data || [];
+                allSchedule = scheduleRes.data || [];
+
+                renderShowsGrid();
+                setStatus('✅ Live', 'ok');
+            } catch (err) {
+                console.error('Load error:', err);
+                setStatus('❌ Error', 'error');
+            }
+        }
+
+        // Render shows grid
+        function renderShowsGrid() {
+            const grid = document.getElementById('showsGrid');
+            
+            if (!allShows.length) {
+                grid.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;grid-column:1/-1;">No shows yet. Add shows via SQL or Supabase.</div>';
+                return;
+            }
+
+            grid.innerHTML = allShows.map(show => {
+                const showEpisodes = allEpisodes.filter(ep => ep.show_title === show.title);
+                const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done').length;
+                const total = showEpisodes.length;
+                const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+                const schedule = allSchedule.filter(s => s.title === show.title);
+                const liveReplay = isLiveReplayShow(show.title);
+                
+                // Calculate available until (latest future to-air episode)
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const futureToAir = showEpisodes.filter(ep => {
+                    if (ep.status === true || ep.status === 'Done') return false;
+                    if (!ep.air_date) return false;
+                    const airDate = new Date(ep.air_date + 'T00:00:00');
+                    return airDate >= today;
+                });
+                const availableUntil = futureToAir.length > 0 
+                    ? futureToAir.map(ep => ep.air_date).sort().pop() 
+                    : null;
+
+                return `
+                    <div class="show-card" onclick="openShow('${show.title.replace(/'/g, "\\'")}')">
+                        <div class="show-card-header">
+                            <div class="show-icon ${getIconClass(show.title)}">${getShowIcon(show.title)}</div>
+                            <div class="menu-container" onclick="event.stopPropagation();">
+                                <div class="menu-dots" onclick="toggleMenu(event, this)">•••</div>
+                                <div class="dropdown-menu">
+                                    <div class="dropdown-item" onclick="openShow('${show.title.replace(/'/g, "\\'")}')">View Details</div>
+                                    <div class="dropdown-item delete" onclick="deleteShow('${show.title.replace(/'/g, "\\'")}')">Delete Show</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="show-card-title">${show.title}</div>
+                        <div class="show-card-schedule">
+                            ${liveReplay ? `
+                                <span class="schedule-tag tag-live">🎥 LIVE Wed</span>
+                                <span class="schedule-tag tag-replay">🔄 REPLAY Sat</span>
+                            ` : schedule.map(s => `
+                                <span class="schedule-tag tag-normal">${s.day.substring(0,3)} ${s.time_slot || ''}</span>
+                            `).join('')}
+                        </div>
+                        <div class="show-card-progress">
+                            <div class="progress-bar">
+                                <div class="fill" style="width:${percent}%;"></div>
+                            </div>
+                            <span class="progress-text">${done}/${total}</span>
+                        </div>
+                        <div class="show-card-footer">
+                            <span>${total} Episodes</span>
+                            <span class="available-until">${availableUntil ? 'Until ' + formatDate(availableUntil) : 'No upcoming'}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle dropdown menu
+        function toggleMenu(event, el) {
+            event.stopPropagation();
+            const menu = el.nextElementSibling;
+            // Close all other menus
+            document.querySelectorAll('.dropdown-menu.show').forEach(m => {
+                if (m !== menu) m.classList.remove('show');
+            });
+            menu.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking elsewhere
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
+        });
+
+        // Open show detail
+        function openShow(showTitle) {
+            currentShow = showTitle;
+            document.getElementById('mainView').classList.add('hidden');
+            document.getElementById('detailView').classList.remove('hidden');
+            document.getElementById('backBtn').classList.remove('hidden');
+            document.getElementById('pageTitle').textContent = showTitle;
+            document.getElementById('episodesTitle').textContent = `${showTitle} - Available Episodes`;
+            calendarWeekOffset = 0;
+            renderCalendar();
+            renderEpisodeList();
+        }
+
+        // Show main view
+        function showMainView() {
+            currentShow = null;
+            document.getElementById('mainView').classList.remove('hidden');
+            document.getElementById('detailView').classList.add('hidden');
+            document.getElementById('backBtn').classList.add('hidden');
+            document.getElementById('pageTitle').textContent = '📺 Shows Dashboard';
+            renderShowsGrid();
+        }
+
+        // Delete show
+        async function deleteShow(showTitle) {
+            if (!confirm(`Are you sure you want to delete "${showTitle}"?`)) return;
+            try {
+                const { error } = await supabaseClient
+                    .from('classic_titles')
+                    .delete()
+                    .eq('title', showTitle);
+                if (error) throw error;
+                await loadAllData();
+            } catch (err) {
+                alert('Failed to delete: ' + err.message);
+            }
+        }
+
+        // Render calendar
+        function renderCalendar() {
+            if (!currentShow) return;
+            const grid = document.getElementById('calendarGrid');
+            const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (calendarWeekOffset * 7));
+
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            document.getElementById('weekLabel').textContent = 
+                `${formatDate(startOfWeek.toISOString().split('T')[0])} – ${formatDate(endOfWeek.toISOString().split('T')[0])}`;
+
+            const showEpisodes = allEpisodes.filter(ep => ep.show_title === currentShow);
+            const liveReplay = isLiveReplayShow(currentShow);
+
+            grid.innerHTML = daysOfWeek.map((day, idx) => {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + idx);
+                const dateStr = date.toISOString().split('T')[0];
+                const dayName = dayNames[idx];
+                
+                const isLiveDay = liveReplay && dayName === 'Wednesday';
+                const isReplayDay = liveReplay && dayName === 'Saturday';
+                
+                let episodesOnThisDay = [];
+                if (isLiveDay) {
+                    episodesOnThisDay = showEpisodes.filter(ep => ep.air_date === dateStr);
+                } else if (isReplayDay) {
+                    episodesOnThisDay = showEpisodes.filter(ep => {
+                        const replayDate = getReplayDate(ep.air_date);
+                        return replayDate === dateStr;
+                    });
+                } else if (!liveReplay) {
+                    episodesOnThisDay = showEpisodes.filter(ep => ep.air_date === dateStr);
+                }
+
+                const isToday = dateStr === today.toISOString().split('T')[0];
+                
+                return `
+                    <div class="calendar-day ${isToday ? 'today' : ''} ${isLiveDay ? 'live-day' : ''} ${isReplayDay ? 'replay-day' : ''}">
+                        <div class="day-name">${day}</div>
+                        <div class="day-number">${date.getDate()}</div>
+                        ${isLiveDay ? '<div class="day-badge badge-live">LIVE</div>' : ''}
+                        ${isReplayDay ? '<div class="day-badge badge-replay">REPLAY</div>' : ''}
+                        ${episodesOnThisDay.map(ep => `
+                            <div class="episode-in-day">
+                                ${isLiveDay ? '🎥' : isReplayDay ? '🔄' : '📺'} EP ${ep.episode_name.split(' - ')[0].replace('EPISODE ', '')}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render episode list
+        function renderEpisodeList() {
+            if (!currentShow) return;
+            const list = document.getElementById('episodeList');
+            const showEpisodes = allEpisodes.filter(ep => ep.show_title === currentShow);
+            const completed = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done').length;
+            const total = showEpisodes.length;
+            const liveReplay = isLiveReplayShow(currentShow);
+            
+            document.getElementById('progressText').textContent = `${completed}/${total} Completed`;
+
+            if (!showEpisodes.length) {
+                list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">No episodes found</div>';
+                return;
+            }
+
+            list.innerHTML = showEpisodes.map(ep => {
+                const isCompleted = ep.status === true || ep.status === 'Done';
+                const replayDate = liveReplay ? getReplayDate(ep.air_date) : null;
+                const isOverdue = !isCompleted && new Date(ep.air_date + 'T00:00:00') < new Date();
+                
+                return `
+                    <div class="episode-item ${isCompleted ? 'completed' : ''}" onclick="toggleEpisode(${ep.id}, ${isCompleted})">
+                        <div class="episode-checkbox ${isCompleted ? 'checked' : ''}">
+                            ${isCompleted ? '<i class="fa-solid fa-check"></i>' : ''}
+                        </div>
+                        <div class="episode-info">
+                            <div class="episode-name">${ep.episode_name || 'Episode'}</div>
+                            <div class="episode-dates">
+                                ${liveReplay ? `
+                                    <span class="live">🎥 LIVE:</span> ${formatDate(ep.air_date)} 
+                                    | <span class="replay">🔄 REPLAY:</span> ${formatDate(replayDate)}
+                                ` : `
+                                    📅 ${formatDate(ep.air_date)}
+                                `}
+                            </div>
+                        </div>
+                        <div class="episode-status ${isCompleted ? 'status-done' : (isOverdue ? 'status-overdue' : 'status-pending')}">
+                            ${isCompleted ? '✅ Done' : (isOverdue ? '⚠️ Overdue' : '⏳ To Air')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle episode status
+        async function toggleEpisode(episodeId, currentStatus) {
+            try {
+                const { error } = await supabaseClient
+                    .from('classic_episodes')
+                    .update({ status: !currentStatus })
+                    .eq('id', episodeId);
+                
+                if (error) throw error;
+                await loadAllData();
+                // Re-render current view
+                if (currentShow) {
+                    renderCalendar();
+                    renderEpisodeList();
+                }
+            } catch (err) {
+                console.error('Toggle error:', err);
+                alert('Failed to update episode status');
+            }
+        }
+
+        // Change week
+        function changeWeek(direction) {
+            calendarWeekOffset += direction;
+            renderCalendar();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllData();
+        });
+    </script>
+</body>
+</html>
