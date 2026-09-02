@@ -904,6 +904,29 @@
             document.getElementById('weekLabel').textContent = `${formatDate(startOfWeek)} – ${formatDate(endOfWeek)}`;
         }
 
+        // ─── RENDER SHOW SCHEDULE (MISSING FUNCTION) ────────────
+        function renderShowSchedule(containerId, data) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            if (!data.length) {
+                container.innerHTML = '<div class="schedule-day"><span class="time">—</span><span class="title">No schedule items</span></div>';
+                return;
+            }
+            const availableUntil = calculateAvailableUntil(currentShowTitle);
+            container.innerHTML = data.map(item => `
+                <div class="schedule-day" data-schedule-id="${item.id}">
+                    <span class="day-label editable-cell" onclick="editScheduleDay(this, '${item.id}')" title="Click to edit day">
+                        ${esc(item.day || '—')} <span class="edit-icon">✏️</span>
+                    </span>
+                    <span class="time editable-cell" onclick="editScheduleTime(this, '${item.id}')" title="Click to edit time">
+                        ${esc(item.time_slot || '—')} <span class="edit-icon">✏️</span>
+                    </span>
+                    <span class="available-until">${availableUntil ? formatDate(availableUntil) : '—'}</span>
+                    <button class="btn-delete-episode" onclick="deleteScheduleItem('${item.id}')" style="margin-left:auto;"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            `).join('');
+        }
+
         // ─── RENDER SHOW VIEW ─────────────────────────────────────
         function renderShowView(showTitle) {
             const show = allShows.find(s => s.title === showTitle);
