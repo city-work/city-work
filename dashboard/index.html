@@ -10,6 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
+    <!-- Anime.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -93,6 +96,33 @@
             overflow: hidden;
         }
 
+        /* Expanded sidebar on large screens */
+        @media (min-width: 1024px) {
+            .sidebar {
+                min-width: 200px;
+                max-width: 200px;
+            }
+            .sidebar-item .label,
+            .sidebar-signout .label {
+                display: inline !important;
+                margin-left: 8px;
+            }
+            .sidebar-item,
+            .sidebar-signout {
+                justify-content: flex-start;
+                padding-left: 1rem;
+            }
+            .sidebar-item .icon,
+            .sidebar-signout .icon {
+                width: auto;
+                margin-right: 0;
+            }
+            .sidebar-item .tooltip,
+            .sidebar-signout .tooltip {
+                display: none;
+            }
+        }
+
         .sidebar-scroll {
             flex: 1;
             overflow-y: auto;
@@ -120,6 +150,7 @@
             position: relative;
             width: 100%;
             margin-bottom: 2px;
+            white-space: nowrap;
         }
         .sidebar-item .icon {
             font-size: 1.1rem;
@@ -214,6 +245,7 @@
             background: transparent;
             width: 100%;
             position: relative;
+            white-space: nowrap;
         }
         .sidebar-signout .icon {
             font-size: 1.1rem;
@@ -449,22 +481,38 @@
             border: 1px solid rgba(24, 32, 47, 0.08);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
+        .welcome-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1rem;
+            background: #DCE1E6;
+            color: #B8734F;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
 
         .hidden {
             display: none !important;
         }
 
         /* ─── RESPONSIVE ─── */
-        @media (max-width: 1024px) {
+        @media (max-width: 1023px) {
             .sidebar {
-                min-width: 50px;
-                max-width: 50px;
+                min-width: 60px;
+                max-width: 60px;
             }
-            .sidebar-item .icon {
-                font-size: 0.95rem;
+            .sidebar-item .label,
+            .sidebar-signout .label {
+                display: none !important;
             }
-            .sidebar-signout .icon {
-                font-size: 0.95rem;
+            .sidebar-item,
+            .sidebar-signout {
+                justify-content: center;
+                padding-left: 0.5rem;
             }
         }
 
@@ -552,7 +600,7 @@
             }
         }
 
-        /* ─── FADE IN ─── */
+        /* ─── FADE IN (fallback) ─── */
         .fade-in {
             animation: fadeIn 0.25s ease-out;
         }
@@ -574,7 +622,7 @@
     <!-- ═══ FULL PAGE APP ═══ -->
     <div class="app-container">
 
-        <!-- ═══ GRAY GLASS SIDEBAR ═══ -->
+        <!-- ═══ SIDEBAR ═══ -->
         <aside class="sidebar">
             <!-- Brand -->
             <div class="px-2 py-4 border-b border-black/5 flex items-center justify-center flex-shrink-0">
@@ -690,7 +738,7 @@
                     </div>
                     <div class="mt-6">
                         <div class="welcome-card p-6 text-center">
-                            <div class="text-6xl mb-4">🏗️</div>
+                            <div class="welcome-icon">CW</div>
                             <h2 class="text-lg font-bold text-midnight">Welcome to City Work</h2>
                             <p class="text-sm text-slateblue mt-1">Select a module from the sidebar to get started.</p>
                             <div class="mt-4 flex flex-wrap gap-2 justify-center">
@@ -908,6 +956,36 @@
                 return role === 'admin' ? 'Admin' : 'User';
             }
 
+            // ─── ANIME.JS INTEGRATION ────────────────────────────────────
+            function animatePanelIn(panel) {
+                anime({
+                    targets: panel,
+                    opacity: [0, 1],
+                    translateY: [10, 0],
+                    duration: 400,
+                    easing: 'easeOutCubic'
+                });
+            }
+
+            function animateIconHover(element) {
+                anime({
+                    targets: element,
+                    scale: [1, 1.2, 1],
+                    duration: 400,
+                    easing: 'easeOutElastic(1, .5)'
+                });
+            }
+
+            function pulseStatusBadge() {
+                anime({
+                    targets: statusBadge,
+                    scale: [1, 1.05, 1],
+                    duration: 1000,
+                    loop: true,
+                    easing: 'easeInOutQuad'
+                });
+            }
+
             // ─── AUTH ──────────────────────────────────────────────────────
             async function checkSession() {
                 if (!supabase) {
@@ -918,6 +996,7 @@
                 }
 
                 setStatus('<span class="spinner"></span> Connecting...', 'waiting');
+                pulseStatusBadge(); // subtle pulse while connecting
 
                 try {
                     const { data, error } = await supabase.auth.getSession();
@@ -969,12 +1048,16 @@
                     setStatus(`✅ ${roleDisplay}`, 'ok');
                     userInfo.textContent = `Logged in as ${roleDisplay}`;
 
+                    // Stop pulse animation after login
+                    anime.remove(statusBadge);
+
                     console.log('✅ [AUTH] Session valid – role:', role);
 
                 } catch (err) {
                     console.error('❌ [AUTH] Error:', err.message);
                     setStatus('❌ Connection error', 'error');
                     showMessage('Failed to connect: ' + err.message + ' – click Retry', 'error');
+                    anime.remove(statusBadge);
                 }
             }
 
@@ -996,6 +1079,7 @@
                 const target = document.getElementById('panel-' + panelId);
                 if (target) {
                     target.classList.add('active');
+                    animatePanelIn(target);
                 }
 
                 document.querySelectorAll('.sidebar-item').forEach(item => {
@@ -1173,6 +1257,39 @@
                 }
             });
 
+            // ─── ANIME.JS HOVER EFFECTS ─────────────────────────────────
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    const icon = this.querySelector('.icon');
+                    if (icon) animateIconHover(icon);
+                });
+            });
+
+            document.querySelectorAll('.archive-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    const arrow = this.querySelector('.fa-arrow-right');
+                    if (arrow) {
+                        anime({
+                            targets: arrow,
+                            translateX: [0, 5],
+                            duration: 300,
+                            easing: 'easeOutQuad'
+                        });
+                    }
+                });
+                card.addEventListener('mouseleave', function() {
+                    const arrow = this.querySelector('.fa-arrow-right');
+                    if (arrow) {
+                        anime({
+                            targets: arrow,
+                            translateX: [5, 0],
+                            duration: 300,
+                            easing: 'easeOutQuad'
+                        });
+                    }
+                });
+            });
+
             // ─── INIT ────────────────────────────────────────────────────
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('📄 [DOM] Ready – initializing...');
@@ -1180,11 +1297,23 @@
                 logoutBtn.addEventListener('click', logoutUser);
                 buildSearchIndex();
 
+                // Animate welcome icon on load
+                const welcomeIcon = document.querySelector('.welcome-icon');
+                if (welcomeIcon) {
+                    anime({
+                        targets: welcomeIcon,
+                        scale: [0.5, 1],
+                        opacity: [0, 1],
+                        duration: 800,
+                        easing: 'easeOutElastic(1, .5)'
+                    });
+                }
+
                 setTimeout(() => {
                     checkSession();
                 }, 100);
 
-                console.log('✅ [INIT] City Work Dashboard ready (with Classics link)');
+                console.log('✅ [INIT] City Work Dashboard ready (with anime.js & responsive sidebar)');
             });
 
             // Expose functions globally
