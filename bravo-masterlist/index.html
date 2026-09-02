@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bravo Masterlist · ArchiveHub</title>
+    <title>Executive Lounge · Bravo Masterlist</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
@@ -35,283 +35,597 @@
     </script>
 
     <style>
-        /* ─── RESET & BASE ─── */
-        * { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
-        body { width: 100%; height: 100%; overflow: hidden; background: #DCE1E6; color: #18202F; }
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .fade-in { animation: fadeIn 0.25s ease-out; }
-        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+        /* ═══ FULL‑SCREEN LAYOUT (same as dashboard/classics) ═══ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #DCE1E6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
 
         /* ─── STATUS BADGE ─── */
         .status-ok { background: #e2e8f0; color: #18202F; border-color: #94a3b8; }
         .status-error { background: #f5e6e6; color: #7a3b3b; border-color: #c9a1a1; }
         .status-waiting { background: #f0ebe6; color: #6b5d4d; border-color: #cdbfae; }
-        .status-badge-top { font-size: 0.65rem; font-weight: 600; padding: 0.2rem 0.7rem; border-radius: 9999px; border: 1px solid; display: inline-flex; align-items: center; gap: 0.4rem; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status-badge-top {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.2rem 0.7rem;
+            border-radius: 9999px;
+            border: 1px solid;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
         .status-dot.green { background: #22c55e; }
         .status-dot.amber { background: #eab308; animation: pulse 1.5s ease-in-out infinite; }
         .status-dot.red { background: #ef4444; }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
-        /* ─── SIDEBAR ─── */
-        .left-rail-full {
-            width: 200px; background: #FAF7F2; border-right: 1px solid rgba(24,32,47,0.08);
-            padding: 1.25rem 0.75rem; display: flex; flex-direction: column; gap: 0.2rem;
-            overflow-y: auto; flex-shrink: 0; transition: width 0.3s ease;
+        /* ═══ SIDEBAR ═══ */
+        .sidebar {
+            background: rgba(220, 225, 230, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(24, 32, 47, 0.08);
+            min-width: 60px;
+            max-width: 60px;
+            transition: all 0.3s ease;
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.03);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow: hidden;
         }
-        .left-rail-full.sidebar-collapsed { width: 56px; padding: 0.75rem 0.4rem; }
-        .left-rail-full.sidebar-collapsed .brand h2,
-        .left-rail-full.sidebar-collapsed .brand .badge,
-        .left-rail-full.sidebar-collapsed .nav-item span,
-        .left-rail-full.sidebar-collapsed .sidebar-label,
-        .left-rail-full.sidebar-collapsed .priority-filter-rail span { display: none; }
-        .left-rail-full.sidebar-collapsed .nav-item,
-        .left-rail-full.sidebar-collapsed .priority-filter-rail { justify-content: center; padding: 0.5rem; }
-        .left-rail-full.sidebar-collapsed .nav-item i,
-        .left-rail-full.sidebar-collapsed .priority-filter-rail i { margin-right: 0; }
-        .left-rail-full.sidebar-collapsed .brand { padding: 0 0.2rem 0.5rem 0.2rem; justify-content: center; }
-        .left-rail-full.sidebar-collapsed .brand .icon-box { width: 28px; height: 28px; font-size: 0.7rem; }
+        @media (min-width: 1024px) {
+            .sidebar:not(.sidebar-collapsed) {
+                min-width: 200px;
+                max-width: 200px;
+            }
+            .sidebar:not(.sidebar-collapsed) .sidebar-item .label,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout .label {
+                display: inline !important;
+                margin-left: 8px;
+            }
+            .sidebar:not(.sidebar-collapsed) .sidebar-item,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout {
+                justify-content: flex-start;
+                padding-left: 1rem;
+            }
+            .sidebar:not(.sidebar-collapsed) .sidebar-item .icon,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout .icon {
+                width: auto;
+                margin-right: 0;
+            }
+            .sidebar:not(.sidebar-collapsed) .sidebar-item .tooltip,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout .tooltip {
+                display: none;
+            }
+        }
+        .sidebar.sidebar-collapsed {
+            min-width: 60px;
+            max-width: 60px;
+        }
+        .sidebar.sidebar-collapsed .sidebar-item .label,
+        .sidebar.sidebar-collapsed .sidebar-signout .label {
+            display: none !important;
+        }
+        .sidebar.sidebar-collapsed .sidebar-item,
+        .sidebar.sidebar-collapsed .sidebar-signout {
+            justify-content: center;
+            padding-left: 0.5rem;
+        }
 
-        .left-rail-full .brand {
-            display: flex; align-items: center; gap: 0.6rem; padding: 0 0.5rem 0.75rem 0.5rem;
-            border-bottom: 1px solid rgba(24,32,47,0.08); margin-bottom: 0.5rem;
+        .sidebar-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 8px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
-        .left-rail-full .brand .icon-box {
-            width: 32px; height: 32px; background: #18202F; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center; color: #FAF7F2; font-size: 0.9rem;
+        .sidebar-scroll::-webkit-scrollbar { width: 0; background: transparent; }
+
+        .sidebar-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #68748A;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            position: relative;
+            width: 100%;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            border: none;
+            background: transparent;
         }
-        .left-rail-full .brand h2 { font-size: 0.9rem; font-weight: 700; color: #18202F; }
-        .left-rail-full .brand .badge {
-            font-size: 0.45rem; background: rgba(184,115,79,0.15); color: #B8734F;
-            padding: 0.1rem 0.4rem; border-radius: 999px; font-weight: 600; margin-left: auto;
+        .sidebar-item .icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .sidebar-item .label { display: none; }
+        .sidebar-item:hover {
+            background: rgba(184, 115, 79, 0.15);
+            color: #9D5D3C;
+        }
+        .sidebar-item:hover .icon { transform: scale(1.15); }
+        .sidebar-item.active {
+            background: rgba(184, 115, 79, 0.2);
+            color: #9D5D3C;
+        }
+        .sidebar-item.active .icon { transform: scale(1.1); }
+
+        .sidebar-item .tooltip {
+            position: absolute;
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: #18202F;
+            color: #FAF7F2;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+        .sidebar-item .tooltip::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-right: 6px solid #18202F;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+        }
+        .sidebar-item:hover .tooltip { opacity: 1; }
+
+        .sidebar-divider {
+            border-top: 1px solid rgba(24, 32, 47, 0.08);
+            margin: 4px 12px;
         }
 
         .sidebar-label {
-            font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; color: #68748A;
-            font-weight: 700; padding: 0.4rem 0.5rem 0.2rem 0.5rem;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94a3b8;
+            padding: 0.5rem 0.75rem 0.25rem;
+            font-weight: 600;
         }
-        .sidebar-divider { border: none; border-top: 1px solid rgba(24,32,47,0.08); margin: 0.3rem 0; }
 
-        /* ─── NAV ITEMS ─── */
-        .nav-item {
-            padding: 0.5rem 0.8rem; border-radius: 0.75rem; font-size: 0.85rem; font-weight: 600;
-            color: #68748A; transition: all 0.15s; cursor: pointer; display: flex; align-items: center;
-            gap: 0.6rem; border: none; background: transparent; width: 100%; text-align: left; outline: none;
+        .brand-city { color: #18202F; }
+        .brand-work { color: #B8734F; }
+
+        .sidebar-signout {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #68748A;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            width: 100%;
+            position: relative;
+            white-space: nowrap;
         }
-        .nav-item:hover { background: rgba(184,115,79,0.1); color: #B8734F; }
-        .nav-item-active { background: rgba(184,115,79,0.2); color: #B8734F; }
-        .nav-item:focus-visible,
-        .priority-filter-rail:focus-visible,
-        button:focus-visible { outline: 2px solid #B8734F; outline-offset: 2px; }
-
-        .priority-filter-rail {
-            padding: 0.3rem 0.8rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600;
-            cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 0.5rem;
-            border: none; background: transparent; width: 100%; text-align: left; outline: none;
+        .sidebar-signout .icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+            transition: all 0.2s ease;
         }
-        .priority-filter-rail:hover { background: rgba(184,115,79,0.1); }
-        .priority-filter-rail-active { background: rgba(184,115,79,0.2); color: #B8734F; box-shadow: 0 1px 4px rgba(184,115,79,0.15); }
-
-        /* ─── BUTTONS ─── */
-        .btn-signout {
-            background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; transition: all 0.2s ease;
-            font-weight: 600; padding: 0.3rem 0.9rem; border-radius: 9999px; font-size: 0.7rem;
-            display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; margin-top: auto;
-            border: none; background: transparent; width: 100%;
+        .sidebar-signout .label { display: none; }
+        .sidebar-signout:hover {
+            background: rgba(184, 115, 79, 0.15);
+            color: #9D5D3C;
         }
-        .btn-signout:hover { background: #fee2e2; border-color: #ef4444; transform: scale(1.02); }
+        .sidebar-signout:hover .icon { transform: scale(1.15); }
 
-        /* ─── MAIN CONTENT ─── */
+        .sidebar-signout .tooltip {
+            position: absolute;
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: #18202F;
+            color: #FAF7F2;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+        .sidebar-signout .tooltip::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-right: 6px solid #18202F;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+        }
+        .sidebar-signout:hover .tooltip { opacity: 1; }
+
+        /* ═══ MAIN CONTENT ═══ */
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            background: #DCE1E6;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        header {
+            background: #DCE1E6;
+            border-bottom: 1px solid rgba(24, 32, 47, 0.08);
+            flex-shrink: 0;
+            padding: 0.75rem 1.5rem;
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            min-height: 0;
+        }
+        .scrollable-content::-webkit-scrollbar { width: 5px; }
+        .scrollable-content::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
+
+        /* ─── CONTENT CARDS ─── */
         .date-card-compact {
-            padding: 0.75rem 1rem; background: #FAF7F2; border: 1px solid rgba(24,32,47,0.08);
-            border-radius: 0.6rem; transition: all 0.2s; cursor: pointer;
+            padding: 0.75rem 1rem;
+            background: #FAF7F2;
+            border: 1px solid rgba(24, 32, 47, 0.08);
+            border-radius: 0.6rem;
+            transition: all 0.2s;
+            cursor: pointer;
         }
-        .date-card-compact:hover { border-color: #B8734F; box-shadow: 0 2px 8px -4px rgba(184,115,79,0.15); transform: translateX(4px); }
-
+        .date-card-compact:hover {
+            border-color: #B8734F;
+            box-shadow: 0 2px 8px -4px rgba(184, 115, 79, 0.15);
+            transform: translateX(4px);
+        }
         .date-note {
-            font-size: 0.6rem; color: #B8734F; background: #FAF7F2; padding: 0.05rem 0.3rem;
-            border-radius: 0.3rem; border: 1px dashed #cbd5e1; cursor: text; min-height: 1.2rem;
-            margin: 0.1rem 0; width: 100%; outline: none; transition: border-color 0.2s, background 0.2s;
+            font-size: 0.6rem;
+            color: #B8734F;
+            background: #FAF7F2;
+            padding: 0.05rem 0.3rem;
+            border-radius: 0.3rem;
+            border: 1px dashed #cbd5e1;
+            cursor: text;
+            min-height: 1.5rem;
+            margin: 0.1rem 0;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
         }
         .date-note:focus { border-color: #B8734F; background: #FFFFFF; }
-        .date-note:empty::before { content: "📝 Click to add note..."; color: #94a3b8; }
+        .date-note:empty::before {
+            content: "✏️ Click to add note...";
+            color: #94a3b8;
+        }
         .date-note:not(:empty)::before { content: ""; }
         .date-note:hover { border-style: solid; }
 
+        /* ─── MODAL ─── */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(4px);
-            z-index: 50; display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
         }
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
         .modal-card {
-            background: #FAF7F2; border-radius: 1.5rem; max-width: 800px; width: 95%;
-            max-height: 85vh; overflow-y: auto; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            transform: scale(0.95) translateY(10px); transition: transform 0.25s ease;
+            background: #FAF7F2;
+            border-radius: 1.5rem;
+            max-width: 800px;
+            width: 95%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.25s ease;
         }
         .modal-overlay.open .modal-card { transform: scale(1) translateY(0); }
 
-        .priority-groups-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        /* ─── PRIORITY TABLE ─── */
+        .priority-groups-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
         .priority-groups-table th {
-            text-align: left; padding: 0.6rem 0.8rem; font-weight: 600; font-size: 0.55rem;
-            text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8;
-            border-bottom: 2px solid rgba(24,32,47,0.1); background: #FAF7F2;
+            text-align: left;
+            padding: 0.6rem 0.8rem;
+            font-weight: 600;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #94a3b8;
+            border-bottom: 2px solid rgba(24,32,47,0.1);
+            background: #FAF7F2;
         }
         .priority-groups-table td {
-            padding: 0.6rem 0.8rem; border-bottom: 1px solid rgba(24,32,47,0.05);
-            color: #18202F; vertical-align: middle;
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid rgba(24,32,47,0.05);
+            color: #18202F;
+            vertical-align: middle;
         }
         .priority-groups-table tr:last-child td { border-bottom: none; }
         .priority-groups-table tr:hover td { background: rgba(220,225,230,0.3); }
 
-        .priority-a { background: #f5e6e6; color: #7a3b3b; }
-        .priority-b { background: #f0ebe6; color: #6b5d4d; }
-        .priority-c { background: #dbeafe; color: #1e40af; }
+        /* Muted priority colours */
+        .priority-a { background: rgba(184,115,79,0.12); color: #7a3b3b; }
+        .priority-b { background: rgba(184,115,79,0.08); color: #6b5d4d; }
+        .priority-c { background: rgba(100,116,139,0.12); color: #1e40af; }
 
         .year-header {
-            display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem;
-            background: #FAF7F2; border: 1px solid rgba(24,32,47,0.08); border-radius: 0.5rem;
-            cursor: pointer; transition: background 0.15s; margin-bottom: 0.5rem; width: 100%;
-            border: none; text-align: left; font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: #FAF7F2;
+            border: 1px solid rgba(24,32,47,0.08);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-bottom: 0.5rem;
+            width: 100%;
+            border: none;
+            text-align: left;
+            font-size: 0.85rem;
         }
         .year-header:hover { background: rgba(220,225,230,0.4); }
         .year-content { display: block; }
         .year-content.collapsed { display: none; }
 
         #loadingSpinner {
-            display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;
-            flex-direction: column; gap: 1rem;
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
         }
         #loadingSpinner .spinner {
-            width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #B8734F;
-            border-radius: 50%; animation: spin 0.8s linear infinite;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #B8734F;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ─── SEARCH BAR (moved to main content) ─── */
+        /* Search bar */
         .search-bar {
-            display: flex; align-items: center; background: #FAF7F2; border-radius: 0.6rem;
-            padding: 0.25rem 0.7rem; border: 1px solid rgba(24,32,47,0.1); transition: all 0.2s;
-            max-width: 300px; margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            background: #FAF7F2;
+            border-radius: 0.6rem;
+            padding: 0.25rem 0.7rem;
+            border: 1px solid rgba(24,32,47,0.1);
+            transition: all 0.2s;
+            max-width: 300px;
         }
-        .search-bar:focus-within { border-color: #B8734F; background: #FFFFFF; box-shadow: 0 0 0 3px rgba(184,115,79,0.1); }
-        .search-bar input { border: none; background: transparent; outline: none; padding: 0.25rem 0; font-size: 0.75rem; width: 100%; color: #18202F; }
+        .search-bar:focus-within {
+            border-color: #B8734F;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(184,115,79,0.1);
+        }
+        .search-bar input {
+            border: none;
+            background: transparent;
+            outline: none;
+            padding: 0.25rem 0;
+            font-size: 0.75rem;
+            width: 100%;
+            color: #18202F;
+        }
         .search-bar input::placeholder { color: #94a3b8; }
         .search-bar i { color: #94a3b8; font-size: 0.75rem; margin-right: 0.4rem; }
 
+        .btn-export {
+            background: #18202F;
+            color: #FAF7F2;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-export:hover { background: #2d3a4f; transform: scale(1.02); }
+
+        /* Responsive */
+        @media (max-width: 1023px) {
+            .sidebar { min-width: 60px; max-width: 60px; }
+            .sidebar-item .label,
+            .sidebar-signout .label { display: none !important; }
+            .sidebar-item,
+            .sidebar-signout { justify-content: center; padding-left: 0.5rem; }
+        }
         @media (max-width: 768px) {
-            .left-rail-full { width: 56px; padding: 0.75rem 0.4rem; }
-            .left-rail-full:not(.sidebar-collapsed) .brand h2,
-            .left-rail-full:not(.sidebar-collapsed) .brand .badge,
-            .left-rail-full:not(.sidebar-collapsed) .nav-item span,
-            .left-rail-full:not(.sidebar-collapsed) .sidebar-label,
-            .left-rail-full:not(.sidebar-collapsed) .priority-filter-rail span { display: none; }
-            .left-rail-full:not(.sidebar-collapsed) .nav-item,
-            .left-rail-full:not(.sidebar-collapsed) .priority-filter-rail { justify-content: center; padding: 0.5rem; }
-            .left-rail-full:not(.sidebar-collapsed) .nav-item i,
-            .left-rail-full:not(.sidebar-collapsed) .priority-filter-rail i { margin-right: 0; }
-            .left-rail-full:not(.sidebar-collapsed) .brand { padding: 0 0.2rem 0.5rem 0.2rem; justify-content: center; }
-            .left-rail-full:not(.sidebar-collapsed) .brand .icon-box { width: 28px; height: 28px; font-size: 0.7rem; }
-            .left-rail-full.sidebar-expanded .brand h2,
-            .left-rail-full.sidebar-expanded .brand .badge,
-            .left-rail-full.sidebar-expanded .nav-item span,
-            .left-rail-full.sidebar-expanded .sidebar-label,
-            .left-rail-full.sidebar-expanded .priority-filter-rail span { display: inline !important; }
-            .left-rail-full.sidebar-expanded .nav-item,
-            .left-rail-full.sidebar-expanded .priority-filter-rail { justify-content: flex-start; padding: 0.5rem 0.8rem; }
-            .left-rail-full.sidebar-expanded .nav-item i,
-            .left-rail-full.sidebar-expanded .priority-filter-rail i { margin-right: 0.6rem; }
+            .sidebar { min-width: 50px; max-width: 50px; }
+            .sidebar-item .icon { font-size: 0.95rem; }
+            .sidebar-signout .icon { font-size: 0.95rem; }
+            header { padding: 0.5rem 1rem; min-height: 56px; }
+            .scrollable-content { padding: 1rem; }
+        }
+        @media (max-width: 480px) {
+            .sidebar { min-width: 44px; max-width: 44px; }
+            .sidebar-item, .sidebar-signout { padding: 0.35rem; }
+            .sidebar-item .icon, .sidebar-signout .icon { font-size: 0.85rem; width: 20px; }
+            .brand-city, .brand-work { font-size: 0.8rem; }
+            .search-input { width: 100px; font-size: 0.65rem; padding: 0.25rem 1.6rem 0.25rem 1.4rem; }
+            .search-input:focus { width: 130px; }
+            header { padding: 0.4rem 0.75rem; min-height: 48px; }
+            .scrollable-content { padding: 0.75rem; }
         }
     </style>
 </head>
+<body>
 
-<body class="h-screen w-screen bg-mist flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden text-midnight antialiased font-sans">
+    <!-- ═══ FULL‑SCREEN APP CONTAINER ═══ -->
+    <div class="app-container">
 
-    <!-- ─── LOADING SPINNER ─── -->
-    <div id="loadingSpinner">
-        <div class="spinner"></div>
-        <p class="text-sm font-medium text-slateblue">Loading Bravo Masterlist...</p>
-    </div>
-
-    <div class="bg-warmwhite w-full max-w-[1440px] h-full max-h-[920px] rounded-3xl shadow-2xl flex border border-slate-200/80 overflow-hidden relative">
-
-        <!-- ═══ LEFT RAIL ═══ -->
-        <aside class="left-rail-full custom-scrollbar" id="sidebar">
-            <div class="brand">
-                <div class="icon-box"><i class="fa-solid fa-box-archive"></i></div>
-                <h2>Archive<span style="color:#B8734F;">Hub</span></h2>
-                <span class="badge">Bravo</span>
+        <!-- ═══ SIDEBAR ═══ -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Brand -->
+            <div class="px-2 py-4 border-b border-black/5 flex items-center justify-center flex-shrink-0">
+                <span class="text-lg font-extrabold tracking-tight whitespace-nowrap">
+                    <span class="brand-city">EL</span><span class="brand-work">·</span><span class="brand-city">Bravo</span>
+                </span>
             </div>
 
-            <div class="sidebar-label">Menu</div>
-            <button onclick="switchView('masterlist')" class="nav-item nav-item-active" id="nav-masterlist">
-                <i class="fa-solid fa-list-check text-sm w-5 text-center"></i>
-                <span>Masterlist</span>
-            </button>
-            <button onclick="switchView('priority')" class="nav-item" id="nav-priority">
-                <i class="fa-solid fa-flag text-sm w-5 text-center"></i>
-                <span>Priority</span>
-            </button>
+            <!-- Navigation -->
+            <nav class="sidebar-scroll" id="sidebarNav">
+                <button class="sidebar-item active" onclick="switchView('masterlist')">
+                    <span class="icon"><i class="fa-solid fa-list-check"></i></span>
+                    <span class="label">Masterlist</span>
+                    <span class="tooltip">Masterlist</span>
+                </button>
+                <button class="sidebar-item" onclick="switchView('priority')">
+                    <span class="icon"><i class="fa-solid fa-flag"></i></span>
+                    <span class="label">Priority</span>
+                    <span class="tooltip">Priority</span>
+                </button>
 
-            <hr class="sidebar-divider" />
+                <div class="sidebar-divider"></div>
 
-            <!-- Year Filter (Masterlist only) -->
-            <div id="yearSection">
-                <div class="sidebar-label"><i class="fa-solid fa-calendar"></i> Years</div>
-                <div class="space-y-0.5" id="year-filter">
-                    <button onclick="filterYear('all')" class="nav-item nav-item-active" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
-                        <i class="fa-solid fa-calendar text-sm w-5 text-center"></i>
-                        <span>All Years</span>
-                    </button>
+                <!-- Year filter (Masterlist only) -->
+                <div id="yearSection">
+                    <div class="sidebar-label"><i class="fa-solid fa-calendar"></i> Years</div>
+                    <div class="space-y-0.5" id="year-filter">
+                        <button onclick="filterYear('all')" class="sidebar-item active" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
+                            <span class="icon"><i class="fa-solid fa-calendar text-sm w-5 text-center"></i></span>
+                            <span class="label">All Years</span>
+                            <span class="tooltip">All Years</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Priority Filter (Priority only) -->
-            <div id="priorityFilterSection" style="display:none;">
-                <div class="sidebar-label"><i class="fa-solid fa-flag"></i> Priority</div>
-                <div class="space-y-0.5">
-                    <button onclick="filterPriorityRail('all')" class="priority-filter-rail priority-filter-rail-active" data-priority="all">
-                        <i class="fa-solid fa-list text-sm w-5 text-center"></i> All
-                    </button>
-                    <button onclick="filterPriorityRail('A')" class="priority-filter-rail" data-priority="A">
-                        <span class="w-5 text-center"><i class="fa-solid fa-circle"></i></span> A – Top Priority
-                    </button>
-                    <button onclick="filterPriorityRail('B')" class="priority-filter-rail" data-priority="B">
-                        <span class="w-5 text-center"><i class="fa-solid fa-circle"></i></span> B – Mid Priority
-                    </button>
-                    <button onclick="filterPriorityRail('C')" class="priority-filter-rail" data-priority="C">
-                        <span class="w-5 text-center"><i class="fa-solid fa-circle"></i></span> C – Lower Priority
-                    </button>
+                <!-- Priority filter (Priority only) -->
+                <div id="priorityFilterSection" style="display:none;">
+                    <div class="sidebar-label"><i class="fa-solid fa-flag"></i> Priority</div>
+                    <div class="space-y-0.5">
+                        <button onclick="filterPriorityRail('all')" class="sidebar-item active" data-priority="all">
+                            <span class="icon"><i class="fa-solid fa-list"></i></span>
+                            <span class="label">All</span>
+                            <span class="tooltip">All</span>
+                        </button>
+                        <button onclick="filterPriorityRail('A')" class="sidebar-item" data-priority="A">
+                            <span class="icon"><i class="fa-solid fa-circle" style="color:#7a3b3b;"></i></span>
+                            <span class="label">A – Top Priority</span>
+                            <span class="tooltip">A – Top Priority</span>
+                        </button>
+                        <button onclick="filterPriorityRail('B')" class="sidebar-item" data-priority="B">
+                            <span class="icon"><i class="fa-solid fa-circle" style="color:#6b5d4d;"></i></span>
+                            <span class="label">B – Mid Priority</span>
+                            <span class="tooltip">B – Mid Priority</span>
+                        </button>
+                        <button onclick="filterPriorityRail('C')" class="sidebar-item" data-priority="C">
+                            <span class="icon"><i class="fa-solid fa-circle" style="color:#1e40af;"></i></span>
+                            <span class="label">C – Lower Priority</span>
+                            <span class="tooltip">C – Lower Priority</span>
+                        </button>
+                    </div>
                 </div>
+
+                <div class="sidebar-divider"></div>
+
+                <button class="sidebar-item" onclick="window.location.href='../index.html'">
+                    <span class="icon"><i class="fa-solid fa-arrow-left"></i></span>
+                    <span class="label">Back to Dashboard</span>
+                    <span class="tooltip">Back to Dashboard</span>
+                </button>
+            </nav>
+
+            <!-- Bottom: Sign Out -->
+            <div class="px-2 py-3 border-t border-black/5 flex-shrink-0">
+                <button class="sidebar-signout" id="logoutBtn">
+                    <span class="icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
+                    <span class="label">Sign Out</span>
+                    <span class="tooltip">Sign Out</span>
+                </button>
             </div>
-
-            <hr class="sidebar-divider" />
-
-            <!-- Back to Dashboard -->
-            <button class="nav-item" onclick="window.location.href='../dashboard/index.html'">
-                <i class="fa-solid fa-arrow-left text-sm w-5 text-center"></i>
-                <span>Back to Dashboard</span>
-            </button>
-            <!-- Sign Out -->
-            <button class="nav-item" onclick="logoutUser()" style="color:#ef4444; margin-top:auto; border:none; background:transparent;">
-                <i class="fa-solid fa-sign-out-alt text-sm w-5 text-center" style="color:#ef4444;"></i>
-                <span>Sign Out</span>
-            </button>
         </aside>
 
         <!-- ═══ MAIN CONTENT ═══ -->
-        <div class="flex-1 flex flex-col h-full overflow-hidden relative bg-mist">
+        <div class="main-content">
 
-            <header class="px-6 sm:px-8 py-5 bg-white/90 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between shrink-0 z-10">
+            <!-- ═══ HEADER ═══ -->
+            <header>
                 <div class="flex items-center gap-3">
                     <button onclick="toggleSidebar()" class="w-8 h-8 rounded-full bg-mist hover:bg-slate-200 text-slateblue transition flex items-center justify-center" title="Toggle sidebar">
                         <i class="fa-solid fa-bars"></i>
                     </button>
-                    <span id="viewTitle" class="text-base font-semibold text-midnight">Masterlist</span>
+                    <span id="viewTitle" class="text-sm font-semibold text-midnight whitespace-nowrap">Masterlist</span>
                 </div>
                 <div class="flex items-center gap-3">
                     <span id="statusBadge" class="status-badge-top status-waiting">
@@ -320,19 +634,24 @@
                 </div>
             </header>
 
-            <div class="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
+            <!-- ═══ SCROLLABLE CONTENT ═══ -->
+            <div class="scrollable-content" id="scrollableContent">
 
-                <!-- ═══ MASTERLIST VIEW ═══ -->
+                <!-- ─── MASTERLIST VIEW ─── -->
                 <div id="masterlist-view">
                     <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
                         <div>
-                            <h2 class="text-xl font-extrabold text-midnight tracking-tight"><i class="fa-solid fa-list-check"></i> Bravo Masterlist</h2>
+                            <h2 class="text-xl font-extrabold text-midnight tracking-tight"><i class="fa-solid fa-list-check"></i> Executive Lounge Masterlist</h2>
                             <p class="text-xs text-slateblue mt-0.5" id="masterlistInfo">All entries organized by date.</p>
                         </div>
-                        <!-- Search moved here -->
-                        <div class="search-bar">
-                            <i class="fa-solid fa-search"></i>
-                            <input type="text" id="searchInput" placeholder="Search title or artist..." oninput="handleSearch()" />
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <div class="search-bar">
+                                <i class="fa-solid fa-search"></i>
+                                <input type="text" id="searchInput" placeholder="Search title or artist..." oninput="handleSearch()" />
+                            </div>
+                            <button class="btn-export" onclick="exportCSV()">
+                                <i class="fa-solid fa-download"></i> Export CSV
+                            </button>
                         </div>
                     </div>
                     <div id="masterlist-content">
@@ -340,13 +659,13 @@
                     </div>
                 </div>
 
-                <!-- ═══ PRIORITY VIEW ═══ -->
+                <!-- ─── PRIORITY VIEW ─── -->
                 <div id="priority-view" class="hidden">
                     <div class="mb-6">
                         <h2 class="text-xl font-extrabold text-midnight tracking-tight"><i class="fa-solid fa-flag"></i> Priority Groups</h2>
                         <p class="text-xs text-slateblue mt-0.5" id="priorityInfo">Entries grouped by priority level.</p>
                     </div>
-                    <div id="priority-content" class="priority-full-height">
+                    <div id="priority-content">
                         <div class="text-center text-slateblue text-sm py-8"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>
                     </div>
                 </div>
@@ -371,11 +690,11 @@
     </div>
 
     <script>
-        // (Same JavaScript as previous revision, but with minor adjustments for removed elements)
-        // I'll include a shortened version here focusing on the essential functions
+        // Complete JavaScript (same as previous, but with updated selectors and layout)
         (function() {
             'use strict';
-            // Supabase config from config.js
+
+            // Supabase config
             let SUPABASE_URL, SUPABASE_ANON_KEY;
             try {
                 if (typeof design !== 'undefined' && design.supabase) {
@@ -385,7 +704,16 @@
                     throw new Error('design.supabase not found');
                 }
             } catch (e) {
-                document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#18202F;padding:20px;font-family:Plus Jakarta Sans,sans-serif;"><div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);"><i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#B8734F;margin-bottom:12px;"></i><h2 style="font-size:20px;font-weight:700;color:#FAF7F2;">Configuration Error</h2><p style="color:rgba(250,247,242,0.7);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#B8734F;">config.js</code>.</p><a href="../../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#B8734F;color:#FAF7F2;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a></div></div>`;
+                document.body.innerHTML = `
+                    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#18202F;padding:20px;font-family:Plus Jakarta Sans,sans-serif;">
+                        <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#B8734F;margin-bottom:12px;"></i>
+                            <h2 style="font-size:20px;font-weight:700;color:#FAF7F2;">Configuration Error</h2>
+                            <p style="color:rgba(250,247,242,0.7);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#B8734F;">config.js</code>.</p>
+                            <a href="../../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#B8734F;color:#FAF7F2;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a>
+                        </div>
+                    </div>
+                `;
                 return;
             }
 
@@ -400,7 +728,6 @@
                 }
             } catch (e) { console.warn('Supabase not loaded'); }
 
-            // DOM refs
             const $ = id => document.getElementById(id);
             const masterlistContent = $('masterlist-content');
             const priorityContent = $('priority-content');
@@ -415,7 +742,6 @@
             const priorityFilterSection = $('priorityFilterSection');
             const viewTitle = $('viewTitle');
 
-            // State
             let masterlistData = [];
             let priorityData = [];
             let dateNotes = {};
@@ -426,38 +752,620 @@
             let userRole = 'user';
             let userEmail = 'Unknown';
 
-            function setStatus(text, type) { /* same as before */ }
-            function esc(s) { /* same */ }
-            function formatDateDisplay(dateStr) { /* same */ }
-            function parseDateFlexible(dateStr) { /* simplified for brevity */ }
-            function getNormalizedDate(dateStr) { /* same */ }
-            function getPriorityClass(p) { /* same */ }
+            function setStatus(text, type) {
+                const colors = { ok: 'status-ok', error: 'status-error', waiting: 'status-waiting' };
+                const dots = { ok: 'green', error: 'red', waiting: 'amber' };
+                statusBadge.className = `status-badge-top ${colors[type] || 'status-waiting'}`;
+                statusBadge.innerHTML = `<span class="status-dot ${dots[type] || 'amber'}"></span> ${text}`;
+            }
 
-            async function fetchAllRows(tableName) { /* same */ }
+            function esc(s) {
+                if (s == null || s === '') return '—';
+                return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
 
-            async function checkSession() { /* same but without userInfo display */ }
+            function formatDateDisplay(dateStr) {
+                if (!dateStr) return '—';
+                const d = parseDateFlexible(dateStr);
+                if (d && !isNaN(d)) {
+                    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                }
+                return dateStr;
+            }
 
-            async function fetchAllData() { /* same */ }
+            function parseDateFlexible(dateStr) {
+                if (!dateStr) return null;
+                const cleaned = dateStr.trim();
+                let match = cleaned.match(/(\d{4})-(\d{2})-(\d{2})/);
+                if (match) return new Date(parseInt(match[1]), parseInt(match[2])-1, parseInt(match[3]));
+                match = cleaned.match(/(\w+)\s+(\d{1,2}),?\s*(\d{4})/);
+                if (match) {
+                    const monthMap = { 'january':0,'february':1,'march':2,'april':3,'may':4,'june':5,'july':6,'august':7,'september':8,'october':9,'november':10,'december':11 };
+                    const month = monthMap[match[1].toLowerCase()];
+                    if (month !== undefined) return new Date(parseInt(match[3]), month, parseInt(match[2]));
+                }
+                match = cleaned.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                if (match) {
+                    const a = parseInt(match[1]), b = parseInt(match[2]), year = parseInt(match[3]);
+                    if (a > 12) return new Date(year, b-1, a);
+                    else return new Date(year, a-1, b);
+                }
+                match = cleaned.match(/(\d{1,2})-(\d{1,2})-(\d{4})/);
+                if (match) return new Date(parseInt(match[3]), parseInt(match[2])-1, parseInt(match[1]));
+                match = cleaned.match(/(\w+)\s+(\d{4})/);
+                if (match) {
+                    const monthMap = { 'january':0,'february':1,'march':2,'april':3,'may':4,'june':5,'july':6,'august':7,'september':8,'october':9,'november':10,'december':11 };
+                    const month = monthMap[match[1].toLowerCase()];
+                    if (month !== undefined) return new Date(parseInt(match[2]), month, 1);
+                }
+                match = cleaned.match(/^(\d{4})$/);
+                if (match) return new Date(parseInt(match[1]), 0, 1);
+                match = cleaned.match(/(\w+)\s+(\d{1,2})/);
+                if (match) {
+                    const monthMap = { 'january':0,'february':1,'march':2,'april':3,'may':4,'june':5,'july':6,'august':7,'september':8,'october':9,'november':10,'december':11 };
+                    const month = monthMap[match[1].toLowerCase()];
+                    if (month !== undefined) return new Date(new Date().getFullYear(), month, parseInt(match[2]));
+                }
+                return null;
+            }
 
-            function renderYearFilter() { /* same */ }
-            window.filterYear = function(year) { /* same */ };
-            window.handleSearch = function() { /* same */ };
-            window.saveDateNote = async function(dateKey, note) { /* same */ };
+            function getNormalizedDate(dateStr) {
+                if (!dateStr) return null;
+                const d = parseDateFlexible(dateStr);
+                if (d && !isNaN(d)) {
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                }
+                return null;
+            }
 
-            function renderMasterlist() { /* same but using more spacing */ }
-            window.openMasterlistModal = function(dateKey) { /* same but handle unknown */ };
+            function getPriorityClass(p) {
+                const map = { 'A': 'priority-a', 'B': 'priority-b', 'C': 'priority-c' };
+                return map[p] || '';
+            }
 
-            function renderPriorityGroups() { /* same */ }
-            function renderPriorityGroup(priority, entries, label) { /* same */ }
-            window.filterPriorityRail = function(priority) { /* same */ };
+            async function fetchAllRows(tableName) {
+                let allData = [];
+                let page = 0;
+                const pageSize = 1000;
+                let more = true;
+                while (more) {
+                    const { data, error } = await supabaseClient
+                        .from(tableName)
+                        .select('*')
+                        .order('DATE', { ascending: true })
+                        .range(page * pageSize, (page + 1) * pageSize - 1);
+                    if (error) throw error;
+                    if (!data || data.length === 0) more = false;
+                    else {
+                        allData = allData.concat(data);
+                        page++;
+                        if (data.length < pageSize) more = false;
+                    }
+                }
+                return allData;
+            }
 
-            window.switchView = function(view) { /* same, with animations */ };
-            window.toggleYear = function(yearId) { /* same */ };
-            window.logoutUser = async function() { /* with confirm */ };
-            window.closeModal = function() { /* same */ };
-            window.toggleSidebar = function() { /* same */ };
+            async function checkSession() {
+                loadingSpinner.style.display = 'flex';
+                setStatus('Checking...', 'waiting');
+                if (!supabaseClient) {
+                    setStatus('⚠️ No Supabase', 'error');
+                    loadingSpinner.style.display = 'none';
+                    return;
+                }
+                try {
+                    const { data, error } = await supabaseClient.auth.getSession();
+                    if (error) throw error;
+                    const session = data?.session;
+                    if (!session || !session.user) {
+                        setStatus('🔓 Not logged in', 'error');
+                        loadingSpinner.style.display = 'none';
+                        setTimeout(() => { window.location.href = '../../index.html'; }, 1500);
+                        return;
+                    }
+                    userEmail = session.user.email;
+                    let role = 'user';
+                    try {
+                        const { data: profile } = await supabaseClient
+                            .from('profiles')
+                            .select('role')
+                            .eq('id', session.user.id)
+                            .maybeSingle();
+                        if (!profile) {
+                            await supabaseClient.from('profiles').insert({
+                                id: session.user.id,
+                                email: session.user.email,
+                                role: 'user'
+                            });
+                        } else if (profile.role) {
+                            role = profile.role;
+                        }
+                    } catch (e) { console.warn('Profile fetch error:', e.message); }
+                    userRole = role;
+                    const roleDisplay = role === 'admin' ? '👑 Admin' : '👤 User';
+                    setStatus(`✅ ${roleDisplay}`, 'ok');
+                    localStorage.setItem('archivehub_user', JSON.stringify({
+                        id: session.user.id,
+                        email: session.user.email,
+                        role: role,
+                        session: session
+                    }));
+                    await fetchAllData();
+                } catch (err) {
+                    console.error('Session error:', err);
+                    setStatus('❌ Connection error', 'error');
+                } finally {
+                    loadingSpinner.style.display = 'none';
+                }
+            }
 
-            document.addEventListener('DOMContentLoaded', function() { /* init */ });
+            async function fetchAllData() {
+                if (!supabaseClient) return;
+                try {
+                    const [master, priority, notes] = await Promise.all([
+                        fetchAllRows(MASTERLIST_TABLE),
+                        fetchAllRows(PRIORITIZATION_TABLE),
+                        fetchAllRows(DATE_NOTES_TABLE)
+                    ]);
+                    masterlistData = master || [];
+                    priorityData = priority || [];
+                    dateNotes = {};
+                    (notes || []).forEach(n => {
+                        dateNotes[n.DATE] = n.NOTES;
+                    });
+                    renderYearFilter();
+                    renderMasterlist();
+                    renderPriorityGroups();
+                } catch (err) {
+                    console.error('Fetch error:', err);
+                    masterlistContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>`;
+                    priorityContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ ${esc(err.message)}</div>`;
+                }
+            }
+
+            function renderYearFilter() {
+                const years = new Set();
+                masterlistData.forEach(e => {
+                    const d = parseDateFlexible(e.DATE);
+                    if (d && !isNaN(d)) years.add(d.getFullYear());
+                });
+                const sortedYears = Array.from(years).sort((a, b) => b - a);
+                if (!sortedYears.length) {
+                    yearFilter.innerHTML = `
+                        <button onclick="filterYear('all')" class="sidebar-item active" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
+                            <span class="icon"><i class="fa-solid fa-calendar text-sm w-5 text-center"></i></span>
+                            <span class="label">All Years</span>
+                            <span class="tooltip">All Years</span>
+                        </button>
+                        <div style="color:#68748A;font-size:0.65rem;padding:0.3rem 0.8rem;">No years found</div>
+                    `;
+                    return;
+                }
+                let html = `
+                    <button onclick="filterYear('all')" class="sidebar-item ${currentYear === 'all' ? 'active' : ''}" id="year-all" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
+                        <span class="icon"><i class="fa-solid fa-calendar text-sm w-5 text-center"></i></span>
+                        <span class="label">All Years</span>
+                        <span class="tooltip">All Years</span>
+                    </button>
+                `;
+                sortedYears.forEach(year => {
+                    const count = masterlistData.filter(e => {
+                        const d = parseDateFlexible(e.DATE);
+                        return d && !isNaN(d) && d.getFullYear() === year;
+                    }).length;
+                    html += `
+                        <button onclick="filterYear('${year}')" class="sidebar-item ${currentYear === String(year) ? 'active' : ''}" data-year="${year}" style="font-size:0.75rem; padding:0.3rem 0.8rem; display:flex; justify-content:space-between;">
+                            <span><i class="fa-solid fa-folder text-sm w-5 text-center" style="color:#B8734F;"></i> ${year}</span>
+                            <span style="font-size:0.6rem; color:#94a3b8; background:rgba(0,0,0,0.05); padding:0.05rem 0.4rem; border-radius:999px;">${count}</span>
+                        </button>
+                    `;
+                });
+                yearFilter.innerHTML = html;
+            }
+
+            window.filterYear = function(year) {
+                currentYear = String(year);
+                document.querySelectorAll('#year-filter .sidebar-item').forEach(el => {
+                    el.classList.remove('active');
+                    if (el.dataset.year === year || (year === 'all' && el.id === 'year-all')) {
+                        el.classList.add('active');
+                    }
+                });
+                if (currentView === 'masterlist') renderMasterlist();
+            };
+
+            window.handleSearch = function() {
+                searchTerm = searchInput.value.toLowerCase().trim();
+                if (currentView === 'masterlist') renderMasterlist();
+            };
+
+            window.saveDateNote = async function(dateKey, note) {
+                if (!supabaseClient) return;
+                try {
+                    const trimmed = note.trim();
+                    if (!trimmed) {
+                        await supabaseClient.from(DATE_NOTES_TABLE).delete().eq('DATE', dateKey);
+                        delete dateNotes[dateKey];
+                        renderMasterlist();
+                        return;
+                    }
+                    const { error } = await supabaseClient
+                        .from(DATE_NOTES_TABLE)
+                        .upsert({ DATE: dateKey, NOTES: trimmed, updated_at: new Date().toISOString() });
+                    if (!error) {
+                        dateNotes[dateKey] = trimmed;
+                        renderMasterlist();
+                    }
+                } catch (err) {
+                    console.error('Save note error:', err);
+                    alert('Failed to save note');
+                }
+            };
+
+            function renderMasterlist() {
+                let filteredData = masterlistData;
+                if (currentYear !== 'all') {
+                    const yearNum = parseInt(currentYear);
+                    filteredData = filteredData.filter(e => {
+                        const d = parseDateFlexible(e.DATE);
+                        return d && !isNaN(d) && d.getFullYear() === yearNum;
+                    });
+                }
+                if (searchTerm) {
+                    filteredData = filteredData.filter(e => {
+                        const title = (e.TITLE || '').toLowerCase();
+                        const artist = (e.ARTIST || '').toLowerCase();
+                        return title.includes(searchTerm) || artist.includes(searchTerm);
+                    });
+                }
+                if (!filteredData.length) {
+                    masterlistContent.innerHTML = `
+                        <div class="text-center text-slateblue text-sm py-8">
+                            <i class="fa-solid fa-search text-2xl mb-2"></i><br>
+                            No entries found${searchTerm ? ' matching "' + searchTerm + '"' : ''}${currentYear !== 'all' ? ' in ' + currentYear : ''}
+                        </div>
+                    `;
+                    return;
+                }
+                const grouped = {};
+                filteredData.forEach(row => {
+                    const key = getNormalizedDate(row.DATE) || '__unknown__';
+                    if (!grouped[key]) grouped[key] = [];
+                    grouped[key].push(row);
+                });
+                const keys = Object.keys(grouped).sort((a, b) => {
+                    if (a === '__unknown__') return 1;
+                    if (b === '__unknown__') return -1;
+                    const da = parseDateFlexible(a);
+                    const db = parseDateFlexible(b);
+                    if (da && db && !isNaN(da) && !isNaN(db)) return da - db;
+                    return a.localeCompare(b);
+                });
+                const yearMap = {};
+                keys.forEach(key => {
+                    const entries = grouped[key];
+                    if (key === '__unknown__') {
+                        yearMap['Unknown'] = { 'Unknown': { 'Unknown': entries } };
+                    } else {
+                        const d = parseDateFlexible(key);
+                        const year = d.getFullYear();
+                        const month = d.getMonth();
+                        const day = d.getDate();
+                        if (!yearMap[year]) yearMap[year] = {};
+                        if (!yearMap[year][month]) yearMap[year][month] = {};
+                        if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
+                        yearMap[year][month][day] = entries;
+                    }
+                });
+                masterlistContent.innerHTML = Object.keys(yearMap).sort((a,b) => {
+                    if (a === 'Unknown') return 1;
+                    if (b === 'Unknown') return -1;
+                    return b - a;
+                }).map(year => {
+                    if (year === 'Unknown') {
+                        const entries = yearMap['Unknown']['Unknown']['Unknown'];
+                        return `
+                            <div class="year-section">
+                                <button class="year-header" onclick="toggleYear('year-unknown')">
+                                    <span class="font-bold text-midnight"><i class="fa-solid fa-folder"></i> Unknown</span>
+                                    <span class="text-xs text-slateblue">${entries.length} entries</span>
+                                    <span class="toggle-icon" id="icon-year-unknown"><i class="fa-solid fa-chevron-down"></i></span>
+                                </button>
+                                <div class="year-content" id="content-year-unknown">
+                                    <div class="grid grid-cols-1 gap-2 ml-2">
+                                        ${entries.map(row => `
+                                            <div class="date-card-compact" onclick="openMasterlistModal('__unknown__')">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="font-semibold text-sm text-midnight"><i class="fa-solid fa-calendar"></i> ${esc(row.DATE)}</span>
+                                                </div>
+                                                <div class="text-[10px] text-slateblue">${esc(row.TITLE)}${row.ARTIST ? ' - ' + esc(row.ARTIST) : ''}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        const months = yearMap[year];
+                        const sortedMonths = Object.keys(months).sort((a,b) => b - a);
+                        const totalInYear = Object.values(months).reduce((sum, days) => sum + Object.values(days).reduce((s, entries) => s + entries.length, 0), 0);
+                        return `
+                            <div class="year-section">
+                                <button class="year-header" onclick="toggleYear('year-${year}')">
+                                    <span class="font-bold text-midnight"><i class="fa-solid fa-folder"></i> ${year}</span>
+                                    <span class="text-xs text-slateblue">${totalInYear} entries</span>
+                                    <span class="toggle-icon" id="icon-year-${year}"><i class="fa-solid fa-chevron-down"></i></span>
+                                </button>
+                                <div class="year-content" id="content-year-${year}">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-2">
+                                        ${sortedMonths.map(month => {
+                                            const days = months[month];
+                                            const sortedDays = Object.keys(days).sort((a,b) => b - a);
+                                            const totalInMonth = Object.values(days).reduce((sum, dayEntries) => sum + dayEntries.length, 0);
+                                            const monthName = new Date(parseInt(year), parseInt(month), 1).toLocaleString('en-US', { month: 'long' });
+                                            return `
+                                                <div class="month-section col-span-1">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <h4 class="text-sm font-bold text-midnight"><i class="fa-solid fa-folder-open"></i> ${monthName}</h4>
+                                                        <span class="text-[10px] text-slateblue bg-mist px-2 py-0.5 rounded-full">${totalInMonth} entries</span>
+                                                    </div>
+                                                    <div class="space-y-2 ml-3">
+                                                        ${sortedDays.map(day => {
+                                                            const entries = days[day];
+                                                            const dateObj = new Date(parseInt(year), parseInt(month), parseInt(day));
+                                                            const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                                                            const dateKey = `${year}-${String(parseInt(month)+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                                                            const note = dateNotes[dateKey] || '';
+                                                            return `
+                                                                <div class="date-card-compact" onclick="openMasterlistModal('${dateKey}')">
+                                                                    <div class="flex items-center justify-between">
+                                                                        <span class="font-semibold text-sm text-midnight"><i class="fa-solid fa-calendar-day"></i> ${dateStr}</span>
+                                                                        <span class="text-xs font-medium text-slateblue bg-mist px-2 py-0.5 rounded-full">${entries.length}</span>
+                                                                    </div>
+                                                                    <div class="date-note" contenteditable="true" onclick="event.stopPropagation();" 
+                                                                         onblur="saveDateNote('${dateKey}', this.innerText.trim())"
+                                                                         onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
+                                                                        ${note}
+                                                                    </div>
+                                                                    <div class="text-[10px] text-slateblue mt-1 truncate">
+                                                                        ${entries.slice(0, 3).map(e => esc(e.TITLE)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
+                                                                    </div>
+                                                                </div>
+                                                            `;
+                                                        }).join('')}
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }).join('');
+            }
+
+            function renderModalEntries(entries) {
+                let tableHtml = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm priority-groups-table">
+                            <thead><tr><th>#</th><th>TITLE</th><th>ARTIST</th><th>DATE</th></tr></thead>
+                            <tbody>
+                `;
+                entries.forEach((row, idx) => {
+                    tableHtml += `
+                        <tr class="table-row-hover fade-in">
+                            <td class="py-2 px-3 text-slateblue font-mono text-[11px]">${idx+1}</td>
+                            <td class="py-2 px-3 text-midnight font-medium">${esc(row.TITLE)}</td>
+                            <td class="py-2 px-3 text-slateblue">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
+                            <td class="py-2 px-3 text-slateblue text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
+                        </tr>
+                    `;
+                });
+                tableHtml += '</tbody></table></div>';
+                modalBody.innerHTML = tableHtml;
+                modalOverlay.classList.add('open');
+            }
+
+            window.openMasterlistModal = function(dateKey) {
+                let entries = [];
+                if (dateKey === '__unknown__') {
+                    entries = masterlistData.filter(row => getNormalizedDate(row.DATE) === null);
+                } else {
+                    entries = masterlistData.filter(row => getNormalizedDate(row.DATE) === dateKey);
+                }
+                if (entries.length) {
+                    modalTitle.textContent = `${dateKey === '__unknown__' ? 'Unknown Dates' : formatDateDisplay(dateKey)}`;
+                    renderModalEntries(entries);
+                } else {
+                    modalTitle.textContent = `${dateKey === '__unknown__' ? 'Unknown Dates' : formatDateDisplay(dateKey)}`;
+                    modalBody.innerHTML = `<div class="text-center text-slateblue text-sm py-8">No entries for this date.</div>`;
+                    modalOverlay.classList.add('open');
+                }
+            };
+
+            function renderPriorityGroups() {
+                let filteredData = priorityData;
+                if (currentPriority !== 'all') {
+                    filteredData = filteredData.filter(e => (e.CATEGORIZATION || '').toUpperCase() === currentPriority);
+                }
+                if (!filteredData.length) {
+                    priorityContent.innerHTML = `
+                        <div class="text-center text-slateblue text-sm py-8">
+                            <i class="fa-solid fa-flag text-2xl mb-2"></i><br>
+                            No entries found${currentPriority !== 'all' ? ' with priority ' + currentPriority : ''}
+                        </div>
+                    `;
+                    return;
+                }
+                const groups = {};
+                filteredData.forEach(row => {
+                    const p = (row.CATEGORIZATION || 'C').toUpperCase();
+                    if (!groups[p]) groups[p] = [];
+                    groups[p].push(row);
+                });
+                const priorityLabels = {
+                    'A': 'A – Top Priority',
+                    'B': 'B – Mid Priority',
+                    'C': 'C – Lower Priority'
+                };
+                let html = '';
+                if (currentPriority !== 'all') {
+                    const p = currentPriority;
+                    const entries = groups[p] || [];
+                    if (entries.length) html = renderPriorityGroup(p, entries, priorityLabels[p]);
+                } else {
+                    ['A','B','C'].forEach(p => {
+                        const entries = groups[p] || [];
+                        if (entries.length) html += renderPriorityGroup(p, entries, priorityLabels[p]);
+                    });
+                    if (!html) html = `<div class="text-center text-slateblue text-sm py-8">No entries found</div>`;
+                }
+                priorityContent.innerHTML = html;
+            }
+
+            function renderPriorityGroup(priority, entries, label) {
+                return `
+                    <div class="bg-warmwhite rounded-xl border border-slate-200/80 shadow-sm flex flex-col flex-1 mb-4">
+                        <div class="px-4 py-2.5 bg-mist border-b border-slate-200 flex items-center justify-between shrink-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-bold ${getPriorityClass(priority)} px-3 py-0.5 rounded-full">${label}</span>
+                                <span class="text-xs text-slateblue">${entries.length} entries</span>
+                            </div>
+                            <button onclick="filterPriorityRail('${priority}')" class="text-xs font-medium text-copper hover:text-copperhover transition">View all →</button>
+                        </div>
+                        <div class="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+                            <table class="w-full text-left border-collapse text-sm priority-groups-table">
+                                <thead class="sticky top-0 bg-warmwhite z-10">
+                                    <tr>
+                                        <th>Title</th><th>Artist</th><th>Date</th><th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${entries.map(row => `
+                                        <tr class="table-row-hover fade-in">
+                                            <td class="py-2 px-3 text-midnight font-medium">${esc(row.TITLE)}</td>
+                                            <td class="py-2 px-3 text-slateblue">${row.ARTIST ? esc(row.ARTIST) : '—'}</td>
+                                            <td class="py-2 px-3 text-slateblue text-[11px]">${row.DATE ? formatDateDisplay(row.DATE) : '—'}</td>
+                                            <td class="py-2 px-3 text-center">${row.NOTES ? `<span class="text-[10px] font-medium text-copper bg-mist px-2 py-0.5 rounded-full">${esc(row.NOTES)}</span>` : '—'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            window.filterPriorityRail = function(priority) {
+                currentPriority = priority;
+                document.querySelectorAll('.priority-filter-rail, .sidebar-item[data-priority]').forEach(el => {
+                    el.classList.remove('active');
+                    if (el.dataset.priority === priority) el.classList.add('active');
+                });
+                if (currentView === 'priority') renderPriorityGroups();
+            };
+
+            window.switchView = function(view) {
+                currentView = view;
+                document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+                if (view === 'masterlist') {
+                    document.getElementById('nav-masterlist')?.classList.add('active');
+                    document.getElementById('masterlist-view').classList.remove('hidden');
+                    document.getElementById('priority-view').classList.add('hidden');
+                    yearSection.style.display = 'block';
+                    priorityFilterSection.style.display = 'none';
+                    viewTitle.textContent = 'Masterlist';
+                    renderMasterlist();
+                } else {
+                    document.getElementById('nav-priority')?.classList.add('active');
+                    document.getElementById('priority-view').classList.remove('hidden');
+                    document.getElementById('masterlist-view').classList.add('hidden');
+                    yearSection.style.display = 'none';
+                    priorityFilterSection.style.display = 'block';
+                    viewTitle.textContent = 'Priority Groups';
+                    renderPriorityGroups();
+                }
+                anime({
+                    targets: view === 'masterlist' ? '#masterlist-view' : '#priority-view',
+                    opacity: [0,1],
+                    translateY: [10,0],
+                    duration: 300,
+                    easing: 'easeOutCubic'
+                });
+            };
+
+            window.toggleYear = function(yearId) {
+                const content = document.getElementById('content-' + yearId);
+                const icon = document.getElementById('icon-' + yearId);
+                if (!content) return;
+                content.classList.toggle('collapsed');
+                if (icon) {
+                    const chevron = icon.querySelector('i');
+                    if (chevron) chevron.classList.toggle('fa-chevron-down');
+                    if (chevron) chevron.classList.toggle('fa-chevron-up');
+                }
+            };
+
+            window.exportCSV = function() {
+                if (!masterlistData.length) {
+                    alert('No data to export.');
+                    return;
+                }
+                const headers = ['Title', 'Artist', 'Date', 'Notes'];
+                const rows = masterlistData.map(row => [
+                    row.TITLE || '',
+                    row.ARTIST || '',
+                    row.DATE || '',
+                    dateNotes[getNormalizedDate(row.DATE)] || ''
+                ]);
+                const csvContent = [headers, ...rows].map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'bravo_masterlist.csv';
+                link.click();
+                URL.revokeObjectURL(link.href);
+            };
+
+            window.logoutUser = async function() {
+                if (!confirm('Are you sure you want to sign out?')) return;
+                try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
+                localStorage.removeItem('archivehub_user');
+                window.location.href = '../../index.html';
+            };
+
+            window.closeModal = function() {
+                modalOverlay.classList.remove('open');
+            };
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeModal();
+            });
+
+            window.toggleSidebar = function() {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                loadingSpinner.style.display = 'flex';
+                if (supabaseClient) {
+                    checkSession();
+                } else {
+                    setStatus('⚠️ No Supabase', 'error');
+                    loadingSpinner.style.display = 'none';
+                    masterlistContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>`;
+                    priorityContent.innerHTML = `<div class="text-center text-rose-500 text-sm py-8">⚠️ Supabase client not available.</div>`;
+                }
+            });
+
+            console.log('📋 Executive Lounge – Bravo Masterlist ready');
         })();
     </script>
 </body>
