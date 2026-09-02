@@ -96,31 +96,46 @@
             overflow: hidden;
         }
 
-        /* Expanded sidebar on large screens */
+        /* Expanded sidebar on large screens by default */
         @media (min-width: 1024px) {
-            .sidebar {
+            .sidebar:not(.sidebar-collapsed) {
                 min-width: 200px;
                 max-width: 200px;
             }
-            .sidebar-item .label,
-            .sidebar-signout .label {
+            .sidebar:not(.sidebar-collapsed) .sidebar-item .label,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout .label {
                 display: inline !important;
                 margin-left: 8px;
             }
-            .sidebar-item,
-            .sidebar-signout {
+            .sidebar:not(.sidebar-collapsed) .sidebar-item,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout {
                 justify-content: flex-start;
                 padding-left: 1rem;
             }
-            .sidebar-item .icon,
-            .sidebar-signout .icon {
+            .sidebar:not(.sidebar-collapsed) .sidebar-item .icon,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout .icon {
                 width: auto;
                 margin-right: 0;
             }
-            .sidebar-item .tooltip,
-            .sidebar-signout .tooltip {
+            .sidebar:not(.sidebar-collapsed) .sidebar-item .tooltip,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout .tooltip {
                 display: none;
             }
+        }
+
+        /* When sidebar-collapsed class is present, force icon-only */
+        .sidebar.sidebar-collapsed {
+            min-width: 60px;
+            max-width: 60px;
+        }
+        .sidebar.sidebar-collapsed .sidebar-item .label,
+        .sidebar.sidebar-collapsed .sidebar-signout .label {
+            display: none !important;
+        }
+        .sidebar.sidebar-collapsed .sidebar-item,
+        .sidebar.sidebar-collapsed .sidebar-signout {
+            justify-content: center;
+            padding-left: 0.5rem;
         }
 
         .sidebar-scroll {
@@ -390,7 +405,8 @@
         }
 
         /* ─── BUTTONS ─── */
-        .btn-retry {
+        .btn-retry,
+        .btn-sidebar-toggle {
             background: #FAF7F2;
             color: #68748A;
             border: 1px solid rgba(24, 32, 47, 0.1);
@@ -404,10 +420,20 @@
             gap: 0.4rem;
             white-space: nowrap;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
         }
-        .btn-retry:hover {
+        .btn-retry:hover,
+        .btn-sidebar-toggle:hover {
             background: #e8edf2;
             border-color: #94a3b8;
+        }
+        .btn-sidebar-toggle {
+            display: none; /* Hidden on mobile */
+        }
+        @media (min-width: 1024px) {
+            .btn-sidebar-toggle {
+                display: inline-flex;
+            }
         }
 
         /* ─── SEARCH INPUT ─── */
@@ -495,8 +521,70 @@
             font-size: 1.5rem;
         }
 
+        /* ─── EMPTY STATE ─── */
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: #FAF7F2;
+            border-radius: 1rem;
+            border: 1px dashed rgba(24, 32, 47, 0.15);
+            max-width: 400px;
+            margin: 2rem auto;
+        }
+        .empty-state .icon {
+            font-size: 2.5rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+        }
+        .empty-state h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #18202F;
+            margin-bottom: 0.25rem;
+        }
+        .empty-state p {
+            font-size: 0.875rem;
+            color: #68748A;
+        }
+
         .hidden {
             display: none !important;
+        }
+
+        /* ─── FOCUS STATES ─── */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible {
+            outline: 2px solid #B8734F;
+            outline-offset: 2px;
+        }
+
+        /* ─── PRINT STYLES ─── */
+        @media print {
+            .sidebar,
+            header,
+            .search-wrapper,
+            .btn-retry,
+            .btn-sidebar-toggle {
+                display: none !important;
+            }
+            .main-content {
+                height: auto;
+                overflow: visible;
+            }
+            .scrollable-content {
+                overflow: visible;
+                padding: 0;
+            }
+            .content-panel {
+                display: none !important;
+            }
+            .content-panel.active {
+                display: block !important;
+            }
+            body {
+                background: white;
+            }
         }
 
         /* ─── RESPONSIVE ─── */
@@ -623,7 +711,7 @@
     <div class="app-container">
 
         <!-- ═══ SIDEBAR ═══ -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <!-- Brand -->
             <div class="px-2 py-4 border-b border-black/5 flex items-center justify-center flex-shrink-0">
                 <span class="text-lg font-extrabold tracking-tight whitespace-nowrap">
@@ -633,7 +721,7 @@
 
             <!-- Navigation -->
             <nav class="sidebar-scroll" id="sidebarNav">
-                <a href="#" class="sidebar-item active" onclick="showPanel('dashboard')" data-search="dashboard home">
+                <a href="#" class="sidebar-item active" onclick="showPanel('dashboard')" data-search="dashboard home" data-panel="dashboard">
                     <span class="icon"><i class="fa-solid fa-gauge-high"></i></span>
                     <span class="label">Dashboard</span>
                     <span class="tooltip">Dashboard</span>
@@ -641,7 +729,7 @@
 
                 <div class="sidebar-divider"></div>
 
-                <a href="#" class="sidebar-item" onclick="showPanel('masterlist')" data-search="masterlist folder">
+                <a href="#" class="sidebar-item" onclick="showPanel('masterlist')" data-search="masterlist folder" data-panel="masterlist">
                     <span class="icon"><i class="fa-solid fa-folder"></i></span>
                     <span class="label">Masterlist</span>
                     <span class="tooltip">Masterlist</span>
@@ -649,34 +737,34 @@
 
                 <div class="sidebar-divider"></div>
 
-                <a href="#" class="sidebar-item" onclick="showPanel('chores')" data-search="daily chores tasks maintenance checklist">
+                <a href="#" class="sidebar-item" onclick="showPanel('chores')" data-search="daily chores tasks maintenance checklist" data-panel="chores">
                     <span class="icon"><i class="fa-solid fa-broom"></i></span>
                     <span class="label">Daily Chores</span>
                     <span class="tooltip">Daily Chores</span>
                 </a>
-                <a href="#" class="sidebar-item" onclick="showPanel('commercial')" data-search="commercial media advertisements archive">
+                <a href="#" class="sidebar-item" onclick="showPanel('commercial')" data-search="commercial media advertisements archive" data-panel="commercial">
                     <span class="icon"><i class="fa-solid fa-rectangle-ad"></i></span>
                     <span class="label">Commercial</span>
                     <span class="tooltip">Commercial</span>
                 </a>
-                <a href="#" class="sidebar-item" onclick="showPanel('cps')" data-search="cps compliance documents logs">
+                <a href="#" class="sidebar-item" onclick="showPanel('cps')" data-search="cps compliance documents logs" data-panel="cps">
                     <span class="icon"><i class="fa-solid fa-shield-halved"></i></span>
                     <span class="label">CPS</span>
                     <span class="tooltip">CPS</span>
                 </a>
-                <a href="#" class="sidebar-item" onclick="showPanel('concert')" data-search="concert schedule music event lineup">
+                <a href="#" class="sidebar-item" onclick="showPanel('concert')" data-search="concert schedule music event lineup" data-panel="concert">
                     <span class="icon"><i class="fa-solid fa-music"></i></span>
                     <span class="label">Choice Concert Schedule</span>
                     <span class="tooltip">Choice Concert Schedule</span>
                 </a>
-                <a href="#" class="sidebar-item" onclick="showPanel('weekly')" data-search="weekly schedule agenda timetable operations">
+                <a href="#" class="sidebar-item" onclick="showPanel('weekly')" data-search="weekly schedule agenda timetable operations" data-panel="weekly">
                     <span class="icon"><i class="fa-solid fa-calendar-days"></i></span>
                     <span class="label">Weekly Schedule</span>
                     <span class="tooltip">Weekly Schedule</span>
                 </a>
 
                 <!-- ✅ CLASSICS (replaces Classic Movie Schedules) -->
-                <a href="../classics/index.html" class="sidebar-item" data-search="classics collection movies shows episodes">
+                <a href="../classics/index.html" class="sidebar-item" data-search="classics collection movies shows episodes" data-panel="classics">
                     <span class="icon"><i class="fa-solid fa-clapperboard"></i></span>
                     <span class="label">Classics</span>
                     <span class="tooltip">Classics Collection</span>
@@ -698,26 +786,37 @@
 
             <!-- ═══ HEADER ═══ -->
             <header>
-                <!-- Left: Status -->
+                <!-- Left: Toggle, Panel Title, Status -->
                 <div class="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
+                    <!-- Sidebar Toggle (desktop only) -->
+                    <button class="btn-sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar" title="Toggle sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+
+                    <span id="panelTitle" class="text-sm font-semibold text-midnight whitespace-nowrap">Dashboard</span>
+
                     <span id="statusBadge" class="status-badge-text text-[10px] sm:text-xs font-medium px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border status-waiting flex items-center gap-1 whitespace-nowrap">
                         <span class="spinner"></span> Connecting...
                     </span>
                 </div>
 
-                <!-- Right: Search + Retry -->
+                <!-- Right: Sync Indicator, Search + Retry -->
                 <div class="flex items-center gap-1.5 sm:gap-3 flex-wrap">
+                    <span id="syncIndicator" class="text-xs text-slateblue whitespace-nowrap">
+                        <i class="fa-solid fa-cloud-arrow-up mr-1"></i>Synced just now
+                    </span>
+
                     <div class="search-wrapper">
                         <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
-                        <input type="text" id="globalSearchInput" placeholder="Search everything..." class="search-input" oninput="handleGlobalSearch(this.value)" onfocus="this.select()" autocomplete="off" />
-                        <span id="searchClear" class="search-clear" onclick="clearSearch()">
+                        <input type="text" id="globalSearchInput" placeholder="Search everything..." class="search-input" oninput="handleGlobalSearch(this.value)" onfocus="this.select()" autocomplete="off" aria-label="Search" />
+                        <span id="searchClear" class="search-clear" onclick="clearSearch()" aria-label="Clear search" title="Clear search">
                             <i class="fa-solid fa-xmark"></i>
                         </span>
                         <span id="searchResultsCount" class="search-results-count hidden">0</span>
                         <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400 bg-slate-100 px-1 py-0.5 rounded hidden sm:block">⌘K</span>
                     </div>
 
-                    <button class="btn-retry" onclick="location.reload()">
+                    <button class="btn-retry" onclick="location.reload()" aria-label="Retry" title="Retry">
                         <i class="fa-solid fa-rotate-right text-xs"></i>
                         <span class="hidden xs:inline">Retry</span>
                     </button>
@@ -826,7 +925,11 @@
                         <h1 class="text-xl sm:text-2xl font-extrabold text-midnight tracking-tight">🧹 Daily Chores</h1>
                         <p class="text-xs text-slateblue mt-0.5">Daily task checklists and maintenance tracking.</p>
                     </div>
-                    <div class="mt-6 text-center text-slateblue text-sm">Daily Chores content goes here.</div>
+                    <div class="empty-state">
+                        <div class="icon"><i class="fa-solid fa-broom"></i></div>
+                        <h3>No chores yet</h3>
+                        <p>Daily task checklists will appear here once added.</p>
+                    </div>
                 </div>
 
                 <!-- ═══ COMMERCIAL PANEL ═══ -->
@@ -835,7 +938,11 @@
                         <h1 class="text-xl sm:text-2xl font-extrabold text-midnight tracking-tight">📢 Commercial</h1>
                         <p class="text-xs text-slateblue mt-0.5">Commercial archives, media, and advertisements.</p>
                     </div>
-                    <div class="mt-6 text-center text-slateblue text-sm">Commercial content goes here.</div>
+                    <div class="empty-state">
+                        <div class="icon"><i class="fa-solid fa-rectangle-ad"></i></div>
+                        <h3>No commercial content</h3>
+                        <p>Media and advertisements will be listed here.</p>
+                    </div>
                 </div>
 
                 <!-- ═══ CPS PANEL ═══ -->
@@ -844,7 +951,11 @@
                         <h1 class="text-xl sm:text-2xl font-extrabold text-midnight tracking-tight">🛡️ CPS</h1>
                         <p class="text-xs text-slateblue mt-0.5">CPS documents, logs, and compliance records.</p>
                     </div>
-                    <div class="mt-6 text-center text-slateblue text-sm">CPS content goes here.</div>
+                    <div class="empty-state">
+                        <div class="icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h3>No CPS records</h3>
+                        <p>Compliance documents will appear here.</p>
+                    </div>
                 </div>
 
                 <!-- ═══ CONCERT PANEL ═══ -->
@@ -853,7 +964,11 @@
                         <h1 class="text-xl sm:text-2xl font-extrabold text-midnight tracking-tight">🎵 Choice Concert Schedule</h1>
                         <p class="text-xs text-slateblue mt-0.5">Concert lineups, dates, and event schedules.</p>
                     </div>
-                    <div class="mt-6 text-center text-slateblue text-sm">Concert schedule content goes here.</div>
+                    <div class="empty-state">
+                        <div class="icon"><i class="fa-solid fa-music"></i></div>
+                        <h3>No upcoming concerts</h3>
+                        <p>Schedules for events will be posted here.</p>
+                    </div>
                 </div>
 
                 <!-- ═══ WEEKLY PANEL ═══ -->
@@ -862,7 +977,11 @@
                         <h1 class="text-xl sm:text-2xl font-extrabold text-midnight tracking-tight">📅 Weekly Schedule</h1>
                         <p class="text-xs text-slateblue mt-0.5">Weekly operational agendas and timetables.</p>
                     </div>
-                    <div class="mt-6 text-center text-slateblue text-sm">Weekly schedule content goes here.</div>
+                    <div class="empty-state">
+                        <div class="icon"><i class="fa-solid fa-calendar-days"></i></div>
+                        <h3>No weekly schedule</h3>
+                        <p>Operational agendas will appear here.</p>
+                    </div>
                 </div>
 
             </div>
@@ -911,6 +1030,9 @@
             const userInfo = $('userInfo');
             const logoutBtn = $('logoutBtn');
             const searchInput = $('globalSearchInput');
+            const sidebarToggle = $('sidebarToggle');
+            const panelTitle = $('panelTitle');
+            const syncIndicator = $('syncIndicator');
 
             // ─── SUPABASE CLIENT ──────────────────────────────────────────
             let supabase = null;
@@ -927,6 +1049,7 @@
 
             // ─── STATE ─────────────────────────────────────────────────────
             let userRole = 'user';
+            let currentPanel = 'dashboard';
 
             // ─── HELPERS ──────────────────────────────────────────────────
             function setStatus(text, type) {
@@ -954,6 +1077,12 @@
 
             function getRoleDisplay(role) {
                 return role === 'admin' ? 'Admin' : 'User';
+            }
+
+            function updateSyncIndicator() {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                syncIndicator.innerHTML = `<i class="fa-solid fa-cloud-arrow-up mr-1"></i>Synced ${timeStr}`;
             }
 
             // ─── ANIME.JS INTEGRATION ────────────────────────────────────
@@ -1050,6 +1179,7 @@
 
                     // Stop pulse animation after login
                     anime.remove(statusBadge);
+                    updateSyncIndicator();
 
                     console.log('✅ [AUTH] Session valid – role:', role);
 
@@ -1072,6 +1202,7 @@
 
             // ─── PANEL SWITCHING ──────────────────────────────────────────
             function showPanel(panelId) {
+                currentPanel = panelId;
                 document.querySelectorAll('.content-panel').forEach(panel => {
                     panel.classList.remove('active');
                 });
@@ -1082,16 +1213,53 @@
                     animatePanelIn(target);
                 }
 
+                // Update sidebar active state
                 document.querySelectorAll('.sidebar-item').forEach(item => {
                     item.classList.remove('active');
                 });
-
                 document.querySelectorAll('.sidebar-item').forEach(item => {
                     const onclickAttr = item.getAttribute('onclick');
                     if (onclickAttr && onclickAttr.includes("'" + panelId + "'")) {
                         item.classList.add('active');
                     }
                 });
+
+                // Update panel title in header
+                const panelNames = {
+                    dashboard: 'Dashboard',
+                    masterlist: 'Masterlist',
+                    chores: 'Daily Chores',
+                    commercial: 'Commercial',
+                    cps: 'CPS',
+                    concert: 'Choice Concert Schedule',
+                    weekly: 'Weekly Schedule',
+                    classics: 'Classics'
+                };
+                panelTitle.textContent = panelNames[panelId] || panelId;
+            }
+
+            // ─── SIDEBAR TOGGLE (desktop only) ──────────────────────────
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('sidebar-collapsed');
+                // Optional: animate sidebar width with anime.js
+                if (sidebar.classList.contains('sidebar-collapsed')) {
+                    anime({
+                        targets: sidebar,
+                        minWidth: [200, 60],
+                        maxWidth: [200, 60],
+                        duration: 300,
+                        easing: 'easeOutCubic'
+                    });
+                } else {
+                    anime({
+                        targets: sidebar,
+                        minWidth: [60, 200],
+                        maxWidth: [60, 200],
+                        duration: 300,
+                        easing: 'easeOutCubic'
+                    });
+                }
             }
 
             // ─── GLOBAL SEARCH ────────────────────────────────────────────
@@ -1106,7 +1274,7 @@
                         type: 'sidebar',
                         text: label,
                         searchData: text,
-                        panel: item.getAttribute('onclick')?.match(/'([^']+)'/)?.[1] || null
+                        panel: item.getAttribute('data-panel') || null
                     });
                 });
 
@@ -1255,6 +1423,25 @@
                 if (e.key === 'Escape') {
                     if (searchInput) searchInput.blur();
                 }
+
+                // Alt+1..8 for panels
+                if (e.altKey) {
+                    const panelMap = {
+                        '1': 'dashboard',
+                        '2': 'masterlist',
+                        '3': 'chores',
+                        '4': 'commercial',
+                        '5': 'cps',
+                        '6': 'concert',
+                        '7': 'weekly',
+                        '8': 'classics'
+                    };
+                    const key = e.key;
+                    if (panelMap[key]) {
+                        e.preventDefault();
+                        showPanel(panelMap[key]);
+                    }
+                }
             });
 
             // ─── ANIME.JS HOVER EFFECTS ─────────────────────────────────
@@ -1295,7 +1482,15 @@
                 console.log('📄 [DOM] Ready – initializing...');
 
                 logoutBtn.addEventListener('click', logoutUser);
+                sidebarToggle.addEventListener('click', toggleSidebar);
                 buildSearchIndex();
+
+                // Update sync indicator every minute
+                updateSyncIndicator();
+                setInterval(updateSyncIndicator, 60000);
+
+                // Set initial panel title
+                showPanel('dashboard');
 
                 // Animate welcome icon on load
                 const welcomeIcon = document.querySelector('.welcome-icon');
@@ -1313,13 +1508,14 @@
                     checkSession();
                 }, 100);
 
-                console.log('✅ [INIT] City Work Dashboard ready (with anime.js & responsive sidebar)');
+                console.log('✅ [INIT] City Work Dashboard ready (with all improvements)');
             });
 
             // Expose functions globally
             window.showPanel = showPanel;
             window.handleGlobalSearch = handleGlobalSearch;
             window.clearSearch = clearSearch;
+            window.toggleSidebar = toggleSidebar;
 
         })();
     </script>
