@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dog Show & Concert Schedule · Executive Lounge</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    <!-- ═══ LOAD CONFIG FROM ROOT ═══ -->
+    <script src="../config.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        midnight: '#18202F',
+                        slateblue: '#68748A',
+                        mist: '#DCE1E6',
+                        warmwhite: '#FAF7F2',
+                        copper: '#B8734F',
+                        copperhover: '#9D5D3C'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ═══ FULL-SCREEN LAYOUT ═══ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #DCE1E6; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .app-container { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
+
+        /* ─── STATUS BADGE ─── */
+        .status-ok { background: #e2e8f0; color: #18202F; border-color: #94a3b8; }
+        .status-error { background: #f5e6e6; color: #7a3b3b; border-color: #c9a1a1; }
+        .status-waiting { background: #f0ebe6; color: #6b5d4d; border-color: #cdbfae; }
+        .status-badge-top { font-size: 0.65rem; font-weight: 600; padding: 0.2rem 0.7rem; border-radius: 9999px; border: 1px solid; display: inline-flex; align-items: center; gap: 0.4rem; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status-dot.green { background: #22c55e; }
+        .status-dot.amber { background: #eab308; animation: pulse 1.5s ease-in-out infinite; }
+        .status-dot.red { background: #ef4444; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+        /* ═══ SIDEBAR ═══ */
+        .sidebar {
+            background: rgba(220, 225, 230, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(24, 32, 47, 0.08);
+            min-width: 60px; max-width: 60px;
+            transition: all 0.3s ease;
+            box-shadow: 4px 0 30px rgba(0,0,0,0.03);
+            height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+        }
+        @media (min-width: 1024px) {
+            .sidebar:not(.sidebar-collapsed) { min-width: 200px; max-width: 200px; }
+            .sidebar:not(.sidebar-collapsed) .sidebar-item .label,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout .label { display: inline !important; margin-left: 8px; }
+            .sidebar:not(.sidebar-collapsed) .sidebar-item,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout { justify-content: flex-start; padding-left: 1rem; }
+            .sidebar:not(.sidebar-collapsed) .sidebar-item .icon,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout .icon { width: auto; margin-right: 0; }
+            .sidebar:not(.sidebar-collapsed) .sidebar-item .tooltip,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout .tooltip { display: none; }
+        }
+        .sidebar.sidebar-collapsed { min-width: 60px; max-width: 60px; }
+        .sidebar.sidebar-collapsed .sidebar-item .label,
+        .sidebar.sidebar-collapsed .sidebar-signout .label { display: none !important; }
+        .sidebar.sidebar-collapsed .sidebar-item,
+        .sidebar.sidebar-collapsed .sidebar-signout { justify-content: center; padding-left: 0.5rem; }
+
+        .sidebar-scroll { flex: 1; overflow-y: auto; padding: 12px 8px; scrollbar-width: none; -ms-overflow-style: none; }
+        .sidebar-scroll::-webkit-scrollbar { width: 0; background: transparent; }
+
+        .sidebar-item {
+            transition: all 0.2s ease; cursor: pointer; border-radius: 0.5rem; padding: 0.5rem;
+            display: flex; align-items: center; justify-content: center; color: #68748A;
+            text-decoration: none; font-size: 0.875rem; font-weight: 500; position: relative; width: 100%; margin-bottom: 2px;
+            white-space: nowrap; border: none; background: transparent;
+        }
+        .sidebar-item .icon { font-size: 1.1rem; width: 24px; text-align: center; transition: all 0.2s ease; }
+        .sidebar-item .label { display: none; }
+        .sidebar-item:hover { background: rgba(184,115,79,0.15); color: #9D5D3C; }
+        .sidebar-item:hover .icon { transform: scale(1.15); }
+        .sidebar-item.active { background: rgba(184,115,79,0.2); color: #9D5D3C; }
+        .sidebar-item.active .icon { transform: scale(1.1); }
+
+        .sidebar-item .tooltip {
+            position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+            background: #18202F; color: #FAF7F2; padding: 0.35rem 0.75rem; border-radius: 0.5rem;
+            font-size: 0.75rem; font-weight: 500; white-space: nowrap; opacity: 0; pointer-events: none;
+            transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 100;
+        }
+        .sidebar-item .tooltip::before {
+            content: ''; position: absolute; left: -6px; top: 50%; transform: translateY(-50%);
+            border-right: 6px solid #18202F; border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+        }
+        .sidebar-item:hover .tooltip { opacity: 1; }
+
+        .sidebar-divider { border-top: 1px solid rgba(24,32,47,0.08); margin: 4px 12px; }
+        .sidebar-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; padding: 0.5rem 0.75rem 0.25rem; font-weight: 600; }
+
+        .brand-city { color: #18202F; }
+        .brand-work { color: #B8734F; }
+
+        .sidebar-signout {
+            transition: all 0.2s ease; cursor: pointer; border-radius: 0.5rem; padding: 0.5rem;
+            display: flex; align-items: center; justify-content: center; color: #68748A;
+            text-decoration: none; font-size: 0.875rem; font-weight: 500; border: none; background: transparent; width: 100%; position: relative; white-space: nowrap;
+        }
+        .sidebar-signout .icon { font-size: 1.1rem; width: 24px; text-align: center; transition: all 0.2s ease; }
+        .sidebar-signout .label { display: none; }
+        .sidebar-signout:hover { background: rgba(184,115,79,0.15); color: #9D5D3C; }
+        .sidebar-signout:hover .icon { transform: scale(1.15); }
+
+        .sidebar-signout .tooltip {
+            position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+            background: #18202F; color: #FAF7F2; padding: 0.35rem 0.75rem; border-radius: 0.5rem;
+            font-size: 0.75rem; font-weight: 500; white-space: nowrap; opacity: 0; pointer-events: none;
+            transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 100;
+        }
+        .sidebar-signout .tooltip::before {
+            content: ''; position: absolute; left: -6px; top: 50%; transform: translateY(-50%);
+            border-right: 6px solid #18202F; border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+        }
+        .sidebar-signout:hover .tooltip { opacity: 1; }
+
+        /* ═══ MAIN CONTENT ═══ */
+        .main-content { flex: 1; min-width: 0; background: #DCE1E6; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { background: #DCE1E6; border-bottom: 1px solid rgba(24,32,47,0.08); flex-shrink: 0; padding: 0.75rem 1.5rem; min-height: 64px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+        .scrollable-content { flex: 1; overflow-y: auto; padding: 1.5rem; min-height: 0; }
+        .scrollable-content::-webkit-scrollbar { width: 5px; }
+        .scrollable-content::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
+
+        /* ─── CONTENT CARDS ─── */
+        .date-card-compact {
+            padding: 0.75rem 1rem; background: #FAF7F2; border: 1px solid rgba(24,32,47,0.08);
+            border-radius: 0.6rem; transition: all 0.2s; cursor: pointer;
+        }
+        .date-card-compact:hover { border-color: #B8734F; box-shadow: 0 2px 8px -4px rgba(184,115,79,0.15); transform: translateX(4px); }
+        .date-note {
+            font-size: 0.6rem; color: #B8734F; background: #FAF7F2; padding: 0.05rem 0.3rem;
+            border-radius: 0.3rem; border: 1px dashed #cbd5e1; cursor: text; min-height: 1.5rem;
+            margin: 0.1rem 0; width: 100%; outline: none; transition: border-color 0.2s, background 0.2s;
+        }
+        .date-note:focus { border-color: #B8734F; background: #FFFFFF; }
+        .date-note:empty::before { content: "✏️ Click to add note..."; color: #94a3b8; }
+        .date-note:not(:empty)::before { content: ""; }
+        .date-note:hover { border-style: solid; }
+
+        /* ─── MODAL ─── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(4px);
+            z-index: 50; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-card {
+            background: #FAF7F2; border-radius: 1.5rem; max-width: 800px; width: 95%; max-height: 85vh;
+            overflow-y: auto; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transform: scale(0.95) translateY(10px); transition: transform 0.25s ease;
+        }
+        .modal-overlay.open .modal-card { transform: scale(1) translateY(0); }
+
+        /* ─── TABLES ─── */
+        .priority-groups-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .priority-groups-table th {
+            text-align: left; padding: 0.6rem 0.8rem; font-weight: 600; font-size: 0.55rem;
+            text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; border-bottom: 2px solid rgba(24,32,47,0.1); background: #FAF7F2;
+        }
+        .priority-groups-table td {
+            padding: 0.6rem 0.8rem; border-bottom: 1px solid rgba(24,32,47,0.05); color: #18202F; vertical-align: middle;
+        }
+        .priority-groups-table tr:last-child td { border-bottom: none; }
+        .priority-groups-table tr:hover td { background: rgba(220,225,230,0.3); }
+
+        .priority-a { background: rgba(184,115,79,0.12); color: #7a3b3b; }
+        .priority-b { background: rgba(184,115,79,0.08); color: #6b5d4d; }
+        .priority-c { background: rgba(100,116,139,0.12); color: #1e40af; }
+
+        .year-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem;
+            background: #FAF7F2; border: 1px solid rgba(24,32,47,0.08); border-radius: 0.5rem;
+            cursor: pointer; transition: background 0.15s; margin-bottom: 0.5rem; width: 100%; border: none; text-align: left; font-size: 0.85rem;
+        }
+        .year-header:hover { background: rgba(220,225,230,0.4); }
+        .year-content { display: block; }
+        .year-content.collapsed { display: none; }
+
+        #loadingSpinner {
+            display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px);
+            z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
+        }
+        #loadingSpinner .spinner {
+            width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #B8734F;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Search bar */
+        .search-bar {
+            display: flex; align-items: center; background: #FAF7F2; border-radius: 0.6rem;
+            padding: 0.25rem 0.7rem; border: 1px solid rgba(24,32,47,0.1); transition: all 0.2s; max-width: 300px;
+        }
+        .search-bar:focus-within { border-color: #B8734F; background: #FFFFFF; box-shadow: 0 0 0 3px rgba(184,115,79,0.1); }
+        .search-bar input { border: none; background: transparent; outline: none; padding: 0.25rem 0; font-size: 0.75rem; width: 100%; color: #18202F; }
+        .search-bar input::placeholder { color: #94a3b8; }
+        .search-bar i { color: #94a3b8; font-size: 0.75rem; margin-right: 0.4rem; }
+
+        .btn-export {
+            background: #18202F; color: #FAF7F2; border: none; padding: 0.4rem 1rem; border-radius: 9999px;
+            font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
+        }
+        .btn-export:hover { background: #2d3a4f; transform: scale(1.02); }
+
+        /* Responsive */
+        @media (max-width: 1023px) {
+            .sidebar { min-width: 60px; max-width: 60px; }
+            .sidebar-item .label, .sidebar-signout .label { display: none !important; }
+            .sidebar-item, .sidebar-signout { justify-content: center; padding-left: 0.5rem; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { min-width: 50px; max-width: 50px; }
+            .sidebar-item .icon { font-size: 0.95rem; }
+            .sidebar-signout .icon { font-size: 0.95rem; }
+            header { padding: 0.5rem 1rem; min-height: 56px; }
+            .scrollable-content { padding: 1rem; }
+        }
+        @media (max-width: 480px) {
+            .sidebar { min-width: 44px; max-width: 44px; }
+            .sidebar-item, .sidebar-signout { padding: 0.35rem; }
+            .sidebar-item .icon, .sidebar-signout .icon { font-size: 0.85rem; width: 20px; }
+            .brand-city, .brand-work { font-size: 0.8rem; }
+            .search-input { width: 100px; font-size: 0.65rem; padding: 0.25rem 1.6rem 0.25rem 1.4rem; }
+            .search-input:focus { width: 130px; }
+            header { padding: 0.4rem 0.75rem; min-height: 48px; }
+            .scrollable-content { padding: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══ FULL-SCREEN APP CONTAINER ═══ -->
+    <div class="app-container">
+
+        <!-- ═══ SIDEBAR ═══ -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Brand -->
+            <div class="px-2 py-4 border-b border-black/5 flex items-center justify-center flex-shrink-0">
+                <span class="text-lg font-extrabold tracking-tight whitespace-nowrap">
+                    <span class="brand-city">EL</span><span class="brand-work">·</span><span class="brand-city">Schedules</span>
+                </span>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="sidebar-scroll" id="sidebarNav">
+                <button class="sidebar-item active" onclick="switchView('overview')">
+                    <span class="icon"><i class="fa-solid fa-gauge-high"></i></span>
+                    <span class="label">Overview</span>
+                    <span class="tooltip">Overview</span>
+                </button>
+
+                <div class="sidebar-divider"></div>
+
+                <div class="sidebar-label">Dog Shows</div>
+                <div id="dogShowButtons"></div>
+
+                <div class="sidebar-divider"></div>
+
+                <div class="sidebar-label">Choice Concerts</div>
+                <div id="concertButtons"></div>
+
+                <div class="sidebar-divider"></div>
+
+                <button class="sidebar-item" onclick="addDogShow()">
+                    <span class="icon"><i class="fa-solid fa-plus"></i></span>
+                    <span class="label">Add Dog Show</span>
+                    <span class="tooltip">Add Dog Show</span>
+                </button>
+                <button class="sidebar-item" onclick="addConcert()">
+                    <span class="icon"><i class="fa-solid fa-plus"></i></span>
+                    <span class="label">Add Concert</span>
+                    <span class="tooltip">Add Concert</span>
+                </button>
+
+                <button class="sidebar-item" onclick="window.location.href='../index.html'">
+                    <span class="icon"><i class="fa-solid fa-arrow-left"></i></span>
+                    <span class="label">Back to Dashboard</span>
+                    <span class="tooltip">Back to Dashboard</span>
+                </button>
+            </nav>
+
+            <!-- Bottom: Sign Out -->
+            <div class="px-2 py-3 border-t border-black/5 flex-shrink-0">
+                <button class="sidebar-signout" id="logoutBtn">
+                    <span class="icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
+                    <span class="label">Sign Out</span>
+                    <span class="tooltip">Sign Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ═══ MAIN CONTENT ═══ -->
+        <div class="main-content">
+
+            <!-- ═══ HEADER ═══ -->
+            <header>
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded-full bg-mist hover:bg-slate-200 text-slateblue transition flex items-center justify-center" title="Toggle sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <span id="viewTitle" class="text-sm font-semibold text-midnight whitespace-nowrap">Overview</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="statusBadge" class="status-badge-top status-waiting">
+                        <span class="status-dot amber"></span> Connecting...
+                    </span>
+                </div>
+            </header>
+
+            <!-- ═══ SCROLLABLE CONTENT ═══ -->
+            <div class="scrollable-content" id="scrollableContent">
+
+                <!-- ─── OVERVIEW VIEW ─── -->
+                <div id="overview-view">
+                    <!-- Calendar -->
+                    <div class="bg-warmwhite rounded-xl border border-slate-200/80 shadow-sm mb-6">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-mist">
+                            <button onclick="changeMonth(-1)" class="text-slateblue hover:text-midnight"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span id="monthLabel" class="font-semibold text-midnight">Loading...</span>
+                            <button onclick="changeMonth(1)" class="text-slateblue hover:text-midnight"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:#eef1f6;"></div>
+                    </div>
+
+                    <!-- Upcoming events -->
+                    <div class="bg-warmwhite rounded-xl border border-slate-200/80 shadow-sm p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <h2 class="text-lg font-bold text-midnight"><i class="fa-regular fa-clock"></i> Upcoming</h2>
+                            <span class="text-xs bg-mist text-slateblue px-2 py-0.5 rounded-full">next 48h</span>
+                        </div>
+                        <div id="upcomingEvents" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="text-slateblue text-sm">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── DOG SHOW DETAIL VIEW ─── -->
+                <div id="dogshow-view" class="hidden">
+                    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+                        <div>
+                            <h1 class="text-xl font-extrabold text-midnight"><i class="fa-solid fa-dog"></i> <span id="dogshowTitle"></span></h1>
+                            <p class="text-xs text-slateblue mt-0.5">Dog Show Episodes</p>
+                        </div>
+                        <button class="btn-export" onclick="addEpisode()"><i class="fa-solid fa-plus"></i> Add Episode</button>
+                    </div>
+                    <div class="table-wrap" id="dogshowTable">
+                        <table class="priority-groups-table">
+                            <thead><tr><th>Air Date</th><th>Episode Number</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody id="dogshowTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ─── CONCERT DETAIL VIEW ─── -->
+                <div id="concert-view" class="hidden">
+                    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+                        <div>
+                            <h1 class="text-xl font-extrabold text-midnight"><i class="fa-solid fa-music"></i> <span id="concertTitle"></span></h1>
+                            <p class="text-xs text-slateblue mt-0.5">Concert Airings</p>
+                        </div>
+                        <button class="btn-export" onclick="addAiring()"><i class="fa-solid fa-plus"></i> Add Airing</button>
+                    </div>
+                    <div class="table-wrap" id="concertTable">
+                        <table class="priority-groups-table">
+                            <thead><tr><th>Air Date</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody id="concertTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ MODAL ═══ -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-card">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 class="text-lg font-bold text-midnight" id="modal-title">Entries</h3>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full hover:bg-mist text-slateblue hover:text-midnight transition flex items-center justify-center">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="mt-4" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ─── SUPABASE CONFIG ──────────────────────────────────
+            let SUPABASE_URL, SUPABASE_ANON_KEY;
+            try {
+                if (typeof design !== 'undefined' && design.supabase) {
+                    SUPABASE_URL = design.supabase.url;
+                    SUPABASE_ANON_KEY = design.supabase.anonKey;
+                } else {
+                    throw new Error('design.supabase not found');
+                }
+            } catch (e) {
+                document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#18202F;padding:20px;font-family:Plus Jakarta Sans,sans-serif;"><div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);"><i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#B8734F;margin-bottom:12px;"></i><h2 style="font-size:20px;font-weight:700;color:#FAF7F2;">Configuration Error</h2><p style="color:rgba(250,247,242,0.7);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#B8734F;">config.js</code>.</p><a href="../../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#B8734F;color:#FAF7F2;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a></div></div>`;
+                return;
+            }
+
+            const DOG_TITLES_TABLE = 'dog_show_titles';
+            const DOG_EPISODES_TABLE = 'dog_show_episodes';
+            const CONCERT_TITLES_TABLE = 'choice_concert_titles';
+            const CONCERT_AIRINGS_TABLE = 'choice_concert_airings';
+
+            let supabaseClient = null;
+            try {
+                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+            } catch (e) { console.warn('Supabase not loaded'); }
+
+            const $ = id => document.getElementById(id);
+            const statusBadge = $('statusBadge');
+            const loadingSpinner = $('loadingSpinner');
+            const viewTitle = $('viewTitle');
+            const sidebar = $('sidebar');
+
+            // state
+            let dogShows = [], dogEpisodes = [];
+            let concerts = [], concertAirings = [];
+            let currentView = 'overview';
+            let currentShowTitle = null, currentShowType = null; // 'dog' or 'concert'
+            let monthOffset = 0;
+            let editingCell = null;
+
+            // ─── HELPERS ──────────────────────────────────────────
+            function setStatus(text, type) {
+                const colors = { ok: 'status-ok', error: 'status-error', waiting: 'status-waiting' };
+                const dots = { ok: 'green', error: 'red', waiting: 'amber' };
+                statusBadge.className = `status-badge-top ${colors[type] || 'status-waiting'}`;
+                statusBadge.innerHTML = `<span class="status-dot ${dots[type] || 'amber'}"></span> ${text}`;
+            }
+            function esc(s) { if (s == null || s === '') return '—'; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+            function formatDate(dateStr) { if (!dateStr) return '—'; const d = new Date(dateStr); if (isNaN(d)) return dateStr; return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+            function isOverdue(dateStr, status) { if (status === true) return false; if (!dateStr) return false; const today = new Date(); today.setHours(0,0,0,0); const d = new Date(dateStr); d.setHours(0,0,0,0); return d < today; }
+
+            // ─── FETCH ALL DATA ─────────────────────────────────
+            async function fetchAllRows(table) {
+                let all = [], page = 0, size = 1000, more = true;
+                while (more) {
+                    const { data, error } = await supabaseClient.from(table).select('*').range(page*size, (page+1)*size-1);
+                    if (error) throw error;
+                    if (!data || data.length === 0) more = false;
+                    else { all = all.concat(data); page++; if (data.length < size) more = false; }
+                }
+                return all;
+            }
+            async function loadAllData() {
+                loadingSpinner.style.display = 'flex';
+                try {
+                    const [dTitles, dEpisodes, cTitles, cAirings] = await Promise.all([
+                        fetchAllRows(DOG_TITLES_TABLE),
+                        fetchAllRows(DOG_EPISODES_TABLE),
+                        fetchAllRows(CONCERT_TITLES_TABLE),
+                        fetchAllRows(CONCERT_AIRINGS_TABLE)
+                    ]);
+                    dogShows = dTitles || [];
+                    dogEpisodes = dEpisodes || [];
+                    concerts = cTitles || [];
+                    concertAirings = cAirings || [];
+                    renderSidebar();
+                    renderOverview();
+                } catch (err) {
+                    console.error(err);
+                    setStatus('❌ Error', 'error');
+                } finally {
+                    loadingSpinner.style.display = 'none';
+                }
+            }
+
+            // ─── RENDER SIDEBAR ─────────────────────────────────
+            function renderSidebar() {
+                let dogHtml = dogShows.map(s => `<button class="sidebar-item" onclick="switchView('dogshow','${esc(s.title)}')"><span class="icon"><i class="fa-solid fa-dog"></i></span><span class="label">${esc(s.title)}</span><span class="tooltip">${esc(s.title)}</span></button>`).join('');
+                let concertHtml = concerts.map(c => `<button class="sidebar-item" onclick="switchView('concert','${esc(c.title)}')"><span class="icon"><i class="fa-solid fa-music"></i></span><span class="label">${esc(c.title)}</span><span class="tooltip">${esc(c.title)}</span></button>`).join('');
+                $('dogShowButtons').innerHTML = dogHtml;
+                $('concertButtons').innerHTML = concertHtml;
+            }
+
+            // ─── VIEW SWITCHING ─────────────────────────────────
+            window.switchView = function(view, title) {
+                currentView = view;
+                currentShowTitle = title || null;
+                document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+                // overview
+                $('overview-view').classList.add('hidden');
+                $('dogshow-view').classList.add('hidden');
+                $('concert-view').classList.add('hidden');
+                if (view === 'overview') {
+                    $('overview-view').classList.remove('hidden');
+                    viewTitle.textContent = 'Overview';
+                    document.querySelector('[onclick="switchView(\'overview\')"]').classList.add('active');
+                    renderOverview();
+                } else if (view === 'dogshow') {
+                    $('dogshow-view').classList.remove('hidden');
+                    viewTitle.textContent = title;
+                    document.querySelector(`[onclick="switchView('dogshow','${esc(title)}')"]`).classList.add('active');
+                    renderDogShow(title);
+                } else if (view === 'concert') {
+                    $('concert-view').classList.remove('hidden');
+                    viewTitle.textContent = title;
+                    document.querySelector(`[onclick="switchView('concert','${esc(title)}')"]`).classList.add('active');
+                    renderConcert(title);
+                }
+                anime({ targets: `#${view}-view`, opacity: [0,1], translateY: [10,0], duration: 300, easing: 'easeOutCubic' });
+            };
+
+            // ─── OVERVIEW: CALENDAR & UPCOMING ─────────────────
+            let monthOffset = 0;
+            window.changeMonth = function(dir) { monthOffset += dir; renderOverview(); };
+            function renderOverview() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth() + monthOffset;
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startWeekday = firstDay.getDay(); // 0=Sun, 1=Mon...
+
+                let calendarHTML = '';
+                // day headers
+                const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                dayNames.forEach(d => calendarHTML += `<div class="text-center py-2 bg-mist font-semibold text-xs text-slateblue">${d}</div>`);
+
+                // empty cells before start
+                for (let i=0; i<startWeekday; i++) calendarHTML += `<div class="bg-warmwhite min-h-[80px]"></div>`;
+
+                for (let day=1; day<=daysInMonth; day++) {
+                    const dateObj = new Date(year, month, day);
+                    const dateStr = dateObj.toISOString().split('T')[0];
+                    const dogEvents = dogEpisodes.filter(e => e.air_date === dateStr);
+                    const concertEvents = concertAirings.filter(a => a.air_date === dateStr);
+                    const totalEvents = dogEvents.length + concertEvents.length;
+                    const isToday = dateStr === new Date().toISOString().split('T')[0];
+
+                    let eventTitles = [];
+                    dogEvents.forEach(e => eventTitles.push(`🐶 ${e.episode_number || e.show_title}`));
+                    concertEvents.forEach(a => eventTitles.push(`🎵 ${a.concert_title}`));
+
+                    let cellContent = `<div class="date-badge ${isToday ? 'today' : ''}">${day}</div>`;
+                    if (totalEvents > 0) {
+                        cellContent += `<div class="event-pills">`;
+                        eventTitles.slice(0,3).forEach(t => cellContent += `<span class="bg-mist text-slateblue text-[10px] px-1 rounded">${esc(t)}</span>`);
+                        if (totalEvents > 3) cellContent += `<span class="text-[10px] text-slateblue">+${totalEvents-3}</span>`;
+                        cellContent += `</div>`;
+                    } else {
+                        cellContent += `<div class="text-slateblue/40 text-[10px]">—</div>`;
+                    }
+
+                    calendarHTML += `
+                        <div class="bg-warmwhite min-h-[80px] p-1 border-b border-r border-slate-200 ${isToday ? 'bg-copper/10' : ''}">
+                            ${cellContent}
+                        </div>
+                    `;
+                }
+
+                $('calendarGrid').innerHTML = calendarHTML;
+                $('monthLabel').textContent = firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+                // Upcoming events (next 48h)
+                const nowTime = new Date().getTime();
+                const upcoming = [];
+                const allEvents = [
+                    ...dogEpisodes.map(e => ({ date: e.air_date, title: `Dog Show: ${e.show_title} (Ep ${e.episode_number||'?'})`, status: e.status, type:'dog' })),
+                    ...concertAirings.map(a => ({ date: a.air_date, title: `Concert: ${a.concert_title}`, status: a.status, type:'concert' }))
+                ];
+                upcoming = allEvents.filter(ev => {
+                    if (!ev.date) return false;
+                    const d = new Date(ev.date);
+                    const diff = d.getTime() - nowTime;
+                    return diff > 0 && diff <= 48*60*60*1000;
+                }).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+                if (upcoming.length === 0) {
+                    $('upcomingEvents').innerHTML = `<div class="text-slateblue text-sm">No upcoming events in the next 48h.</div>`;
+                } else {
+                    $('upcomingEvents').innerHTML = upcoming.map(ev => `
+                        <div class="flex items-start gap-3 p-3 bg-mist rounded-lg">
+                            <div class="w-8 h-8 rounded-lg bg-copper/20 text-copper flex items-center justify-center"><i class="fa-solid ${ev.type==='dog'?'fa-dog':'fa-music'}"></i></div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-midnight text-sm">${esc(ev.title)}</div>
+                                <div class="text-xs text-slateblue">${formatDate(ev.date)}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // ─── DOG SHOW DETAIL ───────────────────────────────
+            function renderDogShow(title) {
+                $('dogshowTitle').textContent = title;
+                const episodes = dogEpisodes.filter(e => e.show_title === title);
+                const tbody = $('dogshowTableBody');
+                if (!episodes.length) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slateblue">No episodes</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = episodes.map(ep => {
+                    const overdue = isOverdue(ep.air_date, ep.status);
+                    const statusClass = ep.status === true ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
+                    const statusText = ep.status === true ? 'Done' : (overdue ? 'Overdue' : 'To Air');
+                    return `
+                        <tr data-id="${ep.id}">
+                            <td onclick="editCell(this, 'air_date', '${ep.id}', 'dog')" class="editable-cell">${esc(ep.air_date || '—')} <span class="edit-icon">✏️</span></td>
+                            <td onclick="editCell(this, 'episode_number', '${ep.id}', 'dog')" class="editable-cell">${esc(ep.episode_number || '—')} <span class="edit-icon">✏️</span></td>
+                            <td class="text-center" onclick="toggleStatus('${ep.id}', ${ep.status}, 'dog')"><span class="${statusClass}">${statusText}</span></td>
+                            <td class="text-center"><button class="btn-delete-episode" onclick="deleteEpisode('${ep.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // ─── CONCERT DETAIL ────────────────────────────────
+            function renderConcert(title) {
+                $('concertTitle').textContent = title;
+                const airings = concertAirings.filter(a => a.concert_title === title);
+                const tbody = $('concertTableBody');
+                if (!airings.length) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-slateblue">No airings</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = airings.map(a => {
+                    const overdue = isOverdue(a.air_date, a.status);
+                    const statusClass = a.status === true ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
+                    const statusText = a.status === true ? 'Done' : (overdue ? 'Overdue' : 'To Air');
+                    return `
+                        <tr data-id="${a.id}">
+                            <td onclick="editCell(this, 'air_date', '${a.id}', 'concert')" class="editable-cell">${esc(a.air_date || '—')} <span class="edit-icon">✏️</span></td>
+                            <td class="text-center" onclick="toggleStatus('${a.id}', ${a.status}, 'concert')"><span class="${statusClass}">${statusText}</span></td>
+                            <td class="text-center"><button class="btn-delete-episode" onclick="deleteAiring('${a.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // ─── CRUD OPERATIONS ───────────────────────────────
+            window.toggleStatus = async function(id, currentStatus, type) {
+                const newStatus = !currentStatus;
+                const table = type === 'dog' ? DOG_EPISODES_TABLE : CONCERT_AIRINGS_TABLE;
+                try {
+                    await supabaseClient.from(table).update({ status: newStatus }).eq('id', id);
+                    if (type === 'dog') {
+                        const ep = dogEpisodes.find(e => e.id == id);
+                        if (ep) ep.status = newStatus;
+                        renderDogShow(currentShowTitle);
+                    } else {
+                        const a = concertAirings.find(x => x.id == id);
+                        if (a) a.status = newStatus;
+                        renderConcert(currentShowTitle);
+                    }
+                } catch (err) { alert('Error: ' + err.message); }
+            };
+
+            window.editCell = function(td, field, id, type) {
+                if (editingCell) return;
+                const currentValue = td.textContent.replace('✏️','').trim();
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue === '—' ? '' : currentValue;
+                input.className = 'edit-input';
+                td.textContent = '';
+                td.appendChild(input);
+                input.focus(); input.select();
+                editingCell = { td, field, id, type, oldValue: currentValue };
+                input.addEventListener('blur', function() { saveEdit(td, field, id, type, input.value); });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); saveEdit(td, field, id, type, input.value); }
+                    if (e.key === 'Escape') { td.textContent = editingCell.oldValue === '' ? '—' : editingCell.oldValue; editingCell = null; }
+                });
+            };
+
+            async function saveEdit(td, field, id, type, newValue) {
+                if (!editingCell) return;
+                const oldValue = editingCell.oldValue;
+                editingCell = null;
+                const finalValue = newValue.trim() || '—';
+                if (finalValue === oldValue) { td.textContent = oldValue; return; }
+                td.textContent = finalValue;
+                const updateData = {};
+                if (field === 'air_date') updateData.air_date = finalValue === '—' ? null : finalValue;
+                else if (field === 'episode_number') updateData.episode_number = finalValue;
+                const table = type === 'dog' ? DOG_EPISODES_TABLE : CONCERT_AIRINGS_TABLE;
+                try {
+                    await supabaseClient.from(table).update(updateData).eq('id', id);
+                    // update local
+                    if (type === 'dog') {
+                        const ep = dogEpisodes.find(e => e.id == id);
+                        if (ep) { if (field === 'air_date') ep.air_date = updateData.air_date; else ep.episode_number = updateData.episode_number; }
+                        renderDogShow(currentShowTitle);
+                    } else {
+                        const a = concertAirings.find(x => x.id == id);
+                        if (a) { a.air_date = updateData.air_date; }
+                        renderConcert(currentShowTitle);
+                    }
+                } catch (err) { alert('Error: ' + err.message); td.textContent = oldValue; }
+            }
+
+            window.deleteEpisode = async function(id) {
+                if (!confirm('Delete this episode?')) return;
+                await supabaseClient.from(DOG_EPISODES_TABLE).delete().eq('id', id);
+                dogEpisodes = dogEpisodes.filter(e => e.id != id);
+                renderDogShow(currentShowTitle);
+            };
+            window.deleteAiring = async function(id) {
+                if (!confirm('Delete this airing?')) return;
+                await supabaseClient.from(CONCERT_AIRINGS_TABLE).delete().eq('id', id);
+                concertAirings = concertAirings.filter(a => a.id != id);
+                renderConcert(currentShowTitle);
+            };
+
+            // Add episode / airing
+            window.addEpisode = async function() {
+                const title = currentShowTitle;
+                const { data, error } = await supabaseClient.from(DOG_EPISODES_TABLE).insert({ show_title: title, air_date: null, episode_number: '', status: false }).select();
+                if (!error) { dogEpisodes.push(data[0]); renderDogShow(title); }
+            };
+            window.addAiring = async function() {
+                const title = currentShowTitle;
+                const { data, error } = await supabaseClient.from(CONCERT_AIRINGS_TABLE).insert({ concert_title: title, air_date: null, status: false }).select();
+                if (!error) { concertAirings.push(data[0]); renderConcert(title); }
+            };
+
+            // Add new dog show / concert
+            window.addDogShow = async function() {
+                const name = prompt('Enter dog show name:');
+                if (!name) return;
+                const { data, error } = await supabaseClient.from(DOG_TITLES_TABLE).insert({ title: name }).select();
+                if (!error) { dogShows.push(data[0]); renderSidebar(); switchView('dogshow', name); }
+            };
+            window.addConcert = async function() {
+                const name = prompt('Enter concert name:');
+                if (!name) return;
+                const { data, error } = await supabaseClient.from(CONCERT_TITLES_TABLE).insert({ title: name }).select();
+                if (!error) { concerts.push(data[0]); renderSidebar(); switchView('concert', name); }
+            };
+
+            // ─── SIDEBAR TOGGLE & LOGOUT ────────────────────────
+            window.toggleSidebar = function() { sidebar.classList.toggle('sidebar-collapsed'); };
+            window.logoutUser = async function() {
+                if (!confirm('Sign out?')) return;
+                await supabaseClient.auth.signOut();
+                localStorage.removeItem('archivehub_user');
+                window.location.href = '../../index.html';
+            };
+
+            // ─── MODAL (unused for now) ─────────────────────────
+            window.closeModal = function() { $('modal-overlay').classList.remove('open'); };
+            $('modal-overlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+            document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+
+            // ─── INIT ───────────────────────────────────────────
+            document.addEventListener('DOMContentLoaded', async function() {
+                if (!supabaseClient) {
+                    setStatus('⚠️ No Supabase', 'error');
+                    return;
+                }
+                setStatus('Checking...', 'waiting');
+                try {
+                    const { data } = await supabaseClient.auth.getSession();
+                    if (!data.session) {
+                        setStatus('🔓 Not logged in', 'error');
+                        setTimeout(() => window.location.href = '../../index.html', 1500);
+                        return;
+                    }
+                    setStatus('✅ Live', 'ok');
+                    await loadAllData();
+                } catch (err) {
+                    setStatus('❌ Error', 'error');
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
