@@ -142,21 +142,63 @@
         .scrollable-content::-webkit-scrollbar { width: 5px; }
         .scrollable-content::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
 
-        /* ─── CONTENT CARDS ─── */
-        .date-card-compact {
-            padding: 0.75rem 1rem; background: #FAF7F2; border: 1px solid rgba(24,32,47,0.08);
-            border-radius: 0.6rem; transition: all 0.2s; cursor: pointer;
+        /* ─── LOADING SPINNER ─── */
+        #loadingSpinner {
+            display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px);
+            z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
         }
-        .date-card-compact:hover { border-color: #B8734F; box-shadow: 0 2px 8px -4px rgba(184,115,79,0.15); transform: translateX(4px); }
-        .date-note {
-            font-size: 0.6rem; color: #B8734F; background: #FAF7F2; padding: 0.05rem 0.3rem;
-            border-radius: 0.3rem; border: 1px dashed #cbd5e1; cursor: text; min-height: 1.5rem;
-            margin: 0.1rem 0; width: 100%; outline: none; transition: border-color 0.2s, background 0.2s;
+        #loadingSpinner .spinner {
+            width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #B8734F;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
         }
-        .date-note:focus { border-color: #B8734F; background: #FFFFFF; }
-        .date-note:empty::before { content: "✏️ Click to add note..."; color: #94a3b8; }
-        .date-note:not(:empty)::before { content: ""; }
-        .date-note:hover { border-style: solid; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── TABLES ─── */
+        .priority-groups-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .priority-groups-table th {
+            text-align: left; padding: 0.6rem 0.8rem; font-weight: 600; font-size: 0.55rem;
+            text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; border-bottom: 2px solid rgba(24,32,47,0.1); background: #FAF7F2;
+        }
+        .priority-groups-table td {
+            padding: 0.6rem 0.8rem; border-bottom: 1px solid rgba(24,32,47,0.05); color: #18202F; vertical-align: middle;
+        }
+        .priority-groups-table tr:last-child td { border-bottom: none; }
+        .priority-groups-table tr:hover td { background: rgba(220,225,230,0.3); }
+
+        .table-wrap { overflow-x: auto; }
+
+        /* ─── BADGES ─── */
+        .badge-done { background: #e2e8f0; color: #18202F; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
+        .badge-toair { background: #f0ebe6; color: #6b5d4d; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
+        .badge-overdue { background: #f5e6e6; color: #7a3b3b; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
+        .badge-done:hover, .badge-toair:hover, .badge-overdue:hover { transform: scale(1.05); }
+
+        /* ─── EDIT ─── */
+        .edit-icon { opacity: 0; transition: opacity 0.2s ease; font-size: 0.6rem; color: #94a3b8; margin-left: 0.25rem; }
+        .editable-cell:hover .edit-icon { opacity: 1; }
+        .editable-cell { cursor: pointer; }
+        .edit-input {
+            width: 100%; padding: 0.25rem 0.5rem; border: 1px solid #B8734F; border-radius: 0.25rem;
+            font-size: 0.8rem; background: #FFFFFF; color: #18202F; outline: none;
+        }
+        .edit-input:focus { border-color: #B8734F; box-shadow: 0 0 0 3px rgba(184,115,79,0.2); }
+
+        .btn-delete-episode { background: transparent; color: #b91c1c; border: none; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .btn-delete-episode:hover { background: rgba(185,28,28,0.1); transform: scale(1.1); }
+
+        .btn-export {
+            background: #18202F; color: #FAF7F2; border: none; padding: 0.4rem 1rem; border-radius: 9999px;
+            font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
+        }
+        .btn-export:hover { background: #2d3a4f; transform: scale(1.02); }
+
+        /* ─── CALENDAR ─── */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #eef1f6; }
+        .calendar-day-cell { background: #FAF7F2; min-height: 80px; padding: 0.25rem; }
+        .calendar-day-cell.today { background: rgba(184,115,79,0.1); }
+        .date-badge { font-size: 0.7rem; font-weight: 600; color: #18202F; margin-bottom: 0.25rem; }
+        .event-pills { display: flex; flex-direction: column; gap: 0.15rem; }
+        .event-pill { font-size: 0.6rem; padding: 0.1rem 0.3rem; background: #e2e8f0; border-radius: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* ─── MODAL ─── */
         .modal-overlay {
@@ -172,56 +214,7 @@
         }
         .modal-overlay.open .modal-card { transform: scale(1) translateY(0); }
 
-        /* ─── TABLES ─── */
-        .priority-groups-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        .priority-groups-table th {
-            text-align: left; padding: 0.6rem 0.8rem; font-weight: 600; font-size: 0.55rem;
-            text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; border-bottom: 2px solid rgba(24,32,47,0.1); background: #FAF7F2;
-        }
-        .priority-groups-table td {
-            padding: 0.6rem 0.8rem; border-bottom: 1px solid rgba(24,32,47,0.05); color: #18202F; vertical-align: middle;
-        }
-        .priority-groups-table tr:last-child td { border-bottom: none; }
-        .priority-groups-table tr:hover td { background: rgba(220,225,230,0.3); }
-
-        .priority-a { background: rgba(184,115,79,0.12); color: #7a3b3b; }
-        .priority-b { background: rgba(184,115,79,0.08); color: #6b5d4d; }
-        .priority-c { background: rgba(100,116,139,0.12); color: #1e40af; }
-
-        .year-header {
-            display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem;
-            background: #FAF7F2; border: 1px solid rgba(24,32,47,0.08); border-radius: 0.5rem;
-            cursor: pointer; transition: background 0.15s; margin-bottom: 0.5rem; width: 100%; border: none; text-align: left; font-size: 0.85rem;
-        }
-        .year-header:hover { background: rgba(220,225,230,0.4); }
-        .year-content { display: block; }
-        .year-content.collapsed { display: none; }
-
-        #loadingSpinner {
-            display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px);
-            z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
-        }
-        #loadingSpinner .spinner {
-            width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #B8734F;
-            border-radius: 50%; animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Search bar */
-        .search-bar {
-            display: flex; align-items: center; background: #FAF7F2; border-radius: 0.6rem;
-            padding: 0.25rem 0.7rem; border: 1px solid rgba(24,32,47,0.1); transition: all 0.2s; max-width: 300px;
-        }
-        .search-bar:focus-within { border-color: #B8734F; background: #FFFFFF; box-shadow: 0 0 0 3px rgba(184,115,79,0.1); }
-        .search-bar input { border: none; background: transparent; outline: none; padding: 0.25rem 0; font-size: 0.75rem; width: 100%; color: #18202F; }
-        .search-bar input::placeholder { color: #94a3b8; }
-        .search-bar i { color: #94a3b8; font-size: 0.75rem; margin-right: 0.4rem; }
-
-        .btn-export {
-            background: #18202F; color: #FAF7F2; border: none; padding: 0.4rem 1rem; border-radius: 9999px;
-            font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
-        }
-        .btn-export:hover { background: #2d3a4f; transform: scale(1.02); }
+        .hidden { display: none !important; }
 
         /* Responsive */
         @media (max-width: 1023px) {
@@ -240,9 +233,6 @@
             .sidebar { min-width: 44px; max-width: 44px; }
             .sidebar-item, .sidebar-signout { padding: 0.35rem; }
             .sidebar-item .icon, .sidebar-signout .icon { font-size: 0.85rem; width: 20px; }
-            .brand-city, .brand-work { font-size: 0.8rem; }
-            .search-input { width: 100px; font-size: 0.65rem; padding: 0.25rem 1.6rem 0.25rem 1.4rem; }
-            .search-input:focus { width: 130px; }
             header { padding: 0.4rem 0.75rem; min-height: 48px; }
             .scrollable-content { padding: 0.75rem; }
         }
@@ -264,7 +254,7 @@
 
             <!-- Navigation -->
             <nav class="sidebar-scroll" id="sidebarNav">
-                <button class="sidebar-item active" onclick="switchView('overview')">
+                <button class="sidebar-item active" id="overviewBtn" onclick="switchView('overview')">
                     <span class="icon"><i class="fa-solid fa-gauge-high"></i></span>
                     <span class="label">Overview</span>
                     <span class="tooltip">Overview</span>
@@ -293,6 +283,8 @@
                     <span class="tooltip">Add Concert</span>
                 </button>
 
+                <div class="sidebar-divider"></div>
+
                 <button class="sidebar-item" onclick="window.location.href='../index.html'">
                     <span class="icon"><i class="fa-solid fa-arrow-left"></i></span>
                     <span class="label">Back to Dashboard</span>
@@ -302,7 +294,7 @@
 
             <!-- Bottom: Sign Out -->
             <div class="px-2 py-3 border-t border-black/5 flex-shrink-0">
-                <button class="sidebar-signout" id="logoutBtn">
+                <button class="sidebar-signout" id="logoutBtn" onclick="logoutUser()">
                     <span class="icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
                     <span class="label">Sign Out</span>
                     <span class="tooltip">Sign Out</span>
@@ -340,7 +332,7 @@
                             <span id="monthLabel" class="font-semibold text-midnight">Loading...</span>
                             <button onclick="changeMonth(1)" class="text-slateblue hover:text-midnight"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
-                        <div class="calendar-grid" id="calendarGrid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:#eef1f6;"></div>
+                        <div class="calendar-grid" id="calendarGrid"></div>
                     </div>
 
                     <!-- Upcoming events -->
@@ -393,6 +385,12 @@
         </div>
     </div>
 
+    <!-- ═══ LOADING SPINNER ═══ -->
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+        <p class="text-slateblue text-sm font-medium">Loading...</p>
+    </div>
+
     <!-- ═══ MODAL ═══ -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal-card">
@@ -420,7 +418,7 @@
                     throw new Error('design.supabase not found');
                 }
             } catch (e) {
-                document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#18202F;padding:20px;font-family:Plus Jakarta Sans,sans-serif;"><div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);"><i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#B8734F;margin-bottom:12px;"></i><h2 style="font-size:20px;font-weight:700;color:#FAF7F2;">Configuration Error</h2><p style="color:rgba(250,247,242,0.7);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#B8734F;">config.js</code>.</p><a href="../../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#B8734F;color:#FAF7F2;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a></div></div>`;
+                document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#18202F;padding:20px;font-family:Plus Jakarta Sans,sans-serif;"><div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);"><i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#B8734F;margin-bottom:12px;"></i><h2 style="font-size:20px;font-weight:700;color:#FAF7F2;">Configuration Error</h2><p style="color:rgba(250,247,242,0.7);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#B8734F;">config.js</code>.</p><a href="../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#B8734F;color:#FAF7F2;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a></div></div>`;
                 return;
             }
 
@@ -446,7 +444,7 @@
             let dogShows = [], dogEpisodes = [];
             let concerts = [], concertAirings = [];
             let currentView = 'overview';
-            let currentShowTitle = null, currentShowType = null; // 'dog' or 'concert'
+            let currentShowTitle = null, currentShowType = null;
             let monthOffset = 0;
             let editingCell = null;
 
@@ -473,6 +471,7 @@
                 return all;
             }
             async function loadAllData() {
+                if (!loadingSpinner) return;
                 loadingSpinner.style.display = 'flex';
                 try {
                     const [dTitles, dEpisodes, cTitles, cAirings] = await Promise.all([
@@ -508,32 +507,40 @@
                 currentView = view;
                 currentShowTitle = title || null;
                 document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-                // overview
+                
                 $('overview-view').classList.add('hidden');
                 $('dogshow-view').classList.add('hidden');
                 $('concert-view').classList.add('hidden');
+                
                 if (view === 'overview') {
                     $('overview-view').classList.remove('hidden');
                     viewTitle.textContent = 'Overview';
-                    document.querySelector('[onclick="switchView(\'overview\')"]').classList.add('active');
+                    $('overviewBtn').classList.add('active');
                     renderOverview();
                 } else if (view === 'dogshow') {
                     $('dogshow-view').classList.remove('hidden');
                     viewTitle.textContent = title;
-                    document.querySelector(`[onclick="switchView('dogshow','${esc(title)}')"]`).classList.add('active');
+                    document.querySelectorAll('#dogShowButtons .sidebar-item').forEach(btn => {
+                        if (btn.textContent.includes(title)) btn.classList.add('active');
+                    });
                     renderDogShow(title);
                 } else if (view === 'concert') {
                     $('concert-view').classList.remove('hidden');
                     viewTitle.textContent = title;
-                    document.querySelector(`[onclick="switchView('concert','${esc(title)}')"]`).classList.add('active');
+                    document.querySelectorAll('#concertButtons .sidebar-item').forEach(btn => {
+                        if (btn.textContent.includes(title)) btn.classList.add('active');
+                    });
                     renderConcert(title);
                 }
-                anime({ targets: `#${view}-view`, opacity: [0,1], translateY: [10,0], duration: 300, easing: 'easeOutCubic' });
+                
+                if (typeof anime !== 'undefined') {
+                    anime({ targets: `#${view}-view`, opacity: [0,1], translateY: [10,0], duration: 300, easing: 'easeOutCubic' });
+                }
             };
 
             // ─── OVERVIEW: CALENDAR & UPCOMING ─────────────────
-            let monthOffset = 0;
             window.changeMonth = function(dir) { monthOffset += dir; renderOverview(); };
+            
             function renderOverview() {
                 const now = new Date();
                 const year = now.getFullYear();
@@ -541,14 +548,12 @@
                 const firstDay = new Date(year, month, 1);
                 const lastDay = new Date(year, month + 1, 0);
                 const daysInMonth = lastDay.getDate();
-                const startWeekday = firstDay.getDay(); // 0=Sun, 1=Mon...
+                const startWeekday = firstDay.getDay();
 
                 let calendarHTML = '';
-                // day headers
                 const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
                 dayNames.forEach(d => calendarHTML += `<div class="text-center py-2 bg-mist font-semibold text-xs text-slateblue">${d}</div>`);
 
-                // empty cells before start
                 for (let i=0; i<startWeekday; i++) calendarHTML += `<div class="bg-warmwhite min-h-[80px]"></div>`;
 
                 for (let day=1; day<=daysInMonth; day++) {
@@ -560,13 +565,13 @@
                     const isToday = dateStr === new Date().toISOString().split('T')[0];
 
                     let eventTitles = [];
-                    dogEvents.forEach(e => eventTitles.push(`🐶 ${e.episode_number || e.show_title}`));
-                    concertEvents.forEach(a => eventTitles.push(`🎵 ${a.concert_title}`));
+                    dogEvents.forEach(e => eventTitles.push(`🐶 ${e.show_title || 'Dog Show'}`));
+                    concertEvents.forEach(a => eventTitles.push(`🎵 ${a.concert_title || 'Concert'}`));
 
-                    let cellContent = `<div class="date-badge ${isToday ? 'today' : ''}">${day}</div>`;
+                    let cellContent = `<div class="date-badge">${day}</div>`;
                     if (totalEvents > 0) {
                         cellContent += `<div class="event-pills">`;
-                        eventTitles.slice(0,3).forEach(t => cellContent += `<span class="bg-mist text-slateblue text-[10px] px-1 rounded">${esc(t)}</span>`);
+                        eventTitles.slice(0,3).forEach(t => cellContent += `<span class="event-pill">${esc(t)}</span>`);
                         if (totalEvents > 3) cellContent += `<span class="text-[10px] text-slateblue">+${totalEvents-3}</span>`;
                         cellContent += `</div>`;
                     } else {
@@ -574,7 +579,7 @@
                     }
 
                     calendarHTML += `
-                        <div class="bg-warmwhite min-h-[80px] p-1 border-b border-r border-slate-200 ${isToday ? 'bg-copper/10' : ''}">
+                        <div class="calendar-day-cell ${isToday ? 'today' : ''}">
                             ${cellContent}
                         </div>
                     `;
@@ -585,9 +590,9 @@
 
                 // Upcoming events (next 48h)
                 const nowTime = new Date().getTime();
-                const upcoming = [];
+                let upcoming = [];
                 const allEvents = [
-                    ...dogEpisodes.map(e => ({ date: e.air_date, title: `Dog Show: ${e.show_title} (Ep ${e.episode_number||'?'})`, status: e.status, type:'dog' })),
+                    ...dogEpisodes.map(e => ({ date: e.air_date, title: `Dog Show: ${e.show_title}`, status: e.status, type:'dog' })),
                     ...concertAirings.map(a => ({ date: a.air_date, title: `Concert: ${a.concert_title}`, status: a.status, type:'concert' }))
                 ];
                 upcoming = allEvents.filter(ev => {
@@ -629,7 +634,7 @@
                         <tr data-id="${ep.id}">
                             <td onclick="editCell(this, 'air_date', '${ep.id}', 'dog')" class="editable-cell">${esc(ep.air_date || '—')} <span class="edit-icon">✏️</span></td>
                             <td onclick="editCell(this, 'episode_number', '${ep.id}', 'dog')" class="editable-cell">${esc(ep.episode_number || '—')} <span class="edit-icon">✏️</span></td>
-                            <td class="text-center" onclick="toggleStatus('${ep.id}', ${ep.status}, 'dog')"><span class="${statusClass}">${statusText}</span></td>
+                            <td class="text-center" onclick="toggleStatus('${ep.id}', ${ep.status === true}, 'dog')"><span class="${statusClass}">${statusText}</span></td>
                             <td class="text-center"><button class="btn-delete-episode" onclick="deleteEpisode('${ep.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
                         </tr>
                     `;
@@ -652,7 +657,7 @@
                     return `
                         <tr data-id="${a.id}">
                             <td onclick="editCell(this, 'air_date', '${a.id}', 'concert')" class="editable-cell">${esc(a.air_date || '—')} <span class="edit-icon">✏️</span></td>
-                            <td class="text-center" onclick="toggleStatus('${a.id}', ${a.status}, 'concert')"><span class="${statusClass}">${statusText}</span></td>
+                            <td class="text-center" onclick="toggleStatus('${a.id}', ${a.status === true}, 'concert')"><span class="${statusClass}">${statusText}</span></td>
                             <td class="text-center"><button class="btn-delete-episode" onclick="deleteAiring('${a.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
                         </tr>
                     `;
@@ -708,7 +713,6 @@
                 const table = type === 'dog' ? DOG_EPISODES_TABLE : CONCERT_AIRINGS_TABLE;
                 try {
                     await supabaseClient.from(table).update(updateData).eq('id', id);
-                    // update local
                     if (type === 'dog') {
                         const ep = dogEpisodes.find(e => e.id == id);
                         if (ep) { if (field === 'air_date') ep.air_date = updateData.air_date; else ep.episode_number = updateData.episode_number; }
@@ -734,7 +738,6 @@
                 renderConcert(currentShowTitle);
             };
 
-            // Add episode / airing
             window.addEpisode = async function() {
                 const title = currentShowTitle;
                 const { data, error } = await supabaseClient.from(DOG_EPISODES_TABLE).insert({ show_title: title, air_date: null, episode_number: '', status: false }).select();
@@ -746,7 +749,6 @@
                 if (!error) { concertAirings.push(data[0]); renderConcert(title); }
             };
 
-            // Add new dog show / concert
             window.addDogShow = async function() {
                 const name = prompt('Enter dog show name:');
                 if (!name) return;
@@ -764,15 +766,24 @@
             window.toggleSidebar = function() { sidebar.classList.toggle('sidebar-collapsed'); };
             window.logoutUser = async function() {
                 if (!confirm('Sign out?')) return;
-                await supabaseClient.auth.signOut();
+                try { await supabaseClient.auth.signOut(); } catch (_) {}
                 localStorage.removeItem('archivehub_user');
-                window.location.href = '../../index.html';
+                window.location.href = '../index.html';
             };
 
-            // ─── MODAL (unused for now) ─────────────────────────
+            // ─── MODAL ─────────────────────────────────────────
             window.closeModal = function() { $('modal-overlay').classList.remove('open'); };
             $('modal-overlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
-            document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+            document.addEventListener('keydown', function(e) { 
+                if (e.key === 'Escape') {
+                    closeModal();
+                    if (editingCell) {
+                        const { td, oldValue } = editingCell;
+                        td.textContent = oldValue === '' ? '—' : oldValue;
+                        editingCell = null;
+                    }
+                }
+            });
 
             // ─── INIT ───────────────────────────────────────────
             document.addEventListener('DOMContentLoaded', async function() {
