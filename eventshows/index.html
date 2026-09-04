@@ -38,7 +38,6 @@
         html, body { width: 100%; height: 100%; overflow: hidden; background: #DCE1E6; font-family: 'Plus Jakarta Sans', sans-serif; }
         .app-container { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
 
-        /* Status Badge */
         .status-ok { background: #e2e8f0; color: #18202F; border-color: #94a3b8; }
         .status-error { background: #f5e6e6; color: #7a3b3b; border-color: #c9a1a1; }
         .status-waiting { background: #f0ebe6; color: #6b5d4d; border-color: #cdbfae; }
@@ -49,7 +48,6 @@
         .status-dot.red { background: #ef4444; }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
-        /* Sidebar */
         .sidebar {
             background: rgba(220, 225, 230, 0.75);
             backdrop-filter: blur(20px);
@@ -92,14 +90,12 @@
         .brand-city { color: #18202F; }
         .brand-work { color: #B8734F; }
 
-        /* Main Content */
         .main-content { flex: 1; min-width: 0; background: #DCE1E6; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { background: #DCE1E6; border-bottom: 1px solid rgba(24,32,47,0.08); flex-shrink: 0; padding: 0.75rem 1.5rem; min-height: 64px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
         .scrollable-content { flex: 1; overflow-y: auto; padding: 1.5rem; min-height: 0; }
         .scrollable-content::-webkit-scrollbar { width: 5px; }
         .scrollable-content::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
 
-        /* Loading Spinner */
         #loadingSpinner {
             display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px);
             z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
@@ -110,7 +106,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Tables */
         .priority-groups-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
         .priority-groups-table th {
             text-align: left; padding: 0.6rem 0.8rem; font-weight: 600; font-size: 0.6rem;
@@ -123,13 +118,11 @@
         .priority-groups-table tr:hover td { background: rgba(220,225,230,0.3); }
         .table-wrap { overflow-x: auto; }
 
-        /* Badges */
         .badge-done { background: #e2e8f0; color: #18202F; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
         .badge-toair { background: #f0ebe6; color: #6b5d4d; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
         .badge-overdue { background: #f5e6e6; color: #7a3b3b; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
         .badge-done:hover, .badge-toair:hover, .badge-overdue:hover { transform: scale(1.05); }
 
-        /* Edit */
         .edit-icon { opacity: 0; transition: opacity 0.2s ease; font-size: 0.6rem; color: #94a3b8; margin-left: 0.25rem; }
         .editable-cell:hover .edit-icon { opacity: 1; }
         .editable-cell { cursor: pointer; }
@@ -146,7 +139,6 @@
         }
         .btn-export:hover { background: #2d3a4f; transform: scale(1.02); }
 
-        /* Week Calendar */
         .week-calendar {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -213,19 +205,12 @@
             font-size: 0.7rem;
             font-weight: 700;
             color: #18202F;
-            margin-bottom: 0.1rem;
-        }
-        .week-event-type {
-            font-size: 0.6rem;
-            color: #68748A;
-            font-weight: 500;
         }
         .check-icon {
             color: #22c55e;
             font-size: 0.7rem;
         }
 
-        /* Search Bar */
         .search-bar {
             display: flex; align-items: center; background: #FAF7F2; border-radius: 0.6rem;
             padding: 0.25rem 0.7rem; border: 1px solid rgba(24,32,47,0.1); transition: all 0.2s; max-width: 300px;
@@ -237,7 +222,6 @@
 
         .hidden { display: none !important; }
 
-        /* Modal */
         .modal-overlay {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
             z-index: 200; align-items: center; justify-content: center;
@@ -259,7 +243,6 @@
 <body>
 
     <div class="app-container">
-        <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="px-2 py-4 border-b border-black/5 flex items-center justify-center flex-shrink-0">
                 <span class="text-lg font-extrabold tracking-tight whitespace-nowrap">
@@ -296,7 +279,6 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
         <div class="main-content">
             <header>
                 <div class="flex items-center gap-3">
@@ -313,9 +295,7 @@
             </header>
 
             <div class="scrollable-content" id="scrollableContent">
-                <!-- Overview View -->
                 <div id="overview-view">
-                    <!-- Week Calendar -->
                     <div class="bg-warmwhite rounded-xl border border-slate-200/80 shadow-sm mb-6">
                         <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-mist">
                             <button onclick="changeWeek(-1)" class="text-slateblue hover:text-midnight text-lg"><i class="fa-solid fa-chevron-left"></i></button>
@@ -325,11 +305,10 @@
                         <div class="week-calendar" id="weekCalendar"></div>
                     </div>
 
-                    <!-- Upcoming Events -->
                     <div class="bg-warmwhite rounded-xl border border-slate-200/80 shadow-sm p-4">
                         <div class="flex items-center gap-2 mb-3">
                             <h2 class="text-lg font-bold text-midnight"><i class="fa-regular fa-clock"></i> Upcoming Events</h2>
-                            <span class="text-xs bg-mist text-slateblue px-2 py-0.5 rounded-full">next 7 days</span>
+                            <span class="text-xs bg-mist text-slateblue px-2 py-0.5 rounded-full">next 2 weeks</span>
                         </div>
                         <div id="upcomingEvents" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div class="text-slateblue text-sm">Loading...</div>
@@ -337,7 +316,6 @@
                     </div>
                 </div>
 
-                <!-- Dog Show View -->
                 <div id="dogshow-view" class="hidden">
                     <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
                         <div>
@@ -354,7 +332,6 @@
                     </div>
                 </div>
 
-                <!-- Concert View -->
                 <div id="concert-view" class="hidden">
                     <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
                         <div>
@@ -393,13 +370,11 @@
         </div>
     </div>
 
-    <!-- Loading Spinner -->
     <div id="loadingSpinner">
         <div class="spinner"></div>
         <p class="text-slateblue text-sm font-medium">Loading...</p>
     </div>
 
-    <!-- Concert Entry Modal -->
     <div class="modal-overlay" id="concertModal">
         <div class="modal-card">
             <h3 style="font-size:1.1rem;font-weight:700;color:#18202F;margin-bottom:1.5rem;">
@@ -496,13 +471,6 @@
                 return dateStr; 
             }
 
-            function formatShortDate(dateStr) { 
-                if (!dateStr) return '—'; 
-                const d = parseDate(dateStr);
-                if (d && !isNaN(d)) return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-                return dateStr; 
-            }
-
             function isOverdue(dateStr, status) { 
                 if (status === true) return false; 
                 if (!dateStr) return false; 
@@ -552,29 +520,36 @@
             function renderSidebar() {
                 let dogHtml = dogShows.map(s => {
                     const title = esc(s.title);
-                    let shortTitle, icon, color;
-                    if (s.title.includes('First Run') || s.title.includes('LIVE')) {
-                        shortTitle = 'LIVE Run';
+                    let isLive = s.title.includes('LIVE') || s.title.includes('First Run');
+                    let isReplay = s.title.includes('REPLAY') || s.title.includes('Second Run');
+                    
+                    let icon, color, mainTitle, subTitle;
+                    if (isLive) {
                         icon = 'fa-tower-broadcast';
                         color = '#ef4444';
-                    } else if (s.title.includes('Second Run') || s.title.includes('REPLAY')) {
-                        shortTitle = 'REPLAY Run';
+                        mainTitle = 'All About Dogs';
+                        subTitle = 'LIVE';
+                    } else if (isReplay) {
                         icon = 'fa-rotate-left';
                         color = '#3b82f6';
+                        mainTitle = 'All About Dogs';
+                        subTitle = 'REPLAY';
                     } else {
-                        shortTitle = s.title.replace('Dog Show ', '');
                         icon = 'fa-dog';
                         color = '#68748A';
+                        mainTitle = s.title;
+                        subTitle = '';
                     }
+                    
                     return `<button class="sidebar-item" onclick="switchView('dogshow','${title.replace(/'/g, "\\'")}')" title="${title}">
                         <span class="icon"><i class="fa-solid ${icon}" style="color:${color};"></i></span>
-                        <span class="label">${esc(shortTitle)}</span>
+                        <span class="label">${esc(mainTitle)} ${subTitle ? `<span style="font-size:0.6rem;color:#94a3b8;font-weight:500;">(${subTitle})</span>` : ''}</span>
                     </button>`;
                 }).join('');
                 
                 let concertHtml = concerts.map(c => {
                     const title = esc(c.title);
-                    const shortTitle = c.title.replace('Choice Concert', 'Concert');
+                    const shortTitle = c.title.replace('Choice Concert', 'Concerts');
                     return `<button class="sidebar-item" onclick="switchView('concert','${title.replace(/'/g, "\\'")}')" title="${title}">
                         <span class="icon"><i class="fa-solid fa-music" style="color:#22c55e;"></i></span>
                         <span class="label">${esc(shortTitle)}</span>
@@ -651,7 +626,6 @@
                         eventsHTML += `
                             <div class="week-event ${eventClass}" onclick="switchView('dogshow','${e.show_title.replace(/'/g, "\\'")}')">
                                 <div class="week-event-title">${checkMark}${esc(e.episode_number || 'Episode')}</div>
-                                <div class="week-event-type">${isReplay ? 'REPLAY' : 'LIVE'}</div>
                             </div>
                         `;
                     });
@@ -660,7 +634,6 @@
                         eventsHTML += `
                             <div class="week-event concert" onclick="switchView('concert','${a.concert_title.replace(/'/g, "\\'")}')">
                                 <div class="week-event-title">${esc(a.episode_title || 'Concert')}</div>
-                                <div class="week-event-type">CONCERT</div>
                             </div>
                         `;
                     });
@@ -692,7 +665,7 @@
                     const d = parseDate(e.air_date);
                     if (!d) return;
                     const diff = d.getTime() - nowTime;
-                    if (diff > 0 && diff <= 7*24*60*60*1000) {
+                    if (diff > 0 && diff <= 14*24*60*60*1000) {
                         const isReplay = e.show_title.includes('REPLAY');
                         upcoming.push({
                             date: e.air_date,
@@ -709,7 +682,7 @@
                     const d = parseDate(a.air_date);
                     if (!d) return;
                     const diff = d.getTime() - nowTime;
-                    if (diff > 0 && diff <= 7*24*60*60*1000) {
+                    if (diff > 0 && diff <= 14*24*60*60*1000) {
                         upcoming.push({
                             date: a.air_date,
                             title: a.episode_title || a.concert_title,
@@ -723,7 +696,7 @@
                 upcoming.sort((a,b) => new Date(a.date) - new Date(b.date));
                 
                 if (upcoming.length === 0) {
-                    $('upcomingEvents').innerHTML = `<div class="text-slateblue text-sm">No upcoming events in the next 7 days.</div>`;
+                    $('upcomingEvents').innerHTML = `<div class="text-slateblue text-sm">No upcoming events in the next 2 weeks.</div>`;
                 } else {
                     $('upcomingEvents').innerHTML = upcoming.map(ev => {
                         const dayName = new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long' });
