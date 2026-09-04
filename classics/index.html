@@ -47,6 +47,26 @@
         .status-ok { background: #e2e8f0; color: #18202F; border-color: #94a3b8; }
         .status-error { background: #f5e6e6; color: #7a3b3b; border-color: #c9a1a1; }
         .status-waiting { background: #f0ebe6; color: #6b5d4d; border-color: #cdbfae; }
+        .status-badge-top {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.2rem 0.7rem;
+            border-radius: 9999px;
+            border: 1px solid;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.green { background: #22c55e; }
+        .status-dot.amber { background: #eab308; animation: pulse 1.5s ease-in-out infinite; }
+        .status-dot.red { background: #ef4444; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
         /* ═══ SIDEBAR ═══ */
         .sidebar {
@@ -89,6 +109,7 @@
             transition: all 0.2s ease; cursor: pointer; border-radius: 0.5rem; padding: 0.5rem;
             display: flex; align-items: center; justify-content: center; color: #68748A; text-decoration: none;
             font-size: 0.875rem; font-weight: 500; position: relative; width: 100%; margin-bottom: 2px; white-space: nowrap;
+            border: none; background: transparent;
         }
         .sidebar-back .icon, .sidebar-item .icon, .sidebar-signout .icon {
             font-size: 1.1rem; width: 24px; text-align: center; transition: all 0.2s ease;
@@ -116,6 +137,8 @@
         .sidebar-signout { border: none; background: transparent; color: #68748A; }
         .sidebar-signout:hover { background: rgba(184, 115, 79, 0.15); color: #9D5D3C; }
         .sidebar-signout:hover .icon { transform: scale(1.15); }
+        .brand-city { color: #18202F; }
+        .brand-work { color: #B8734F; }
 
         /* ─── MAIN CONTENT ─── */
         .main-content { flex: 1; min-width: 0; background: #DCE1E6; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -199,6 +222,53 @@
         /* ─── FADE IN ─── */
         .fade-in { animation: fadeIn 0.25s ease-out; }
         @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* ─── TABLE ROW HOVER ─── */
+        .table-row-hover { transition: background 0.2s ease; }
+        .table-row-hover:hover { background: rgba(220, 225, 230, 0.3); }
+
+        /* ─── MINI PROGRESS BAR ─── */
+        .mini-progress {
+            display: inline-block;
+            width: 80px;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        .mini-progress .fill {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, #B8734F, #22c55e);
+            border-radius: 999px;
+            transition: width 0.6s ease;
+        }
+
+        /* ─── EDIT INPUT ─── */
+        .edit-input {
+            width: 100%;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #B8734F;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            background: #FFFFFF;
+            color: #18202F;
+            outline: none;
+        }
+        .edit-input:focus {
+            border-color: #B8734F;
+            box-shadow: 0 0 0 3px rgba(184, 115, 79, 0.2);
+        }
+        select.edit-input {
+            cursor: pointer;
+        }
+
+        /* ─── CUSTOM SCROLLBAR ─── */
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 
         /* ─── EPISODE TABLE & CARDS ─── */
         .episode-filter-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-bottom: 1px solid rgba(24, 32, 47, 0.08); flex-wrap: wrap; }
@@ -364,7 +434,7 @@
                     </div>
                 </div>
 
-                <!-- Weekly Calendar (moved to top) -->
+                <!-- Weekly Calendar -->
                 <div class="overview-section" style="margin-bottom:1.5rem;">
                     <div class="section-title" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#94a3b8;margin-bottom:0.5rem;padding-bottom:0.25rem;border-bottom:1px solid rgba(24,32,47,0.08);">📅 Weekly Calendar</div>
                     <div class="section-card" style="background:#FAF7F2;border:1px solid rgba(24,32,47,0.08);border-radius:0.75rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
@@ -661,22 +731,28 @@
 
         // ─── ANIME.JS ─────────────────────────────────────────────
         function animatePanelIn(panel) {
-            anime({
-                targets: panel,
-                opacity: [0, 1],
-                translateY: [10, 0],
-                duration: 400,
-                easing: 'easeOutCubic'
-            });
+            if (typeof anime !== 'undefined') {
+                anime({
+                    targets: panel,
+                    opacity: [0, 1],
+                    translateY: [10, 0],
+                    duration: 400,
+                    easing: 'easeOutCubic'
+                });
+            } else {
+                panel.style.opacity = '1';
+            }
         }
 
         function animateIconHover(icon) {
-            anime({
-                targets: icon,
-                scale: [1, 1.2, 1],
-                duration: 400,
-                easing: 'easeOutElastic(1, .5)'
-            });
+            if (typeof anime !== 'undefined') {
+                anime({
+                    targets: icon,
+                    scale: [1, 1.2, 1],
+                    duration: 400,
+                    easing: 'easeOutElastic(1, .5)'
+                });
+            }
         }
 
         // ─── AUTH ──────────────────────────────────────────────────
@@ -817,7 +893,7 @@
                     const percent = total > 0 ? Math.round((available / total) * 100) : 0;
                     const availableUntil = availableUntilMap[show.title];
                     return `
-                        <tr onclick="switchView('show', '${jsEscape(show.title)}')" style="cursor:pointer;" title="Click to view ${esc(show.title)}">
+                        <tr onclick="switchView('show', '${jsEscape(show.title)}')" style="cursor:pointer;" title="Click to view ${esc(show.title)}" class="table-row-hover fade-in">
                             <td class="font-bold">${esc(show.title)}</td>
                             <td class="text-center">
                                 <span class="mini-progress"><span class="fill" style="width:${percent}%;"></span></span>
@@ -895,16 +971,20 @@
             renderCalendar('calendarGrid', allEpisodes);
             updateWeekLabel();
         };
+        
         function updateWeekLabel() {
             const today = new Date();
             const startOfWeek = new Date(today);
             startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (calendarWeekOffset * 7));
             const endOfWeek = new Date(startOfWeek);
             endOfWeek.setDate(startOfWeek.getDate() + 6);
-            document.getElementById('weekLabel').textContent = `${formatDate(startOfWeek)} – ${formatDate(endOfWeek)}`;
+            const weekLabel = document.getElementById('weekLabel');
+            if (weekLabel) {
+                weekLabel.textContent = `${formatDate(startOfWeek)} – ${formatDate(endOfWeek)}`;
+            }
         }
 
-        // ─── RENDER SHOW SCHEDULE (MISSING FUNCTION) ────────────
+        // ─── RENDER SHOW SCHEDULE ────────────────────────────────
         function renderShowSchedule(containerId, data) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -992,7 +1072,7 @@
                     const statusClass = ep.status === true || ep.status === 'Done' ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
                     const statusText = ep.status === true || ep.status === 'Done' ? 'Done' : (overdue ? 'Overdue' : 'To Air');
                     return `
-                        <tr data-episode-id="${ep.id}">
+                        <tr data-episode-id="${ep.id}" class="table-row-hover fade-in">
                             <td onclick="editCell(this, 'air_date', '${ep.id}')" class="editable-cell" title="Click to edit">${esc(ep.air_date || '—')} <span class="edit-icon">✏️</span></td>
                             <td onclick="editCell(this, 'episode_name', '${ep.id}')" class="editable-cell episode-title" title="${esc(ep.episode_name || '')}">${esc(ep.episode_name || '—')} <span class="edit-icon">✏️</span></td>
                             <td class="text-center" onclick="toggleStatus('${ep.id}', ${ep.status === true || ep.status === 'Done'})" style="cursor:pointer;"><span class="${statusClass}">${statusText}</span></td>
@@ -1011,7 +1091,7 @@
                     const statusClass = ep.status === true || ep.status === 'Done' ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
                     const statusText = ep.status === true || ep.status === 'Done' ? 'Done' : (overdue ? 'Overdue' : 'To Air');
                     return `
-                        <div class="episode-card">
+                        <div class="episode-card fade-in">
                             <div class="card-header">
                                 <div>
                                     <h4 title="${esc(ep.episode_name || '')}">${esc(ep.episode_name || 'Untitled')}</h4>
@@ -1201,6 +1281,7 @@
                 el.textContent = oldValue;
             }
         }
+        
         async function saveScheduleTime(el, scheduleId, newValue) {
             if (!editingCell) return;
             const oldValue = editingCell.oldValue; editingCell = null;
@@ -1230,6 +1311,7 @@
                 if (currentShowTitle) renderShowView(currentShowTitle);
             } catch (err) { showMessage('❌ ' + err.message, 'error'); }
         };
+        
         window.deleteScheduleItem = async function(id) {
             if (!confirm('Delete this schedule item?')) return;
             try {
@@ -1349,12 +1431,14 @@
                 btn.style.display = title.includes(q) ? '' : 'none';
             });
         }
+        
         function clearSearch() {
             const input = document.getElementById('globalSearchInput');
             input.value = '';
             handleGlobalSearch('');
             input.focus();
         }
+        
         window.handleGlobalSearch = handleGlobalSearch;
         window.clearSearch = clearSearch;
 
