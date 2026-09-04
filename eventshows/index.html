@@ -111,9 +111,9 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Tables */
-        .priority-groups-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .priority-groups-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
         .priority-groups-table th {
-            text-align: left; padding: 0.6rem 0.8rem; font-weight: 600; font-size: 0.55rem;
+            text-align: left; padding: 0.6rem 0.8rem; font-weight: 600; font-size: 0.6rem;
             text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; border-bottom: 2px solid rgba(24,32,47,0.1); background: #FAF7F2;
         }
         .priority-groups-table td {
@@ -146,13 +146,84 @@
         }
         .btn-export:hover { background: #2d3a4f; transform: scale(1.02); }
 
-        /* Calendar */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #eef1f6; }
-        .calendar-day-cell { background: #FAF7F2; min-height: 100px; padding: 0.3rem; }
-        .calendar-day-cell.today { background: rgba(184,115,79,0.1); }
-        .date-badge { font-size: 0.7rem; font-weight: 600; color: #18202F; margin-bottom: 0.25rem; }
-        .event-pills { display: flex; flex-direction: column; gap: 0.15rem; max-height: 70px; overflow-y: auto; }
-        .event-pill { font-size: 0.55rem; padding: 0.15rem 0.3rem; background: #e2e8f0; border-radius: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* Week Calendar - IMPROVED */
+        .week-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.75rem;
+            padding: 1rem;
+        }
+        .week-day {
+            background: #FAF7F2;
+            border: 1px solid rgba(24, 32, 47, 0.08);
+            border-radius: 0.75rem;
+            min-height: 150px;
+            padding: 0.5rem;
+            transition: all 0.2s;
+        }
+        .week-day.today {
+            background: rgba(184,115,79,0.1);
+            border-color: #B8734F;
+            box-shadow: 0 2px 8px rgba(184,115,79,0.15);
+        }
+        .week-day.has-events {
+            border-color: #B8734F;
+        }
+        .week-day-header {
+            text-align: center;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(24, 32, 47, 0.08);
+            margin-bottom: 0.5rem;
+        }
+        .week-day-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+        }
+        .week-day-date {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #18202F;
+        }
+        .week-event {
+            background: white;
+            border: 1px solid rgba(24, 32, 47, 0.1);
+            border-radius: 0.4rem;
+            padding: 0.4rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #18202F;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .week-event:hover {
+            background: #f0ebe6;
+            transform: translateX(2px);
+        }
+        .week-event.dog-live {
+            border-left: 3px solid #ef4444;
+            background: #fef2f2;
+        }
+        .week-event.dog-replay {
+            border-left: 3px solid #3b82f6;
+            background: #eff6ff;
+        }
+        .week-event.concert {
+            border-left: 3px solid #22c55e;
+            background: #f0fdf4;
+        }
+        .week-event-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-bottom: 0.1rem;
+        }
+        .week-event-type {
+            font-size: 0.6rem;
+            color: #68748A;
+            font-weight: 500;
+        }
 
         /* Search Bar */
         .search-bar {
@@ -236,19 +307,21 @@
             <div class="scrollable-content" id="scrollableContent">
                 <!-- Overview View -->
                 <div id="overview-view">
+                    <!-- Week Calendar -->
                     <div class="bg-warmwhite rounded-xl border border-slate-200/80 shadow-sm mb-6">
                         <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-mist">
-                            <button onclick="changeMonth(-1)" class="text-slateblue hover:text-midnight"><i class="fa-solid fa-chevron-left"></i></button>
-                            <span id="monthLabel" class="font-semibold text-midnight">Loading...</span>
-                            <button onclick="changeMonth(1)" class="text-slateblue hover:text-midnight"><i class="fa-solid fa-chevron-right"></i></button>
+                            <button onclick="changeWeek(-1)" class="text-slateblue hover:text-midnight text-lg"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span id="weekLabel" class="font-semibold text-midnight text-sm">Loading...</span>
+                            <button onclick="changeWeek(1)" class="text-slateblue hover:text-midnight text-lg"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
-                        <div class="calendar-grid" id="calendarGrid"></div>
+                        <div class="week-calendar" id="weekCalendar"></div>
                     </div>
 
+                    <!-- Upcoming Events -->
                     <div class="bg-warmwhite rounded-xl border border-slate-200/80 shadow-sm p-4">
                         <div class="flex items-center gap-2 mb-3">
-                            <h2 class="text-lg font-bold text-midnight"><i class="fa-regular fa-clock"></i> Upcoming</h2>
-                            <span class="text-xs bg-mist text-slateblue px-2 py-0.5 rounded-full">next 48h</span>
+                            <h2 class="text-lg font-bold text-midnight"><i class="fa-regular fa-clock"></i> Upcoming Events</h2>
+                            <span class="text-xs bg-mist text-slateblue px-2 py-0.5 rounded-full">next 7 days</span>
                         </div>
                         <div id="upcomingEvents" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div class="text-slateblue text-sm">Loading...</div>
@@ -328,9 +401,8 @@
             try {
                 if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    console.log('✅ Supabase client created');
                 }
-            } catch (e) { console.error('❌ Supabase client error:', e.message); }
+            } catch (e) { console.error('Supabase error:', e.message); }
 
             const $ = id => document.getElementById(id);
             const statusBadge = $('statusBadge');
@@ -342,7 +414,7 @@
             let concerts = [], concertAirings = [];
             let currentView = 'overview';
             let currentShowTitle = null;
-            let monthOffset = 0;
+            let weekOffset = 0;
             let editingCell = null;
             let concertSearchTerm = '';
 
@@ -363,6 +435,13 @@
                 const d = new Date(dateStr); 
                 if (isNaN(d)) return dateStr; 
                 return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); 
+            }
+
+            function formatShortDate(dateStr) { 
+                if (!dateStr) return '—'; 
+                const d = new Date(dateStr); 
+                if (isNaN(d)) return dateStr; 
+                return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); 
             }
 
             function isOverdue(dateStr, status) { 
@@ -400,11 +479,10 @@
                     dogEpisodes = dEpisodes || [];
                     concerts = cTitles || [];
                     concertAirings = cAirings || [];
-                    console.log('📊 Data loaded:', { dogShows: dogShows.length, dogEpisodes: dogEpisodes.length, concerts: concerts.length, concertAirings: concertAirings.length });
                     renderSidebar();
                     renderOverview();
                 } catch (err) {
-                    console.error('❌ Load error:', err);
+                    console.error('Load error:', err);
                     setStatus('❌ Error: ' + err.message, 'error');
                 } finally {
                     if (loadingSpinner) loadingSpinner.style.display = 'none';
@@ -454,98 +532,135 @@
                 }
             };
 
-            window.changeMonth = function(dir) { monthOffset += dir; renderOverview(); };
+            window.changeWeek = function(dir) { 
+                weekOffset += dir; 
+                renderOverview(); 
+            };
 
             function renderOverview() {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = now.getMonth() + monthOffset;
-                const firstDay = new Date(year, month, 1);
-                const lastDay = new Date(year, month + 1, 0);
-                const daysInMonth = lastDay.getDate();
-                const startWeekday = firstDay.getDay();
+                renderWeekCalendar();
+                renderUpcomingEvents();
+            }
 
+            function renderWeekCalendar() {
+                const today = new Date();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (weekOffset * 7));
+                
+                const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
                 let calendarHTML = '';
-                const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-                dayNames.forEach(d => calendarHTML += `<div class="text-center py-2 bg-mist font-semibold text-xs text-slateblue">${d}</div>`);
-                for (let i=0; i<startWeekday; i++) calendarHTML += `<div class="bg-warmwhite min-h-[80px]"></div>`;
-
-                for (let day=1; day<=daysInMonth; day++) {
-                    const dateObj = new Date(year, month, day);
-                    const dateStr = dateObj.toISOString().split('T')[0];
-                    const dayOfWeek = dateObj.getDay();
+                
+                dayNames.forEach((dayName, idx) => {
+                    const date = new Date(startOfWeek);
+                    date.setDate(startOfWeek.getDate() + idx);
+                    const dateStr = date.toISOString().split('T')[0];
+                    const isToday = dateStr === today.toISOString().split('T')[0];
+                    
+                    // Get events for this date
                     const dogEvents = dogEpisodes.filter(e => e.air_date === dateStr);
                     const concertEvents = concertAirings.filter(a => a.air_date === dateStr);
-                    const totalEvents = dogEvents.length + concertEvents.length;
-                    const isToday = dateStr === new Date().toISOString().split('T')[0];
-
-                    let eventTitles = [];
+                    
+                    let eventsHTML = '';
+                    
+                    // Dog events
                     dogEvents.forEach(e => {
-                        const epNumber = e.episode_number || '';
-                        const showName = e.show_title || 'Dog Show';
-                        const runType = showName.includes('REPLAY') ? '📼' : '🔴';
-                        eventTitles.push(`${runType} ${epNumber} - ${showName.replace('Dog Show ', '')}`);
+                        const isReplay = e.show_title.includes('REPLAY');
+                        const eventClass = isReplay ? 'dog-replay' : 'dog-live';
+                        const eventType = isReplay ? '📼 REPLAY' : '🔴 LIVE';
+                        eventsHTML += `
+                            <div class="week-event ${eventClass}" onclick="switchView('dogshow','${e.show_title.replace(/'/g, "\\'")}')">
+                                <div class="week-event-title">${esc(e.episode_number || 'Episode')}</div>
+                                <div class="week-event-type">${eventType} - ${esc(e.show_title.replace('Dog Show ', ''))}</div>
+                            </div>
+                        `;
                     });
+                    
+                    // Concert events
                     concertEvents.forEach(a => {
-                        eventTitles.push(`🎵 ${a.episode_title || a.concert_title || 'Concert'}`);
+                        eventsHTML += `
+                            <div class="week-event concert" onclick="switchView('concert','${a.concert_title.replace(/'/g, "\\'")}')">
+                                <div class="week-event-title">${esc(a.episode_title || 'Concert')}</div>
+                                <div class="week-event-type">🎵 CONCERT</div>
+                            </div>
+                        `;
                     });
+                    
+                    calendarHTML += `
+                        <div class="week-day ${isToday ? 'today' : ''} ${(dogEvents.length + concertEvents.length) > 0 ? 'has-events' : ''}">
+                            <div class="week-day-header">
+                                <div class="week-day-name">${dayName.substring(0,3)}</div>
+                                <div class="week-day-date">${date.getDate()}</div>
+                                <div style="font-size:0.6rem;color:#94a3b8;">${date.toLocaleDateString('en-US',{month:'short'})}</div>
+                            </div>
+                            ${eventsHTML || '<div style="text-align:center;color:#d1d5db;font-size:0.7rem;padding-top:1rem;">No events</div>'}
+                        </div>
+                    `;
+                });
+                
+                $('weekCalendar').innerHTML = calendarHTML;
+                
+                // Update week label
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                $('weekLabel').textContent = `${formatShortDate(startOfWeek)} – ${formatShortDate(endOfWeek)}`;
+            }
 
-                    let cellContent = `<div class="date-badge">${day} <span class="text-[8px] text-slateblue">${dayNames[dayOfWeek]}</span></div>`;
-                    if (totalEvents > 0) {
-                        cellContent += `<div class="event-pills">`;
-                        eventTitles.slice(0,4).forEach(t => cellContent += `<span class="event-pill">${esc(t)}</span>`);
-                        if (totalEvents > 4) cellContent += `<span class="text-[10px] text-slateblue">+${totalEvents-4}</span>`;
-                        cellContent += `</div>`;
-                    } else {
-                        cellContent += `<div class="text-slateblue/40 text-[10px]">—</div>`;
-                    }
-
-                    calendarHTML += `<div class="calendar-day-cell ${isToday ? 'today' : ''}">${cellContent}</div>`;
-                }
-
-                $('calendarGrid').innerHTML = calendarHTML;
-                $('monthLabel').textContent = firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-                // Upcoming events
+            function renderUpcomingEvents() {
                 const nowTime = new Date().getTime();
                 let upcoming = [];
-                const allEvents = [
-                    ...dogEpisodes.map(e => ({ 
-                        date: e.air_date, 
-                        title: `${e.episode_number || ''} - ${e.show_title}`, 
-                        status: e.status, 
-                        type:'dog',
-                        runType: e.show_title.includes('REPLAY') ? 'REPLAY' : 'LIVE'
-                    })),
-                    ...concertAirings.map(a => ({ 
-                        date: a.air_date, 
-                        title: a.episode_title || a.concert_title, 
-                        status: a.status, 
-                        type:'concert' 
-                    }))
-                ];
-                upcoming = allEvents.filter(ev => {
-                    if (!ev.date) return false;
-                    const d = new Date(ev.date);
+                
+                // Dog show events
+                dogEpisodes.forEach(e => {
+                    if (!e.air_date) return;
+                    const d = new Date(e.air_date);
                     const diff = d.getTime() - nowTime;
-                    return diff > 0 && diff <= 48*60*60*1000;
-                }).sort((a,b) => new Date(a.date) - new Date(b.date));
-
+                    if (diff > 0 && diff <= 7*24*60*60*1000) {
+                        const isReplay = e.show_title.includes('REPLAY');
+                        upcoming.push({
+                            date: e.air_date,
+                            title: `${e.episode_number || 'Episode'} - ${e.show_title}`,
+                            type: 'dog',
+                            runType: isReplay ? 'REPLAY' : 'LIVE',
+                            status: e.status
+                        });
+                    }
+                });
+                
+                // Concert events
+                concertAirings.forEach(a => {
+                    if (!a.air_date) return;
+                    const d = new Date(a.air_date);
+                    const diff = d.getTime() - nowTime;
+                    if (diff > 0 && diff <= 7*24*60*60*1000) {
+                        upcoming.push({
+                            date: a.air_date,
+                            title: a.episode_title || a.concert_title,
+                            type: 'concert',
+                            runType: 'CONCERT',
+                            status: a.status
+                        });
+                    }
+                });
+                
+                // Sort by date
+                upcoming.sort((a,b) => new Date(a.date) - new Date(b.date));
+                
                 if (upcoming.length === 0) {
-                    $('upcomingEvents').innerHTML = `<div class="text-slateblue text-sm">No upcoming events in the next 48h.</div>`;
+                    $('upcomingEvents').innerHTML = `<div class="text-slateblue text-sm">No upcoming events in the next 7 days.</div>`;
                 } else {
                     $('upcomingEvents').innerHTML = upcoming.map(ev => {
-                        const dayName = ev.date ? new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long' }) : '';
-                        const badge = ev.type === 'dog' ? (ev.runType === 'LIVE' ? '🔴 LIVE' : '📼 REPLAY') : '🎵 CONCERT';
+                        const dayName = new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long' });
+                        const icon = ev.type === 'dog' ? (ev.runType === 'LIVE' ? 'fa-dog text-red-500' : 'fa-dog text-blue-500') : 'fa-music text-green-500';
+                        const badgeColor = ev.type === 'dog' ? (ev.runType === 'LIVE' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700') : 'bg-green-100 text-green-700';
                         return `
                             <div class="flex items-start gap-3 p-3 bg-mist rounded-lg">
-                                <div class="w-8 h-8 rounded-lg bg-copper/20 text-copper flex items-center justify-center">
-                                    <i class="fa-solid ${ev.type==='dog'?'fa-dog':'fa-music'}"></i>
+                                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                                    <i class="fa-solid ${icon}"></i>
                                 </div>
                                 <div class="flex-1">
                                     <div class="font-semibold text-midnight text-sm">${esc(ev.title)}</div>
-                                    <div class="text-xs text-slateblue">${dayName}, ${formatDate(ev.date)}</div>
-                                    <span class="text-[10px] font-semibold text-copper">${badge}</span>
+                                    <div class="text-xs text-slateblue mt-0.5">${dayName}, ${formatDate(ev.date)}</div>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColor}">${ev.runType}</span>
                                 </div>
                             </div>
                         `;
@@ -561,13 +676,14 @@
                     tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slateblue">No episodes found</td></tr>`;
                     return;
                 }
+                episodes.sort((a,b) => new Date(a.air_date) - new Date(b.air_date));
                 tbody.innerHTML = episodes.map(ep => {
                     const overdue = isOverdue(ep.air_date, ep.status);
                     const statusClass = ep.status === true ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
                     const statusText = ep.status === true ? 'Done' : (overdue ? 'Overdue' : 'To Air');
                     return `
                         <tr data-id="${ep.id}">
-                            <td onclick="editCell(this, 'air_date', '${ep.id}', 'dog')" class="editable-cell">${esc(ep.air_date || '—')} <span class="edit-icon">✏️</span></td>
+                            <td onclick="editCell(this, 'air_date', '${ep.id}', 'dog')" class="editable-cell">${formatDate(ep.air_date)} <span class="edit-icon">✏️</span></td>
                             <td onclick="editCell(this, 'episode_number', '${ep.id}', 'dog')" class="editable-cell">${esc(ep.episode_number || '—')} <span class="edit-icon">✏️</span></td>
                             <td class="text-center" onclick="toggleStatus('${ep.id}', ${ep.status === true}, 'dog')"><span class="${statusClass}">${statusText}</span></td>
                             <td class="text-center"><button class="btn-delete-episode" onclick="deleteEpisode('${ep.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
@@ -580,7 +696,6 @@
                 $('concertTitle').textContent = title;
                 let airings = concertAirings.filter(a => a.concert_title === title);
                 
-                // Apply search filter
                 if (concertSearchTerm) {
                     airings = airings.filter(a => 
                         (a.episode_title || '').toLowerCase().includes(concertSearchTerm) ||
@@ -589,7 +704,6 @@
                     );
                 }
                 
-                // Sort by date
                 airings.sort((a,b) => new Date(b.air_date) - new Date(a.air_date));
                 
                 const tbody = $('concertTableBody');
@@ -673,10 +787,6 @@
                         const ep = dogEpisodes.find(e => e.id == id);
                         if (ep) { if (field === 'air_date') ep.air_date = updateData.air_date; else ep.episode_number = updateData.episode_number; }
                         renderDogShow(currentShowTitle);
-                    } else {
-                        const a = concertAirings.find(x => x.id == id);
-                        if (a) { a.air_date = updateData.air_date; }
-                        renderConcert(currentShowTitle);
                     }
                 } catch (err) { alert('Error: ' + err.message); td.textContent = oldValue; }
             }
@@ -691,16 +801,6 @@
                 } catch (err) { alert('Error: ' + err.message); }
             };
 
-            window.deleteAiring = async function(id) {
-                if (!confirm('Delete this airing?')) return;
-                try {
-                    const { error } = await supabaseClient.from(CONCERT_AIRINGS_TABLE).delete().eq('id', id);
-                    if (error) throw error;
-                    concertAirings = concertAirings.filter(a => a.id != id);
-                    renderConcert(currentShowTitle);
-                } catch (err) { alert('Error: ' + err.message); }
-            };
-
             window.addEpisode = async function() {
                 const title = currentShowTitle;
                 try {
@@ -708,16 +808,6 @@
                     if (error) throw error;
                     if (data && data[0]) dogEpisodes.push(data[0]);
                     renderDogShow(title);
-                } catch (err) { alert('Error: ' + err.message); }
-            };
-
-            window.addAiring = async function() {
-                const title = currentShowTitle;
-                try {
-                    const { data, error } = await supabaseClient.from(CONCERT_AIRINGS_TABLE).insert({ concert_title: title, air_date: null, episode_title: '', notes: '', status: false }).select();
-                    if (error) throw error;
-                    if (data && data[0]) concertAirings.push(data[0]);
-                    renderConcert(title);
                 } catch (err) { alert('Error: ' + err.message); }
             };
 
@@ -755,7 +845,6 @@
             };
 
             document.addEventListener('DOMContentLoaded', async function() {
-                console.log('🚀 DOM loaded');
                 if (!supabaseClient) {
                     setStatus('⚠️ No Supabase', 'error');
                     return;
@@ -771,7 +860,7 @@
                     setStatus('✅ Live', 'ok');
                     await loadAllData();
                 } catch (err) {
-                    console.error('❌ Init error:', err);
+                    console.error('Init error:', err);
                     setStatus('❌ Error', 'error');
                 }
             });
