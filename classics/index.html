@@ -227,25 +227,6 @@
         .table-row-hover { transition: background 0.2s ease; }
         .table-row-hover:hover { background: rgba(220, 225, 230, 0.3); }
 
-        /* ─── MINI PROGRESS BAR ─── */
-        .mini-progress {
-            display: inline-block;
-            width: 80px;
-            height: 6px;
-            background: #e5e7eb;
-            border-radius: 999px;
-            overflow: hidden;
-            margin-right: 0.5rem;
-            vertical-align: middle;
-        }
-        .mini-progress .fill {
-            display: block;
-            height: 100%;
-            background: linear-gradient(90deg, #B8734F, #22c55e);
-            border-radius: 999px;
-            transition: width 0.6s ease;
-        }
-
         /* ─── EDIT INPUT ─── */
         .edit-input {
             width: 100%;
@@ -329,25 +310,87 @@
         .turnover-item .turnover-dates { font-size: 0.7rem; color: #68748A; }
         .turnover-item .turnover-notes { font-size: 0.7rem; color: #94a3b8; flex: 1; min-width: 120px; }
 
-        /* ─── CALENDAR ─── */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.5rem; padding: 0.75rem; }
+        /* ─── CALENDAR (Updated) ─── */
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 0.75rem; 
+            padding: 0.75rem; 
+        }
+        .calendar-day { 
+            background: #FAF7F2; 
+            border: 1px solid rgba(24, 32, 47, 0.08); 
+            border-radius: 0.5rem; 
+            overflow: hidden; 
+            min-height: 50px; 
+            display: none; /* Hide by default */
+        }
+        .calendar-day.has-events { 
+            display: block; /* Show only days with events */
+            background: #FAF7F2; 
+            border-color: #B8734F; 
+            box-shadow: 0 2px 8px rgba(184, 115, 79, 0.15); 
+            min-height: 120px; /* Make event days bigger */
+        }
+        .calendar-day .day-header { 
+            background: #f0ebe6; 
+            padding: 0.4rem 0.6rem; 
+            font-size: 0.65rem; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            color: #94a3b8; 
+            text-align: center; 
+            border-bottom: 1px solid rgba(24, 32, 47, 0.08); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .calendar-day.has-events .day-header { 
+            background: #B8734F; 
+            color: white; 
+        }
+        .calendar-day.has-events .day-header span { 
+            color: white; 
+            font-weight: 700; 
+        }
+        .calendar-day .day-body { 
+            padding: 0.4rem; 
+            max-height: none; 
+            overflow-y: auto; 
+        }
+        .calendar-day.has-events .day-body { 
+            max-height: 250px; /* Allow more space for content */
+        }
+        .calendar-day .day-body .cal-event { 
+            font-size: 0.55rem; 
+            padding: 0.2rem 0.3rem; 
+            background: white; 
+            border-radius: 4px; 
+            border: 1px solid rgba(24, 32, 47, 0.08); 
+            margin-bottom: 0.2rem; 
+            font-weight: 500; 
+            color: #18202F; 
+        }
+        .calendar-day.has-events .cal-event { 
+            background: rgba(184, 115, 79, 0.08); 
+            border-color: rgba(184, 115, 79, 0.3); 
+        }
+        .cal-event-title {
+            font-weight: 600;
+            font-size: 0.6rem;
+            color: #18202F;
+            margin-bottom: 0.15rem;
+        }
+        .cal-event-time {
+            font-size: 0.5rem;
+            color: #68748A;
+        }
         @media (max-width: 1024px) {
-            .calendar-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); overflow-x: auto; }
-            .calendar-day { min-width: 90px; }
+            .calendar-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
         }
         @media (max-width: 640px) {
-            .calendar-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); overflow-x: auto; }
-            .calendar-day { min-width: 70px; }
+            .calendar-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
         }
-        .calendar-day { background: #FAF7F2; border: 1px solid rgba(24, 32, 47, 0.08); border-radius: 0.5rem; overflow: hidden; min-height: 50px; }
-        .calendar-day .day-header { background: #f0ebe6; padding: 0.2rem 0.3rem; font-size: 0.5rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; text-align: center; border-bottom: 1px solid rgba(24, 32, 47, 0.08); display: flex; justify-content: space-between; align-items: center; }
-        .calendar-day .day-body { padding: 0.2rem; max-height: 60px; overflow-y: auto; }
-        .calendar-day .day-body .cal-event { font-size: 0.5rem; padding: 0.1rem 0.2rem; background: white; border-radius: 3px; border: 1px solid rgba(24, 32, 47, 0.08); margin-bottom: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; color: #18202F; }
-        .calendar-day .day-body .empty-cal { font-size: 0.45rem; color: #d1d5db; text-align: center; padding: 0.15rem 0; font-style: italic; }
-        .calendar-day.has-events { background: #FAF7F2; border-color: #B8734F; box-shadow: 0 2px 8px rgba(184, 115, 79, 0.15); }
-        .calendar-day.has-events .day-header { background: #B8734F; color: white; }
-        .calendar-day.has-events .day-header .day-num, .calendar-day.has-events .day-header span { color: white; font-weight: 700; }
-        .calendar-day.has-events .cal-event { background: rgba(184, 115, 79, 0.08); border-color: rgba(184, 115, 79, 0.3); }
 
         .hidden { display: none !important; }
     </style>
@@ -436,7 +479,7 @@
 
                 <!-- Weekly Calendar -->
                 <div class="overview-section" style="margin-bottom:1.5rem;">
-                    <div class="section-title" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#94a3b8;margin-bottom:0.5rem;padding-bottom:0.25rem;border-bottom:1px solid rgba(24,32,47,0.08);">📅 Weekly Calendar</div>
+                    <div class="section-title" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#94a3b8;margin-bottom:0.5rem;padding-bottom:0.25rem;border-bottom:1px solid rgba(24,32,47,0.08);">📅 Weekly Schedule</div>
                     <div class="section-card" style="background:#FAF7F2;border:1px solid rgba(24,32,47,0.08);border-radius:0.75rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
                         <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 1rem;border-bottom:1px solid rgba(24,32,47,0.08);background:#f0ebe6;">
                             <button onclick="changeWeek(-1)" style="background:transparent;border:none;cursor:pointer;color:#94a3b8;padding:0.25rem 0.5rem;border-radius:0.25rem;"><i class="fa-solid fa-chevron-left"></i></button>
@@ -451,17 +494,16 @@
                 <div class="overview-section" style="margin-bottom:1.5rem;">
                     <div class="section-title" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#94a3b8;margin-bottom:0.5rem;padding-bottom:0.25rem;border-bottom:1px solid rgba(24,32,47,0.08);">📋 Titles</div>
                     <div class="section-card" style="background:#FAF7F2;border:1px solid rgba(24,32,47,0.08);border-radius:0.75rem;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-                        <div class="table-wrap" style="padding:0.5rem 1rem;">
+                        <div class="table-wrap" style="padding:0;">
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Title</th>
-                                        <th class="text-center">Progress</th>
-                                        <th class="text-right">Available Until</th>
+                                        <th style="text-align:left;padding-left:1rem;">Title</th>
+                                        <th style="text-align:right;padding-right:1rem;">Available Until</th>
                                     </tr>
                                 </thead>
                                 <tbody id="overviewTableBody">
-                                    <tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
+                                    <tr><td colspan="2" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -876,30 +918,15 @@
             $('statTotalShows').textContent = totalShows;
             $('statNextExpire').textContent = nextExpireShow && nextExpire ? `${nextExpireShow} — ${formatDate(nextExpire)}` : '—';
 
-            const episodeCounts = {};
-            const availableCounts = {};
-            allEpisodes.forEach(ep => {
-                if (!ep.show_title) return;
-                episodeCounts[ep.show_title] = (episodeCounts[ep.show_title] || 0) + 1;
-                if (ep.status === true || ep.status === 'Done') availableCounts[ep.show_title] = (availableCounts[ep.show_title] || 0) + 1;
-            });
-
             if (!allShows.length) {
-                overviewTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>';
+                overviewTableBody.innerHTML = '<tr><td colspan="2" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>';
             } else {
                 overviewTableBody.innerHTML = allShows.map(show => {
-                    const total = episodeCounts[show.title] || 0;
-                    const available = availableCounts[show.title] || 0;
-                    const percent = total > 0 ? Math.round((available / total) * 100) : 0;
                     const availableUntil = availableUntilMap[show.title];
                     return `
                         <tr onclick="switchView('show', '${jsEscape(show.title)}')" style="cursor:pointer;" title="Click to view ${esc(show.title)}" class="table-row-hover fade-in">
-                            <td class="font-bold">${esc(show.title)}</td>
-                            <td class="text-center">
-                                <span class="mini-progress"><span class="fill" style="width:${percent}%;"></span></span>
-                                <span class="font-semibold">${available}/${total}</span>
-                            </td>
-                            <td class="text-right text-slate-500 font-medium">${availableUntil ? formatDate(availableUntil) : '—'}</td>
+                            <td class="font-bold py-3 px-4 text-left">${esc(show.title)}</td>
+                            <td class="text-right text-slate-500 font-medium py-3 px-4">${availableUntil ? formatDate(availableUntil) : '—'}</td>
                         </tr>
                     `;
                 }).join('');
@@ -907,7 +934,8 @@
 
             renderScheduleOverview('scheduleItems', weekendData);
             renderOverviewTurnovers('turnoversContainer', turnoverData);
-            renderCalendar('calendarGrid', allEpisodes);
+            // 🔧 Use schedule data for calendar
+            renderCalendar('calendarGrid', weekendData);
         }
 
         function renderScheduleOverview(containerId, data) {
@@ -942,33 +970,60 @@
             container.innerHTML = html;
         }
 
-        function renderCalendar(gridId, episodes) {
+        // ─── RENDER CALENDAR (Updated to use schedule data) ───────
+        function renderCalendar(gridId, scheduleData) {
             const grid = document.getElementById(gridId);
             if (!grid) return;
             const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             const today = new Date();
             const startOfWeek = new Date(today);
             startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (calendarWeekOffset * 7));
-            grid.innerHTML = daysOfWeek.map((day, idx) => {
+            
+            // Filter to only show days with events
+            const daysWithEvents = [];
+            
+            daysOfWeek.forEach((day, idx) => {
                 const date = new Date(startOfWeek);
                 date.setDate(startOfWeek.getDate() + idx);
-                const dateStr = date.toISOString().split('T')[0];
-                const dayEvents = episodes.filter(e => e.air_date === dateStr);
-                const hasEvents = dayEvents.length > 0;
-                return `<div class="calendar-day ${hasEvents ? 'has-events' : ''}">
-                    <div class="day-header"><span>${day.substring(0,3)}</span><span>${date.getDate()}</span></div>
+                
+                // Get schedule items for this day (case insensitive)
+                const dayScheduleItems = scheduleData.filter(item => {
+                    return item.day && item.day.toLowerCase() === day.toLowerCase();
+                });
+                
+                if (dayScheduleItems.length > 0) {
+                    daysWithEvents.push({ day, date, items: dayScheduleItems });
+                }
+            });
+            
+            if (daysWithEvents.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:1rem;color:#94a3b8;font-size:0.8rem;">No schedule for this week</div>';
+                return;
+            }
+            
+            grid.innerHTML = daysWithEvents.map(({ day, date, items }) => {
+                return `<div class="calendar-day has-events">
+                    <div class="day-header">
+                        <span>${day}</span>
+                        <span>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    </div>
                     <div class="day-body">
-                        ${dayEvents.map(e => `<div class="cal-event">${esc(e.episode_name)}</div>`).join('')}
-                        ${dayEvents.length === 0 ? '<div class="empty-cal">—</div>' : ''}
+                        ${items.map(item => {
+                            return `<div class="cal-event">
+                                <div class="cal-event-title">${esc(item.title || 'Untitled')}</div>
+                                ${item.time_slot ? `<div class="cal-event-time">🕐 ${esc(item.time_slot)}</div>` : ''}
+                            </div>`;
+                        }).join('')}
                     </div>
                 </div>`;
             }).join('');
+            
             updateWeekLabel();
         }
 
         window.changeWeek = function(direction) {
             calendarWeekOffset += direction;
-            renderCalendar('calendarGrid', allEpisodes);
+            renderCalendar('calendarGrid', weekendData);
             updateWeekLabel();
         };
         
