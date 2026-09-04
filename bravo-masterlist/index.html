@@ -545,12 +545,12 @@
 
             <!-- Navigation -->
             <nav class="sidebar-scroll" id="sidebarNav">
-                <button class="sidebar-item active" onclick="switchView('masterlist')">
+                <button class="sidebar-item active" id="nav-masterlist" onclick="switchView('masterlist')">
                     <span class="icon"><i class="fa-solid fa-list-check"></i></span>
                     <span class="label">Masterlist</span>
                     <span class="tooltip">Masterlist</span>
                 </button>
-                <button class="sidebar-item" onclick="switchView('priority')">
+                <button class="sidebar-item" id="nav-priority" onclick="switchView('priority')">
                     <span class="icon"><i class="fa-solid fa-flag"></i></span>
                     <span class="label">Priority</span>
                     <span class="tooltip">Priority</span>
@@ -608,7 +608,7 @@
 
             <!-- Bottom: Sign Out -->
             <div class="px-2 py-3 border-t border-black/5 flex-shrink-0">
-                <button class="sidebar-signout" id="logoutBtn">
+                <button class="sidebar-signout" id="logoutBtn" onclick="logoutUser()">
                     <span class="icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
                     <span class="label">Sign Out</span>
                     <span class="tooltip">Sign Out</span>
@@ -674,6 +674,12 @@
         </div>
     </div>
 
+    <!-- ═══ LOADING SPINNER (FIXED) ═══ -->
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+        <p class="text-slateblue text-sm font-medium">Loading...</p>
+    </div>
+
     <!-- ═══ MODAL ═══ -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal-card">
@@ -690,7 +696,7 @@
     </div>
 
     <script>
-        // Complete JavaScript (same as previous, but with updated selectors and layout)
+        // Complete JavaScript with fixes
         (function() {
             'use strict';
 
@@ -849,6 +855,10 @@
             }
 
             async function checkSession() {
+                if (!loadingSpinner) {
+                    console.error('Loading spinner element not found');
+                    return;
+                }
                 loadingSpinner.style.display = 'flex';
                 setStatus('Checking...', 'waiting');
                 if (!supabaseClient) {
@@ -1262,16 +1272,23 @@
 
             window.filterPriorityRail = function(priority) {
                 currentPriority = priority;
-                document.querySelectorAll('.priority-filter-rail, .sidebar-item[data-priority]').forEach(el => {
+                document.querySelectorAll('.sidebar-item[data-priority]').forEach(el => {
                     el.classList.remove('active');
                     if (el.dataset.priority === priority) el.classList.add('active');
                 });
+                // Also handle the "All" button
+                if (priority === 'all') {
+                    const allButton = document.querySelector('.sidebar-item[data-priority="all"]');
+                    if (allButton) allButton.classList.add('active');
+                }
                 if (currentView === 'priority') renderPriorityGroups();
             };
 
             window.switchView = function(view) {
                 currentView = view;
+                // Remove active from all sidebar items
                 document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+                
                 if (view === 'masterlist') {
                     document.getElementById('nav-masterlist')?.classList.add('active');
                     document.getElementById('masterlist-view').classList.remove('hidden');
@@ -1305,8 +1322,10 @@
                 content.classList.toggle('collapsed');
                 if (icon) {
                     const chevron = icon.querySelector('i');
-                    if (chevron) chevron.classList.toggle('fa-chevron-down');
-                    if (chevron) chevron.classList.toggle('fa-chevron-up');
+                    if (chevron) {
+                        chevron.classList.toggle('fa-chevron-down');
+                        chevron.classList.toggle('fa-chevron-up');
+                    }
                 }
             };
 
@@ -1341,9 +1360,11 @@
             window.closeModal = function() {
                 modalOverlay.classList.remove('open');
             };
+            
             modalOverlay.addEventListener('click', function(e) {
                 if (e.target === this) closeModal();
             });
+            
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') closeModal();
             });
@@ -1354,6 +1375,10 @@
             };
 
             document.addEventListener('DOMContentLoaded', function() {
+                if (!loadingSpinner) {
+                    console.error('Loading spinner element not found');
+                    return;
+                }
                 loadingSpinner.style.display = 'flex';
                 if (supabaseClient) {
                     checkSession();
