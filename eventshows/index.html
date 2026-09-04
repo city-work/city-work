@@ -121,7 +121,6 @@
         }
         .priority-groups-table tr:last-child td { border-bottom: none; }
         .priority-groups-table tr:hover td { background: rgba(220,225,230,0.3); }
-
         .table-wrap { overflow-x: auto; }
 
         /* Badges */
@@ -139,10 +138,8 @@
             font-size: 0.8rem; background: #FFFFFF; color: #18202F; outline: none;
         }
         .edit-input:focus { border-color: #B8734F; box-shadow: 0 0 0 3px rgba(184,115,79,0.2); }
-
         .btn-delete-episode { background: transparent; color: #b91c1c; border: none; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
         .btn-delete-episode:hover { background: rgba(185,28,28,0.1); transform: scale(1.1); }
-
         .btn-export {
             background: #18202F; color: #FAF7F2; border: none; padding: 0.4rem 1rem; border-radius: 9999px;
             font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
@@ -151,11 +148,21 @@
 
         /* Calendar */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #eef1f6; }
-        .calendar-day-cell { background: #FAF7F2; min-height: 80px; padding: 0.25rem; }
+        .calendar-day-cell { background: #FAF7F2; min-height: 100px; padding: 0.3rem; }
         .calendar-day-cell.today { background: rgba(184,115,79,0.1); }
         .date-badge { font-size: 0.7rem; font-weight: 600; color: #18202F; margin-bottom: 0.25rem; }
-        .event-pills { display: flex; flex-direction: column; gap: 0.15rem; }
-        .event-pill { font-size: 0.6rem; padding: 0.1rem 0.3rem; background: #e2e8f0; border-radius: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .event-pills { display: flex; flex-direction: column; gap: 0.15rem; max-height: 70px; overflow-y: auto; }
+        .event-pill { font-size: 0.55rem; padding: 0.15rem 0.3rem; background: #e2e8f0; border-radius: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Search Bar */
+        .search-bar {
+            display: flex; align-items: center; background: #FAF7F2; border-radius: 0.6rem;
+            padding: 0.25rem 0.7rem; border: 1px solid rgba(24,32,47,0.1); transition: all 0.2s; max-width: 300px;
+        }
+        .search-bar:focus-within { border-color: #B8734F; background: #FFFFFF; box-shadow: 0 0 0 3px rgba(184,115,79,0.1); }
+        .search-bar input { border: none; background: transparent; outline: none; padding: 0.25rem 0; font-size: 0.75rem; width: 100%; color: #18202F; }
+        .search-bar input::placeholder { color: #94a3b8; }
+        .search-bar i { color: #94a3b8; font-size: 0.75rem; margin-right: 0.4rem; }
 
         .hidden { display: none !important; }
     </style>
@@ -273,11 +280,14 @@
                             <h1 class="text-xl font-extrabold text-midnight"><i class="fa-solid fa-music"></i> <span id="concertTitle"></span></h1>
                             <p class="text-xs text-slateblue mt-0.5">Concert Airings</p>
                         </div>
-                        <button class="btn-export" onclick="addAiring()"><i class="fa-solid fa-plus"></i> Add Airing</button>
+                        <div class="search-bar">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="concertSearch" placeholder="Search by title or date..." oninput="searchConcerts(this.value)" />
+                        </div>
                     </div>
                     <div class="table-wrap">
                         <table class="priority-groups-table">
-                            <thead><tr><th>Air Date</th><th>Status</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Date Aired</th><th>Title</th><th>Notes</th><th>Status</th></tr></thead>
                             <tbody id="concertTableBody"></tbody>
                         </table>
                     </div>
@@ -319,12 +329,8 @@
                 if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                     console.log('✅ Supabase client created');
-                } else {
-                    console.error('❌ Supabase library not loaded');
                 }
-            } catch (e) { 
-                console.error('❌ Failed to create Supabase client:', e.message); 
-            }
+            } catch (e) { console.error('❌ Supabase client error:', e.message); }
 
             const $ = id => document.getElementById(id);
             const statusBadge = $('statusBadge');
@@ -338,6 +344,7 @@
             let currentShowTitle = null;
             let monthOffset = 0;
             let editingCell = null;
+            let concertSearchTerm = '';
 
             function setStatus(text, type) {
                 const colors = { ok: 'status-ok', error: 'status-error', waiting: 'status-waiting' };
@@ -355,7 +362,7 @@
                 if (!dateStr) return '—'; 
                 const d = new Date(dateStr); 
                 if (isNaN(d)) return dateStr; 
-                return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); 
+                return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); 
             }
 
             function isOverdue(dateStr, status) { 
@@ -372,14 +379,10 @@
                 let all = [], page = 0, size = 1000, more = true;
                 while (more) {
                     const { data, error } = await supabaseClient.from(table).select('*').range(page*size, (page+1)*size-1);
-                    if (error) {
-                        console.error(`Error fetching ${table}:`, error);
-                        throw error;
-                    }
+                    if (error) throw error;
                     if (!data || data.length === 0) more = false;
                     else { all = all.concat(data); page++; if (data.length < size) more = false; }
                 }
-                console.log(`✅ Fetched ${all.length} rows from ${table}`);
                 return all;
             }
 
@@ -397,14 +400,7 @@
                     dogEpisodes = dEpisodes || [];
                     concerts = cTitles || [];
                     concertAirings = cAirings || [];
-                    
-                    console.log('📊 Data loaded:', {
-                        dogShows: dogShows.length,
-                        dogEpisodes: dogEpisodes.length,
-                        concerts: concerts.length,
-                        concertAirings: concertAirings.length
-                    });
-                    
+                    console.log('📊 Data loaded:', { dogShows: dogShows.length, dogEpisodes: dogEpisodes.length, concerts: concerts.length, concertAirings: concertAirings.length });
                     renderSidebar();
                     renderOverview();
                 } catch (err) {
@@ -423,7 +419,6 @@
                         <span class="label">${title}</span>
                     </button>`;
                 }).join('');
-                
                 let concertHtml = concerts.map(c => {
                     const title = esc(c.title);
                     return `<button class="sidebar-item" onclick="switchView('concert','${title.replace(/'/g, "\\'")}')">
@@ -431,7 +426,6 @@
                         <span class="label">${title}</span>
                     </button>`;
                 }).join('');
-                
                 $('dogShowButtons').innerHTML = dogHtml || '<div class="text-xs text-slateblue p-2">No dog shows</div>';
                 $('concertButtons').innerHTML = concertHtml || '<div class="text-xs text-slateblue p-2">No concerts</div>';
             }
@@ -439,9 +433,7 @@
             window.switchView = function(view, title) {
                 currentView = view;
                 currentShowTitle = title || null;
-                
                 document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-                
                 $('overview-view').classList.add('hidden');
                 $('dogshow-view').classList.add('hidden');
                 $('concert-view').classList.add('hidden');
@@ -462,10 +454,7 @@
                 }
             };
 
-            window.changeMonth = function(dir) { 
-                monthOffset += dir; 
-                renderOverview(); 
-            };
+            window.changeMonth = function(dir) { monthOffset += dir; renderOverview(); };
 
             function renderOverview() {
                 const now = new Date();
@@ -479,26 +468,33 @@
                 let calendarHTML = '';
                 const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
                 dayNames.forEach(d => calendarHTML += `<div class="text-center py-2 bg-mist font-semibold text-xs text-slateblue">${d}</div>`);
-
                 for (let i=0; i<startWeekday; i++) calendarHTML += `<div class="bg-warmwhite min-h-[80px]"></div>`;
 
                 for (let day=1; day<=daysInMonth; day++) {
                     const dateObj = new Date(year, month, day);
                     const dateStr = dateObj.toISOString().split('T')[0];
+                    const dayOfWeek = dateObj.getDay();
                     const dogEvents = dogEpisodes.filter(e => e.air_date === dateStr);
                     const concertEvents = concertAirings.filter(a => a.air_date === dateStr);
                     const totalEvents = dogEvents.length + concertEvents.length;
                     const isToday = dateStr === new Date().toISOString().split('T')[0];
 
                     let eventTitles = [];
-                    dogEvents.forEach(e => eventTitles.push(`🐶 ${e.show_title || 'Dog Show'}`));
-                    concertEvents.forEach(a => eventTitles.push(`🎵 ${a.concert_title || 'Concert'}`));
+                    dogEvents.forEach(e => {
+                        const epNumber = e.episode_number || '';
+                        const showName = e.show_title || 'Dog Show';
+                        const runType = showName.includes('REPLAY') ? '📼' : '🔴';
+                        eventTitles.push(`${runType} ${epNumber} - ${showName.replace('Dog Show ', '')}`);
+                    });
+                    concertEvents.forEach(a => {
+                        eventTitles.push(`🎵 ${a.episode_title || a.concert_title || 'Concert'}`);
+                    });
 
-                    let cellContent = `<div class="date-badge">${day}</div>`;
+                    let cellContent = `<div class="date-badge">${day} <span class="text-[8px] text-slateblue">${dayNames[dayOfWeek]}</span></div>`;
                     if (totalEvents > 0) {
                         cellContent += `<div class="event-pills">`;
-                        eventTitles.slice(0,3).forEach(t => cellContent += `<span class="event-pill">${esc(t)}</span>`);
-                        if (totalEvents > 3) cellContent += `<span class="text-[10px] text-slateblue">+${totalEvents-3}</span>`;
+                        eventTitles.slice(0,4).forEach(t => cellContent += `<span class="event-pill">${esc(t)}</span>`);
+                        if (totalEvents > 4) cellContent += `<span class="text-[10px] text-slateblue">+${totalEvents-4}</span>`;
                         cellContent += `</div>`;
                     } else {
                         cellContent += `<div class="text-slateblue/40 text-[10px]">—</div>`;
@@ -514,8 +510,19 @@
                 const nowTime = new Date().getTime();
                 let upcoming = [];
                 const allEvents = [
-                    ...dogEpisodes.map(e => ({ date: e.air_date, title: `Dog Show: ${e.show_title}`, status: e.status, type:'dog' })),
-                    ...concertAirings.map(a => ({ date: a.air_date, title: `Concert: ${a.concert_title}`, status: a.status, type:'concert' }))
+                    ...dogEpisodes.map(e => ({ 
+                        date: e.air_date, 
+                        title: `${e.episode_number || ''} - ${e.show_title}`, 
+                        status: e.status, 
+                        type:'dog',
+                        runType: e.show_title.includes('REPLAY') ? 'REPLAY' : 'LIVE'
+                    })),
+                    ...concertAirings.map(a => ({ 
+                        date: a.air_date, 
+                        title: a.episode_title || a.concert_title, 
+                        status: a.status, 
+                        type:'concert' 
+                    }))
                 ];
                 upcoming = allEvents.filter(ev => {
                     if (!ev.date) return false;
@@ -527,15 +534,22 @@
                 if (upcoming.length === 0) {
                     $('upcomingEvents').innerHTML = `<div class="text-slateblue text-sm">No upcoming events in the next 48h.</div>`;
                 } else {
-                    $('upcomingEvents').innerHTML = upcoming.map(ev => `
-                        <div class="flex items-start gap-3 p-3 bg-mist rounded-lg">
-                            <div class="w-8 h-8 rounded-lg bg-copper/20 text-copper flex items-center justify-center"><i class="fa-solid ${ev.type==='dog'?'fa-dog':'fa-music'}"></i></div>
-                            <div class="flex-1">
-                                <div class="font-semibold text-midnight text-sm">${esc(ev.title)}</div>
-                                <div class="text-xs text-slateblue">${formatDate(ev.date)}</div>
+                    $('upcomingEvents').innerHTML = upcoming.map(ev => {
+                        const dayName = ev.date ? new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long' }) : '';
+                        const badge = ev.type === 'dog' ? (ev.runType === 'LIVE' ? '🔴 LIVE' : '📼 REPLAY') : '🎵 CONCERT';
+                        return `
+                            <div class="flex items-start gap-3 p-3 bg-mist rounded-lg">
+                                <div class="w-8 h-8 rounded-lg bg-copper/20 text-copper flex items-center justify-center">
+                                    <i class="fa-solid ${ev.type==='dog'?'fa-dog':'fa-music'}"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-midnight text-sm">${esc(ev.title)}</div>
+                                    <div class="text-xs text-slateblue">${dayName}, ${formatDate(ev.date)}</div>
+                                    <span class="text-[10px] font-semibold text-copper">${badge}</span>
+                                </div>
                             </div>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 }
             }
 
@@ -543,14 +557,10 @@
                 $('dogshowTitle').textContent = title;
                 const episodes = dogEpisodes.filter(e => e.show_title === title);
                 const tbody = $('dogshowTableBody');
-                
-                console.log(`🐶 Rendering dog show "${title}" with ${episodes.length} episodes`);
-                
                 if (!episodes.length) {
                     tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slateblue">No episodes found</td></tr>`;
                     return;
                 }
-                
                 tbody.innerHTML = episodes.map(ep => {
                     const overdue = isOverdue(ep.air_date, ep.status);
                     const statusClass = ep.status === true ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
@@ -568,29 +578,46 @@
 
             function renderConcert(title) {
                 $('concertTitle').textContent = title;
-                const airings = concertAirings.filter(a => a.concert_title === title);
-                const tbody = $('concertTableBody');
+                let airings = concertAirings.filter(a => a.concert_title === title);
                 
-                console.log(`🎵 Rendering concert "${title}" with ${airings.length} airings`);
-                
-                if (!airings.length) {
-                    tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-slateblue">No airings found</td></tr>`;
-                    return;
+                // Apply search filter
+                if (concertSearchTerm) {
+                    airings = airings.filter(a => 
+                        (a.episode_title || '').toLowerCase().includes(concertSearchTerm) ||
+                        (a.air_date || '').toLowerCase().includes(concertSearchTerm) ||
+                        (a.notes || '').toLowerCase().includes(concertSearchTerm)
+                    );
                 }
                 
+                // Sort by date
+                airings.sort((a,b) => new Date(b.air_date) - new Date(a.air_date));
+                
+                const tbody = $('concertTableBody');
+                if (!airings.length) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slateblue">No concerts found</td></tr>`;
+                    return;
+                }
                 tbody.innerHTML = airings.map(a => {
                     const overdue = isOverdue(a.air_date, a.status);
                     const statusClass = a.status === true ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
-                    const statusText = a.status === true ? 'Done' : (overdue ? 'Overdue' : 'To Air');
+                    const statusText = a.status === true ? 'Aired' : (overdue ? 'Overdue' : 'Upcoming');
                     return `
                         <tr data-id="${a.id}">
-                            <td onclick="editCell(this, 'air_date', '${a.id}', 'concert')" class="editable-cell">${esc(a.air_date || '—')} <span class="edit-icon">✏️</span></td>
-                            <td class="text-center" onclick="toggleStatus('${a.id}', ${a.status === true}, 'concert')"><span class="${statusClass}">${statusText}</span></td>
-                            <td class="text-center"><button class="btn-delete-episode" onclick="deleteAiring('${a.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
+                            <td>${formatDate(a.air_date)}</td>
+                            <td class="font-semibold">${esc(a.episode_title || '—')}</td>
+                            <td class="text-slateblue">${esc(a.notes || '—')}</td>
+                            <td class="text-center"><span class="${statusClass}">${statusText}</span></td>
                         </tr>
                     `;
                 }).join('');
             }
+
+            window.searchConcerts = function(term) {
+                concertSearchTerm = term.toLowerCase().trim();
+                if (currentView === 'concert' && currentShowTitle) {
+                    renderConcert(currentShowTitle);
+                }
+            };
 
             window.toggleStatus = async function(id, currentStatus, type) {
                 const newStatus = !currentStatus;
@@ -607,10 +634,7 @@
                         if (a) a.status = newStatus;
                         renderConcert(currentShowTitle);
                     }
-                } catch (err) { 
-                    console.error('Toggle error:', err);
-                    alert('Error: ' + err.message); 
-                }
+                } catch (err) { alert('Error: ' + err.message); }
             };
 
             window.editCell = function(td, field, id, type) {
@@ -654,11 +678,7 @@
                         if (a) { a.air_date = updateData.air_date; }
                         renderConcert(currentShowTitle);
                     }
-                } catch (err) { 
-                    console.error('Save error:', err);
-                    alert('Error: ' + err.message); 
-                    td.textContent = oldValue; 
-                }
+                } catch (err) { alert('Error: ' + err.message); td.textContent = oldValue; }
             }
 
             window.deleteEpisode = async function(id) {
@@ -694,7 +714,7 @@
             window.addAiring = async function() {
                 const title = currentShowTitle;
                 try {
-                    const { data, error } = await supabaseClient.from(CONCERT_AIRINGS_TABLE).insert({ concert_title: title, air_date: null, status: false }).select();
+                    const { data, error } = await supabaseClient.from(CONCERT_AIRINGS_TABLE).insert({ concert_title: title, air_date: null, episode_title: '', notes: '', status: false }).select();
                     if (error) throw error;
                     if (data && data[0]) concertAirings.push(data[0]);
                     renderConcert(title);
@@ -725,9 +745,7 @@
                 } catch (err) { alert('Error: ' + err.message); }
             };
 
-            window.toggleSidebar = function() { 
-                sidebar.classList.toggle('sidebar-collapsed'); 
-            };
+            window.toggleSidebar = function() { sidebar.classList.toggle('sidebar-collapsed'); };
 
             window.logoutUser = async function() {
                 if (!confirm('Sign out?')) return;
@@ -737,9 +755,8 @@
             };
 
             document.addEventListener('DOMContentLoaded', async function() {
-                console.log('🚀 DOM loaded, initializing...');
+                console.log('🚀 DOM loaded');
                 if (!supabaseClient) {
-                    console.error('❌ No Supabase client');
                     setStatus('⚠️ No Supabase', 'error');
                     return;
                 }
@@ -751,7 +768,6 @@
                         setTimeout(() => window.location.href = '../index.html', 1500);
                         return;
                     }
-                    console.log('✅ Session found');
                     setStatus('✅ Live', 'ok');
                     await loadAllData();
                 } catch (err) {
