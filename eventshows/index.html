@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dog Show & Concert Schedule · Executive Lounge</title>
+    <title>Weekly Events · Executive Lounge</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -146,23 +146,23 @@
         }
         .btn-export:hover { background: #2d3a4f; transform: scale(1.02); }
 
-        /* Week Calendar - IMPROVED */
+        /* Week Calendar */
         .week-calendar {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 0.75rem;
+            gap: 0.5rem;
             padding: 1rem;
         }
         .week-day {
             background: #FAF7F2;
             border: 1px solid rgba(24, 32, 47, 0.08);
-            border-radius: 0.75rem;
-            min-height: 150px;
-            padding: 0.5rem;
+            border-radius: 0.5rem;
+            min-height: 120px;
+            overflow: hidden;
             transition: all 0.2s;
         }
         .week-day.today {
-            background: rgba(184,115,79,0.1);
+            background: rgba(184,115,79,0.08);
             border-color: #B8734F;
             box-shadow: 0 2px 8px rgba(184,115,79,0.15);
         }
@@ -171,58 +171,58 @@
         }
         .week-day-header {
             text-align: center;
-            padding-bottom: 0.5rem;
+            padding: 0.4rem;
             border-bottom: 1px solid rgba(24, 32, 47, 0.08);
-            margin-bottom: 0.5rem;
-        }
-        .week-day-name {
-            font-size: 0.8rem;
+            background: #f0ebe6;
             font-weight: 700;
+            font-size: 0.75rem;
             color: #475569;
-            text-transform: uppercase;
         }
-        .week-day-date {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: #18202F;
+        .week-day.today .week-day-header {
+            background: #B8734F;
+            color: white;
+        }
+        .week-day-body {
+            padding: 0.4rem;
+            max-height: 200px;
+            overflow-y: auto;
         }
         .week-event {
             background: white;
             border: 1px solid rgba(24, 32, 47, 0.1);
-            border-radius: 0.4rem;
-            padding: 0.4rem;
-            margin-bottom: 0.3rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #18202F;
+            border-radius: 0.3rem;
+            padding: 0.3rem;
+            margin-bottom: 0.25rem;
             cursor: pointer;
             transition: all 0.2s;
         }
         .week-event:hover {
-            background: #f0ebe6;
             transform: translateX(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .week-event.dog-live {
             border-left: 3px solid #ef4444;
-            background: #fef2f2;
         }
         .week-event.dog-replay {
             border-left: 3px solid #3b82f6;
-            background: #eff6ff;
         }
         .week-event.concert {
             border-left: 3px solid #22c55e;
-            background: #f0fdf4;
         }
         .week-event-title {
             font-size: 0.7rem;
             font-weight: 700;
+            color: #18202F;
             margin-bottom: 0.1rem;
         }
         .week-event-type {
             font-size: 0.6rem;
             color: #68748A;
             font-weight: 500;
+        }
+        .check-icon {
+            color: #22c55e;
+            font-size: 0.7rem;
         }
 
         /* Search Bar */
@@ -236,6 +236,24 @@
         .search-bar i { color: #94a3b8; font-size: 0.75rem; margin-right: 0.4rem; }
 
         .hidden { display: none !important; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            z-index: 200; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-card {
+            background: #FAF7F2; border-radius: 1rem; padding: 1.5rem; width: 90%; max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        .modal-input {
+            width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;
+            font-size: 0.85rem; font-family: inherit; margin-bottom: 1rem;
+        }
+        .modal-label {
+            font-size: 0.7rem; font-weight: 600; color: #68748A; display: block; margin-bottom: 0.25rem;
+        }
     </style>
 </head>
 <body>
@@ -245,7 +263,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="px-2 py-4 border-b border-black/5 flex items-center justify-center flex-shrink-0">
                 <span class="text-lg font-extrabold tracking-tight whitespace-nowrap">
-                    <span class="brand-city">EL</span><span class="brand-work">·</span><span class="brand-city">Schedules</span>
+                    <span class="brand-city">EL</span><span class="brand-work">·</span><span class="brand-city">Events</span>
                 </span>
             </div>
 
@@ -262,16 +280,6 @@
                 <div class="sidebar-divider"></div>
                 <div class="sidebar-label">Choice Concerts</div>
                 <div id="concertButtons"></div>
-
-                <div class="sidebar-divider"></div>
-                <button class="sidebar-item" onclick="addDogShow()">
-                    <span class="icon"><i class="fa-solid fa-plus"></i></span>
-                    <span class="label">Add Dog Show</span>
-                </button>
-                <button class="sidebar-item" onclick="addConcert()">
-                    <span class="icon"><i class="fa-solid fa-plus"></i></span>
-                    <span class="label">Add Concert</span>
-                </button>
 
                 <div class="sidebar-divider"></div>
                 <button class="sidebar-item" onclick="window.location.href='../index.html'">
@@ -295,7 +303,7 @@
                     <button onclick="toggleSidebar()" class="w-8 h-8 rounded-full bg-mist hover:bg-slate-200 text-slateblue transition flex items-center justify-center">
                         <i class="fa-solid fa-bars"></i>
                     </button>
-                    <span id="viewTitle" class="text-sm font-semibold text-midnight whitespace-nowrap">Overview</span>
+                    <span id="viewTitle" class="text-sm font-semibold text-midnight whitespace-nowrap">Weekly Events</span>
                 </div>
                 <div class="flex items-center gap-3">
                     <span id="statusBadge" class="status-badge-top status-waiting">
@@ -351,16 +359,32 @@
                     <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
                         <div>
                             <h1 class="text-xl font-extrabold text-midnight"><i class="fa-solid fa-music"></i> <span id="concertTitle"></span></h1>
-                            <p class="text-xs text-slateblue mt-0.5">Concert Airings</p>
-                        </div>
-                        <div class="search-bar">
-                            <i class="fa-solid fa-search"></i>
-                            <input type="text" id="concertSearch" placeholder="Search by title or date..." oninput="searchConcerts(this.value)" />
+                            <p class="text-xs text-slateblue mt-0.5">Concert Archive</p>
                         </div>
                     </div>
+                    
+                    <div class="flex items-center gap-3 mb-4 flex-wrap">
+                        <div class="search-bar">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="concertSearch" placeholder="Search by title..." oninput="searchConcerts(this.value)" />
+                        </div>
+                        <button class="btn-export" onclick="openConcertModal()" style="margin-left:auto;">
+                            <i class="fa-solid fa-plus"></i> Add Entry
+                        </button>
+                    </div>
+                    
                     <div class="table-wrap">
                         <table class="priority-groups-table">
-                            <thead><tr><th>Date Aired</th><th>Title</th><th>Notes</th><th>Status</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th style="cursor:pointer;" onclick="sortConcertByDate()">
+                                        Date Aired <i class="fa-solid fa-sort-down" id="dateSortIcon"></i>
+                                    </th>
+                                    <th>Title</th>
+                                    <th>Notes</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
                             <tbody id="concertTableBody"></tbody>
                         </table>
                     </div>
@@ -373,6 +397,31 @@
     <div id="loadingSpinner">
         <div class="spinner"></div>
         <p class="text-slateblue text-sm font-medium">Loading...</p>
+    </div>
+
+    <!-- Concert Entry Modal -->
+    <div class="modal-overlay" id="concertModal">
+        <div class="modal-card">
+            <h3 style="font-size:1.1rem;font-weight:700;color:#18202F;margin-bottom:1.5rem;">
+                <i class="fa-solid fa-music text-copper"></i> Add Concert Entry
+            </h3>
+            
+            <label class="modal-label">DATE AIRED</label>
+            <input type="date" id="concertDateInput" class="modal-input" />
+            
+            <label class="modal-label">TITLE</label>
+            <input type="text" id="concertTitleInput" placeholder="e.g., ELVIS NIGHT" class="modal-input" />
+            
+            <label class="modal-label">NOTES (optional)</label>
+            <textarea id="concertNotesInput" rows="3" placeholder="Add any notes..." class="modal-input" style="resize:vertical;"></textarea>
+            
+            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                <button onclick="closeConcertModal()" style="padding:0.5rem 1rem;border-radius:0.5rem;border:1px solid #cbd5e1;background:white;color:#68748A;font-size:0.8rem;cursor:pointer;font-weight:600;">Cancel</button>
+                <button onclick="saveConcertEntry()" style="padding:0.5rem 1rem;border-radius:0.5rem;border:none;background:#B8734F;color:white;font-size:0.8rem;font-weight:600;cursor:pointer;">
+                    <i class="fa-solid fa-save"></i> Save Entry
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -417,6 +466,7 @@
             let weekOffset = 0;
             let editingCell = null;
             let concertSearchTerm = '';
+            let concertSortDirection = 'desc';
 
             function setStatus(text, type) {
                 const colors = { ok: 'status-ok', error: 'status-error', waiting: 'status-waiting' };
@@ -430,18 +480,27 @@
                 return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); 
             }
 
+            function parseDate(dateStr) {
+                if (!dateStr) return null;
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                }
+                return null;
+            }
+
             function formatDate(dateStr) { 
                 if (!dateStr) return '—'; 
-                const d = new Date(dateStr); 
-                if (isNaN(d)) return dateStr; 
-                return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); 
+                const d = parseDate(dateStr);
+                if (d && !isNaN(d)) return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+                return dateStr; 
             }
 
             function formatShortDate(dateStr) { 
                 if (!dateStr) return '—'; 
-                const d = new Date(dateStr); 
-                if (isNaN(d)) return dateStr; 
-                return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); 
+                const d = parseDate(dateStr);
+                if (d && !isNaN(d)) return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+                return dateStr; 
             }
 
             function isOverdue(dateStr, status) { 
@@ -449,7 +508,8 @@
                 if (!dateStr) return false; 
                 const today = new Date(); 
                 today.setHours(0,0,0,0); 
-                const d = new Date(dateStr); 
+                const d = parseDate(dateStr); 
+                if (!d) return false;
                 d.setHours(0,0,0,0); 
                 return d < today; 
             }
@@ -492,18 +552,35 @@
             function renderSidebar() {
                 let dogHtml = dogShows.map(s => {
                     const title = esc(s.title);
-                    return `<button class="sidebar-item" onclick="switchView('dogshow','${title.replace(/'/g, "\\'")}')">
-                        <span class="icon"><i class="fa-solid fa-dog"></i></span>
-                        <span class="label">${title}</span>
+                    let shortTitle, icon, color;
+                    if (s.title.includes('First Run') || s.title.includes('LIVE')) {
+                        shortTitle = 'LIVE Run';
+                        icon = 'fa-tower-broadcast';
+                        color = '#ef4444';
+                    } else if (s.title.includes('Second Run') || s.title.includes('REPLAY')) {
+                        shortTitle = 'REPLAY Run';
+                        icon = 'fa-rotate-left';
+                        color = '#3b82f6';
+                    } else {
+                        shortTitle = s.title.replace('Dog Show ', '');
+                        icon = 'fa-dog';
+                        color = '#68748A';
+                    }
+                    return `<button class="sidebar-item" onclick="switchView('dogshow','${title.replace(/'/g, "\\'")}')" title="${title}">
+                        <span class="icon"><i class="fa-solid ${icon}" style="color:${color};"></i></span>
+                        <span class="label">${esc(shortTitle)}</span>
                     </button>`;
                 }).join('');
+                
                 let concertHtml = concerts.map(c => {
                     const title = esc(c.title);
-                    return `<button class="sidebar-item" onclick="switchView('concert','${title.replace(/'/g, "\\'")}')">
-                        <span class="icon"><i class="fa-solid fa-music"></i></span>
-                        <span class="label">${title}</span>
+                    const shortTitle = c.title.replace('Choice Concert', 'Concert');
+                    return `<button class="sidebar-item" onclick="switchView('concert','${title.replace(/'/g, "\\'")}')" title="${title}">
+                        <span class="icon"><i class="fa-solid fa-music" style="color:#22c55e;"></i></span>
+                        <span class="label">${esc(shortTitle)}</span>
                     </button>`;
                 }).join('');
+                
                 $('dogShowButtons').innerHTML = dogHtml || '<div class="text-xs text-slateblue p-2">No dog shows</div>';
                 $('concertButtons').innerHTML = concertHtml || '<div class="text-xs text-slateblue p-2">No concerts</div>';
             }
@@ -518,7 +595,7 @@
                 
                 if (view === 'overview') {
                     $('overview-view').classList.remove('hidden');
-                    viewTitle.textContent = 'Overview';
+                    viewTitle.textContent = 'Weekly Events';
                     $('overviewBtn').classList.add('active');
                     renderOverview();
                 } else if (view === 'dogshow') {
@@ -547,72 +624,73 @@
                 const startOfWeek = new Date(today);
                 startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (weekOffset * 7));
                 
-                const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+                const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
                 let calendarHTML = '';
                 
                 dayNames.forEach((dayName, idx) => {
                     const date = new Date(startOfWeek);
                     date.setDate(startOfWeek.getDate() + idx);
-                    const dateStr = date.toISOString().split('T')[0];
-                    const isToday = dateStr === today.toISOString().split('T')[0];
                     
-                    // Get events for this date
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const dateStr = `${year}-${month}-${day}`;
+                    
+                    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                    const isToday = dateStr === todayStr;
+                    
                     const dogEvents = dogEpisodes.filter(e => e.air_date === dateStr);
                     const concertEvents = concertAirings.filter(a => a.air_date === dateStr);
                     
                     let eventsHTML = '';
                     
-                    // Dog events
                     dogEvents.forEach(e => {
                         const isReplay = e.show_title.includes('REPLAY');
                         const eventClass = isReplay ? 'dog-replay' : 'dog-live';
-                        const eventType = isReplay ? '📼 REPLAY' : '🔴 LIVE';
+                        const checkMark = e.status === true ? '<i class="fa-solid fa-circle-check check-icon"></i> ' : '';
                         eventsHTML += `
                             <div class="week-event ${eventClass}" onclick="switchView('dogshow','${e.show_title.replace(/'/g, "\\'")}')">
-                                <div class="week-event-title">${esc(e.episode_number || 'Episode')}</div>
-                                <div class="week-event-type">${eventType} - ${esc(e.show_title.replace('Dog Show ', ''))}</div>
+                                <div class="week-event-title">${checkMark}${esc(e.episode_number || 'Episode')}</div>
+                                <div class="week-event-type">${isReplay ? 'REPLAY' : 'LIVE'}</div>
                             </div>
                         `;
                     });
                     
-                    // Concert events
                     concertEvents.forEach(a => {
                         eventsHTML += `
                             <div class="week-event concert" onclick="switchView('concert','${a.concert_title.replace(/'/g, "\\'")}')">
                                 <div class="week-event-title">${esc(a.episode_title || 'Concert')}</div>
-                                <div class="week-event-type">🎵 CONCERT</div>
+                                <div class="week-event-type">CONCERT</div>
                             </div>
                         `;
                     });
                     
                     calendarHTML += `
                         <div class="week-day ${isToday ? 'today' : ''} ${(dogEvents.length + concertEvents.length) > 0 ? 'has-events' : ''}">
-                            <div class="week-day-header">
-                                <div class="week-day-name">${dayName.substring(0,3)}</div>
-                                <div class="week-day-date">${date.getDate()}</div>
-                                <div style="font-size:0.6rem;color:#94a3b8;">${date.toLocaleDateString('en-US',{month:'short'})}</div>
+                            <div class="week-day-header">${dayName} ${date.getDate()}</div>
+                            <div class="week-day-body">
+                                ${eventsHTML || '<div style="text-align:center;color:#d1d5db;font-size:0.7rem;padding-top:0.5rem;">—</div>'}
                             </div>
-                            ${eventsHTML || '<div style="text-align:center;color:#d1d5db;font-size:0.7rem;padding-top:1rem;">No events</div>'}
                         </div>
                     `;
                 });
                 
                 $('weekCalendar').innerHTML = calendarHTML;
                 
-                // Update week label
                 const endOfWeek = new Date(startOfWeek);
                 endOfWeek.setDate(startOfWeek.getDate() + 6);
-                $('weekLabel').textContent = `${formatShortDate(startOfWeek)} – ${formatShortDate(endOfWeek)}`;
+                const monthLabel = startOfWeek.toLocaleDateString('en-US', { month: 'long' });
+                $('weekLabel').textContent = `${monthLabel} ${startOfWeek.getDate()}-${endOfWeek.getDate()}, ${endOfWeek.getFullYear()}`;
             }
 
             function renderUpcomingEvents() {
                 const nowTime = new Date().getTime();
                 let upcoming = [];
                 
-                // Dog show events
                 dogEpisodes.forEach(e => {
                     if (!e.air_date) return;
-                    const d = new Date(e.air_date);
+                    const d = parseDate(e.air_date);
+                    if (!d) return;
                     const diff = d.getTime() - nowTime;
                     if (diff > 0 && diff <= 7*24*60*60*1000) {
                         const isReplay = e.show_title.includes('REPLAY');
@@ -626,10 +704,10 @@
                     }
                 });
                 
-                // Concert events
                 concertAirings.forEach(a => {
                     if (!a.air_date) return;
-                    const d = new Date(a.air_date);
+                    const d = parseDate(a.air_date);
+                    if (!d) return;
                     const diff = d.getTime() - nowTime;
                     if (diff > 0 && diff <= 7*24*60*60*1000) {
                         upcoming.push({
@@ -642,7 +720,6 @@
                     }
                 });
                 
-                // Sort by date
                 upcoming.sort((a,b) => new Date(a.date) - new Date(b.date));
                 
                 if (upcoming.length === 0) {
@@ -650,17 +727,33 @@
                 } else {
                     $('upcomingEvents').innerHTML = upcoming.map(ev => {
                         const dayName = new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long' });
-                        const icon = ev.type === 'dog' ? (ev.runType === 'LIVE' ? 'fa-dog text-red-500' : 'fa-dog text-blue-500') : 'fa-music text-green-500';
-                        const badgeColor = ev.type === 'dog' ? (ev.runType === 'LIVE' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700') : 'bg-green-100 text-green-700';
+                        let icon, iconColor, badgeColor;
+                        if (ev.type === 'dog') {
+                            if (ev.runType === 'LIVE') {
+                                icon = 'fa-dog';
+                                iconColor = 'text-red-500';
+                                badgeColor = 'bg-red-100 text-red-700';
+                            } else {
+                                icon = 'fa-dog';
+                                iconColor = 'text-blue-500';
+                                badgeColor = 'bg-blue-100 text-blue-700';
+                            }
+                        } else {
+                            icon = 'fa-music';
+                            iconColor = 'text-green-500';
+                            badgeColor = 'bg-green-100 text-green-700';
+                        }
                         return `
                             <div class="flex items-start gap-3 p-3 bg-mist rounded-lg">
-                                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                                    <i class="fa-solid ${icon}"></i>
+                                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+                                    <i class="fa-solid ${icon} ${iconColor}"></i>
                                 </div>
-                                <div class="flex-1">
-                                    <div class="font-semibold text-midnight text-sm">${esc(ev.title)}</div>
-                                    <div class="text-xs text-slateblue mt-0.5">${dayName}, ${formatDate(ev.date)}</div>
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColor}">${ev.runType}</span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-midnight text-sm truncate">${esc(ev.title)}</div>
+                                    <div class="text-xs text-slateblue mt-0.5">
+                                        <i class="fa-regular fa-calendar mr-1"></i>${dayName}, ${formatDate(ev.date)}
+                                    </div>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColor} inline-block mt-1">${ev.runType}</span>
                                 </div>
                             </div>
                         `;
@@ -680,7 +773,7 @@
                 tbody.innerHTML = episodes.map(ep => {
                     const overdue = isOverdue(ep.air_date, ep.status);
                     const statusClass = ep.status === true ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
-                    const statusText = ep.status === true ? 'Done' : (overdue ? 'Overdue' : 'To Air');
+                    const statusText = ep.status === true ? '✓' : (overdue ? 'Overdue' : 'To Air');
                     return `
                         <tr data-id="${ep.id}">
                             <td onclick="editCell(this, 'air_date', '${ep.id}', 'dog')" class="editable-cell">${formatDate(ep.air_date)} <span class="edit-icon">✏️</span></td>
@@ -704,7 +797,11 @@
                     );
                 }
                 
-                airings.sort((a,b) => new Date(b.air_date) - new Date(a.air_date));
+                airings.sort((a,b) => {
+                    const dateA = new Date(a.air_date);
+                    const dateB = new Date(b.air_date);
+                    return concertSortDirection === 'desc' ? dateB - dateA : dateA - dateB;
+                });
                 
                 const tbody = $('concertTableBody');
                 if (!airings.length) {
@@ -712,25 +809,93 @@
                     return;
                 }
                 tbody.innerHTML = airings.map(a => {
-                    const overdue = isOverdue(a.air_date, a.status);
-                    const statusClass = a.status === true ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
-                    const statusText = a.status === true ? 'Aired' : (overdue ? 'Overdue' : 'Upcoming');
                     return `
                         <tr data-id="${a.id}">
-                            <td>${formatDate(a.air_date)}</td>
+                            <td class="whitespace-nowrap">${formatDate(a.air_date)}</td>
                             <td class="font-semibold">${esc(a.episode_title || '—')}</td>
                             <td class="text-slateblue">${esc(a.notes || '—')}</td>
-                            <td class="text-center"><span class="${statusClass}">${statusText}</span></td>
+                            <td class="text-center">
+                                <button class="btn-delete-episode" onclick="deleteConcertEntry('${a.id}')" title="Delete">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
                         </tr>
                     `;
                 }).join('');
             }
+
+            window.sortConcertByDate = function() {
+                concertSortDirection = concertSortDirection === 'desc' ? 'asc' : 'desc';
+                const icon = $('dateSortIcon');
+                if (icon) {
+                    icon.className = concertSortDirection === 'desc' ? 'fa-solid fa-sort-down' : 'fa-solid fa-sort-up';
+                }
+                if (currentView === 'concert' && currentShowTitle) {
+                    renderConcert(currentShowTitle);
+                }
+            };
 
             window.searchConcerts = function(term) {
                 concertSearchTerm = term.toLowerCase().trim();
                 if (currentView === 'concert' && currentShowTitle) {
                     renderConcert(currentShowTitle);
                 }
+            };
+
+            window.openConcertModal = function() {
+                $('concertModal').classList.add('open');
+                const today = new Date();
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+                $('concertDateInput').value = todayStr;
+                $('concertTitleInput').value = '';
+                $('concertNotesInput').value = '';
+                $('concertTitleInput').focus();
+            };
+
+            window.closeConcertModal = function() {
+                $('concertModal').classList.remove('open');
+            };
+
+            window.saveConcertEntry = async function() {
+                const date = $('concertDateInput').value;
+                const title = $('concertTitleInput').value.trim();
+                const notes = $('concertNotesInput').value.trim();
+                
+                if (!date || !title) {
+                    alert('Please enter both date and title');
+                    return;
+                }
+                
+                try {
+                    const { data, error } = await supabaseClient
+                        .from(CONCERT_AIRINGS_TABLE)
+                        .insert({ 
+                            concert_title: currentShowTitle,
+                            air_date: date,
+                            episode_title: title,
+                            notes: notes || null,
+                            status: false
+                        })
+                        .select();
+                    
+                    if (error) throw error;
+                    if (data && data[0]) concertAirings.push(data[0]);
+                    
+                    closeConcertModal();
+                    renderConcert(currentShowTitle);
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                }
+            };
+
+            window.deleteConcertEntry = async function(id) {
+                if (!confirm('Delete this entry?')) return;
+                try {
+                    const { error } = await supabaseClient.from(CONCERT_AIRINGS_TABLE).delete().eq('id', id);
+                    if (error) throw error;
+                    concertAirings = concertAirings.filter(a => a.id != id);
+                    renderConcert(currentShowTitle);
+                } catch (err) { alert('Error: ' + err.message); }
             };
 
             window.toggleStatus = async function(id, currentStatus, type) {
@@ -743,10 +908,6 @@
                         const ep = dogEpisodes.find(e => e.id == id);
                         if (ep) ep.status = newStatus;
                         renderDogShow(currentShowTitle);
-                    } else {
-                        const a = concertAirings.find(x => x.id == id);
-                        if (a) a.status = newStatus;
-                        renderConcert(currentShowTitle);
                     }
                 } catch (err) { alert('Error: ' + err.message); }
             };
@@ -811,30 +972,6 @@
                 } catch (err) { alert('Error: ' + err.message); }
             };
 
-            window.addDogShow = async function() {
-                const name = prompt('Enter dog show name:');
-                if (!name) return;
-                try {
-                    const { data, error } = await supabaseClient.from(DOG_TITLES_TABLE).insert({ title: name }).select();
-                    if (error) throw error;
-                    if (data && data[0]) dogShows.push(data[0]);
-                    renderSidebar();
-                    switchView('dogshow', name);
-                } catch (err) { alert('Error: ' + err.message); }
-            };
-
-            window.addConcert = async function() {
-                const name = prompt('Enter concert name:');
-                if (!name) return;
-                try {
-                    const { data, error } = await supabaseClient.from(CONCERT_TITLES_TABLE).insert({ title: name }).select();
-                    if (error) throw error;
-                    if (data && data[0]) concerts.push(data[0]);
-                    renderSidebar();
-                    switchView('concert', name);
-                } catch (err) { alert('Error: ' + err.message); }
-            };
-
             window.toggleSidebar = function() { sidebar.classList.toggle('sidebar-collapsed'); };
 
             window.logoutUser = async function() {
@@ -843,6 +980,21 @@
                 localStorage.removeItem('archivehub_user');
                 window.location.href = '../index.html';
             };
+
+            $('concertModal').addEventListener('click', function(e) {
+                if (e.target === this) closeConcertModal();
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeConcertModal();
+                    if (editingCell) {
+                        const { td, oldValue } = editingCell;
+                        td.textContent = oldValue === '' ? '—' : oldValue;
+                        editingCell = null;
+                    }
+                }
+            });
 
             document.addEventListener('DOMContentLoaded', async function() {
                 if (!supabaseClient) {
