@@ -710,7 +710,7 @@
                             <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#B8734F;margin-bottom:12px;"></i>
                             <h2 style="font-size:20px;font-weight:700;color:#FAF7F2;">Configuration Error</h2>
                             <p style="color:rgba(250,247,242,0.7);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#B8734F;">config.js</code>.</p>
-                            <a href="../../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#B8734F;color:#FAF7F2;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a>
+                            <a href="../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#B8734F;color:#FAF7F2;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a>
                         </div>
                     </div>
                 `;
@@ -863,7 +863,7 @@
                     if (!session || !session.user) {
                         setStatus('🔓 Not logged in', 'error');
                         loadingSpinner.style.display = 'none';
-                        setTimeout(() => { window.location.href = '../../index.html'; }, 1500);
+                        setTimeout(() => { window.location.href = '../index.html'; }, 1500);
                         return;
                     }
                     userEmail = session.user.email;
@@ -1335,7 +1335,7 @@
                 if (!confirm('Are you sure you want to sign out?')) return;
                 try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
                 localStorage.removeItem('archivehub_user');
-                window.location.href = '../../index.html';
+                window.location.href = '../index.html';
             };
 
             window.closeModal = function() {
