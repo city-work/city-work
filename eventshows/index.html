@@ -580,6 +580,10 @@
             0% { opacity: 0; transform: translateY(8px); }
             100% { opacity: 1; transform: translateY(0); }
         }
+
+        /* Hide debug and logout */
+        #upcomingDebug { display: none !important; }
+        #logoutBtn { display: none !important; }
     </style>
 </head>
 <body>
@@ -892,14 +896,12 @@
 
             // ─── RENDER SIDEBAR - ICONS ONLY ────────────────────────
             function renderSidebar() {
-                // Dog shows - icons only, no text labels
                 let dogHtml = dogShows.map(s => {
                     const title = esc(s.title);
                     let isLive = s.title.includes('LIVE') || s.title.includes('First Run');
                     let isReplay = s.title.includes('REPLAY') || s.title.includes('Second Run');
                     let icon, color, tooltipText;
                     
-                    // Rename to "All About Dogs (LIVE)" and "All About Dogs (REPLAY)"
                     let displayTitle = s.title;
                     if (isLive) {
                         displayTitle = 'All About Dogs (LIVE)';
@@ -923,7 +925,6 @@
                     </button>`;
                 }).join('');
                 
-                // Concerts - icons only
                 let concertHtml = concerts.map(c => {
                     const title = esc(c.title);
                     return `<button class="sidebar-item" data-view="concert" data-title="${esc(c.title)}">
@@ -964,7 +965,6 @@
                     if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true }); }
                 } else if (view === 'dogshow') {
                     $('dogshow-view').classList.remove('hidden');
-                    // Show the display name
                     let displayTitle = title;
                     if (title && title.includes('LIVE')) {
                         displayTitle = 'All About Dogs (LIVE)';
@@ -1027,7 +1027,6 @@
                         const eventClass = isReplay ? 'dog-replay' : 'dog-live';
                         const checkMark = e.status === true ? '<i class="fa-solid fa-circle-check check-icon"></i> ' : '';
                         const episodeLabel = e.episode_number ? `Ep ${e.episode_number}` : 'No Episode #';
-                        // Use display name
                         let displayTitle = e.show_title;
                         if (displayTitle.includes('LIVE')) displayTitle = 'All About Dogs (LIVE)';
                         else if (displayTitle.includes('REPLAY')) displayTitle = 'All About Dogs (REPLAY)';
@@ -1085,7 +1084,7 @@
                 if (view && title) switchView(view, title);
             };
 
-            // ─── UPCOMING EVENTS - INTEGRATED DESIGN ────────────────
+            // ─── UPCOMING EVENTS - NO TIME, NO DEBUG ────────────────
             function renderUpcomingEvents() {
                 const nowTime = new Date().getTime();
                 let upcoming = [];
@@ -1097,7 +1096,6 @@
                     const diff = d.getTime() - nowTime;
                     if (diff > 0 && diff <= 14 * 24 * 60 * 60 * 1000) {
                         const isReplay = e.show_title.includes('REPLAY');
-                        // Use display names
                         let displayTitle = e.show_title;
                         if (displayTitle.includes('LIVE')) displayTitle = 'All About Dogs (LIVE)';
                         else if (displayTitle.includes('REPLAY')) displayTitle = 'All About Dogs (REPLAY)';
@@ -1135,10 +1133,6 @@
                 upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
 
                 const container = $('upcomingEvents');
-                const debugEl = $('upcomingDebug');
-                if (debugEl) {
-                    debugEl.textContent = `Debug: ${upcoming.length} upcoming events in the next 2 weeks`;
-                }
 
                 if (upcoming.length === 0) {
                     container.innerHTML = `<div class="text-slateblue text-sm col-span-2 text-center py-8">✨ No upcoming events in the next 2 weeks.</div>`;
@@ -1168,8 +1162,6 @@
                             badgeText = 'REPLAY';
                         }
                         
-                        const timeStr = '09:00 AM';
-                        
                         return `
                             <div class="upcoming-event-card" onclick="switchView('${ev.type === 'dog' ? 'dogshow' : 'concert'}', '${esc(ev.showTitle)}')" style="animation: fadeUp 0.4s ease forwards; animation-delay: ${index * 0.08}s;">
                                 <div class="event-content ${borderClass}">
@@ -1182,7 +1174,6 @@
                                         <div class="event-subtitle">${esc(ev.subtitle)}</div>
                                         <div class="event-meta">
                                             <span><i class="fa-regular fa-calendar"></i> ${dayName} - ${monthDay}</span>
-                                            <span><i class="fa-regular fa-clock"></i> ${timeStr}</span>
                                         </div>
                                     </div>
                                     
@@ -1527,8 +1518,8 @@
                 }
             });
 
-            // Attach logout event listener
-            document.getElementById('logoutBtn').addEventListener('click', logoutUser);
+            // Attach logout event listener (though button is hidden)
+            document.getElementById('logoutBtn')?.addEventListener('click', logoutUser);
 
         })();
     </script>
