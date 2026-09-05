@@ -835,6 +835,14 @@
             }
         }
 
+        /* ─── CONTENT PANELS - FIXED ISOLATION ─── */
+        .content-panel {
+            display: none !important;
+        }
+        .content-panel.active {
+            display: block !important;
+        }
+
         /* ─── RESPONSIVE ─── */
         @media (max-width: 1023px) {
             .sidebar {
@@ -1112,7 +1120,7 @@
                 </div>
 
                 <div class="flex items-center gap-1.5 sm:gap-3 flex-wrap">
-                    <button class="btn-add-header" id="addMasterlistBtn" onclick="openMasterlistModal()" title="Add New Item">
+                    <button class="btn-add-header" id="addMasterlistBtn" onclick="openMasterlistModal()" title="Add New Item" style="display:none;">
                         <i class="fa-solid fa-plus"></i>
                     </button>
                     <span id="syncIndicator" class="text-xs text-slateblue whitespace-nowrap">
@@ -1141,9 +1149,8 @@
 
                 <div id="messageArea"></div>
 
-                <!-- ═══ DASHBOARD ═══ -->
+                <!-- ═══ DASHBOARD PANEL ═══ -->
                 <div id="panel-dashboard" class="content-panel active" data-panel="dashboard">
-
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                         <a href="#masterlist" onclick="showPanel('masterlist');return false;" class="bg-warmwhite p-4 rounded-2xl border border-mist/50 text-center hover:border-copper transition-all hover:shadow-lift hover:-translate-y-1">
                             <div class="text-2xl mb-1">📋</div>
@@ -1176,7 +1183,7 @@
                     </div>
                 </div>
 
-                <!-- ═══ MASTERLIST ═══ -->
+                <!-- ═══ MASTERLIST PANEL ═══ -->
                 <div id="panel-masterlist" class="content-panel" data-panel="masterlist">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4" id="masterlistCards">
                         <!-- Cards rendered by JavaScript -->
@@ -1188,7 +1195,7 @@
                     </div>
                 </div>
 
-                <!-- ═══ CHORES ═══ -->
+                <!-- ═══ CHORES PANEL ═══ -->
                 <div id="panel-chores" class="content-panel" data-panel="chores">
                     <div class="empty-state">
                         <div class="icon"><i class="fa-solid fa-broom"></i></div>
@@ -1197,7 +1204,7 @@
                     </div>
                 </div>
 
-                <!-- ═══ COMMERCIAL ═══ -->
+                <!-- ═══ COMMERCIAL PANEL ═══ -->
                 <div id="panel-commercial" class="content-panel" data-panel="commercial">
                     <div class="empty-state">
                         <div class="icon"><i class="fa-solid fa-rectangle-ad"></i></div>
@@ -1206,7 +1213,7 @@
                     </div>
                 </div>
 
-                <!-- ═══ CPS ═══ -->
+                <!-- ═══ CPS PANEL ═══ -->
                 <div id="panel-cps" class="content-panel" data-panel="cps">
                     <div class="empty-state">
                         <div class="icon"><i class="fa-solid fa-shield-halved"></i></div>
@@ -1215,7 +1222,7 @@
                     </div>
                 </div>
 
-                <!-- ═══ CONCERT ═══ -->
+                <!-- ═══ CONCERT PANEL ═══ -->
                 <div id="panel-concert" class="content-panel" data-panel="concert">
                     <div class="empty-state">
                         <div class="icon"><i class="fa-solid fa-music"></i></div>
@@ -1224,7 +1231,7 @@
                     </div>
                 </div>
 
-                <!-- ═══ WEEKLY ═══ -->
+                <!-- ═══ WEEKLY PANEL ═══ -->
                 <div id="panel-weekly" class="content-panel" data-panel="weekly">
                     <div class="empty-state">
                         <div class="icon"><i class="fa-solid fa-calendar-days"></i></div>
@@ -1233,7 +1240,7 @@
                     </div>
                 </div>
 
-                <!-- ═══ CLASSICS ═══ -->
+                <!-- ═══ CLASSICS PANEL ═══ -->
                 <div id="panel-classics" class="content-panel" data-panel="classics">
                     <div class="empty-state">
                         <div class="icon"><i class="fa-solid fa-clapperboard"></i></div>
@@ -1322,7 +1329,7 @@
         (function() {
             'use strict';
 
-            console.log('🚀 [CITY WORK] Dashboard with Add Panel & Masterlist features');
+            console.log('🚀 [CITY WORK] Dashboard with Proper Panel Isolation');
 
             // ─── CONFIG ──────────────────────────────────────────────
             let SUPABASE_URL, SUPABASE_ANON_KEY;
@@ -1758,14 +1765,17 @@
             window.showPanel = function(panelId) {
                 currentPanel = panelId;
 
+                // Hide all panels
                 document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
 
+                // Show target panel
                 const target = document.getElementById('panel-' + panelId);
                 if (target) {
                     target.classList.add('active');
                     animatePanelIn(target);
                 }
 
+                // Update sidebar active state
                 document.querySelectorAll('.nav-item').forEach(item => {
                     item.classList.toggle('active', item.dataset.panel === panelId);
                 });
@@ -1778,6 +1788,7 @@
                     addBtn.style.display = 'none';
                 }
 
+                // Update title
                 if (panelId.startsWith('dynamic_')) {
                     const index = parseInt(panelId.split('_')[1]);
                     if (dynamicPanels[index]) {
@@ -1801,7 +1812,16 @@
 
                 clearBtn.classList.toggle('visible', hasQuery);
 
-                document.querySelectorAll('.masterlist-card').forEach(c => c.style.display = '');
+                // Only search in the current panel
+                const currentPanelEl = document.querySelector('.content-panel.active');
+                if (!currentPanelEl) return;
+
+                const cards = currentPanelEl.querySelectorAll('.masterlist-card');
+                const quickLinks = currentPanelEl.querySelectorAll('.bg-warmwhite.p-4.rounded-2xl');
+
+                // Reset all
+                cards.forEach(c => c.style.display = '');
+                quickLinks.forEach(c => c.style.display = '');
                 document.querySelectorAll('.search-highlight').forEach(h => {
                     const parent = h.parentNode;
                     parent.replaceChild(document.createTextNode(h.textContent), h);
@@ -1812,7 +1832,9 @@
                 if (!hasQuery) return;
 
                 let matchCount = 0;
-                document.querySelectorAll('.masterlist-card').forEach(card => {
+
+                // Search masterlist cards
+                cards.forEach(card => {
                     const text = card.textContent.toLowerCase();
                     if (text.includes(q)) {
                         card.style.display = '';
@@ -1827,6 +1849,17 @@
                         }
                     } else {
                         card.style.display = 'none';
+                    }
+                });
+
+                // Search quick links (dashboard)
+                quickLinks.forEach(link => {
+                    const text = link.textContent.toLowerCase();
+                    if (!text.includes(q)) {
+                        link.style.display = 'none';
+                    } else {
+                        link.style.display = '';
+                        matchCount++;
                     }
                 });
 
@@ -1850,12 +1883,18 @@
                 input.value = '';
                 clearBtn.classList.remove('visible');
                 count.classList.add('hidden');
-                document.querySelectorAll('.masterlist-card').forEach(c => c.style.display = '');
-                document.querySelectorAll('.search-highlight').forEach(h => {
-                    const parent = h.parentNode;
-                    parent.replaceChild(document.createTextNode(h.textContent), h);
-                    parent.normalize();
-                });
+
+                // Reset all cards in current panel
+                const currentPanelEl = document.querySelector('.content-panel.active');
+                if (currentPanelEl) {
+                    currentPanelEl.querySelectorAll('.masterlist-card, .bg-warmwhite.p-4.rounded-2xl').forEach(c => c
+                        .style.display = '');
+                    currentPanelEl.querySelectorAll('.search-highlight').forEach(h => {
+                        const parent = h.parentNode;
+                        parent.replaceChild(document.createTextNode(h.textContent), h);
+                        parent.normalize();
+                    });
+                }
                 input.focus();
             }
 
@@ -1955,10 +1994,9 @@
                 loadMasterlistItems();
                 updateSyncIndicator();
                 setInterval(updateSyncIndicator, 60000);
-                showPanel('dashboard');
 
-                // Hide add button initially (only shows on masterlist)
-                $('addMasterlistBtn').style.display = 'none';
+                // Start on dashboard
+                showPanel('dashboard');
 
                 const brandIcon = document.querySelector('.brand-icon');
                 if (brandIcon && typeof anime !== 'undefined') {
@@ -1973,7 +2011,7 @@
 
                 setTimeout(checkSession, 200);
 
-                console.log('✅ [CITY WORK] Ready with Add Panel & Masterlist features');
+                console.log('✅ [CITY WORK] Ready with proper panel isolation');
             });
 
             // Expose for inline onclick
