@@ -242,7 +242,7 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ─── CALENDAR (flex, only days with events stretch to fill) ─── */
+        /* ─── CALENDAR (flex, only days with events stretch) ─── */
         .week-calendar {
             display: flex;
             flex-wrap: nowrap;
@@ -679,7 +679,6 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT -->
     <script>
         (function() {
             'use strict';
@@ -774,6 +773,7 @@
                 });
             }
 
+            // ─── DATA FETCHING ────────────────────────────────────────
             async function fetchAllRows(table) {
                 let all = [], page = 0, size = 1000, more = true;
                 while (more) {
@@ -809,6 +809,7 @@
                 }
             }
 
+            // ─── RENDER SIDEBAR ──────────────────────────────────────
             function renderSidebar() {
                 let dogHtml = dogShows.map(s => {
                     const title = esc(s.title);
@@ -834,6 +835,7 @@
                 $('concertButtons').innerHTML = concertHtml || '<div class="text-xs text-slateblue p-2 text-center">—</div>';
             }
 
+            // Event delegation for sidebar items
             document.getElementById('sidebarNav').addEventListener('click', function(e) {
                 const btn = e.target.closest('.sidebar-item');
                 if (!btn) return;
@@ -842,6 +844,7 @@
                 if (view) switchView(view, title);
             });
 
+            // ─── VIEW SWITCHING ──────────────────────────────────────
             window.switchView = function(view, title) {
                 currentView = view;
                 currentShowTitle = title || null;
@@ -875,6 +878,7 @@
                 }
             };
 
+            // ─── OVERVIEW ────────────────────────────────────────────
             window.changeWeek = function(dir) {
                 weekOffset += dir;
                 renderOverview();
@@ -907,7 +911,7 @@
                     const concertEvents = concertAirings.filter(a => a.air_date === dateStr);
                     const totalEvents = dogEvents.length + concertEvents.length;
 
-                    if (totalEvents === 0) return; // skip empty days entirely
+                    if (totalEvents === 0) return; // skip empty days
 
                     let eventsHTML = '';
                     dogEvents.forEach(e => {
@@ -1049,17 +1053,82 @@
                 }
             }
 
-            // ... (rest of the JavaScript remains identical to previous version)
-            // To save space, I'll include the remaining functions below as comments referencing original code
-            // The full code should be copied from the earlier response, with no changes needed there.
+            // ─── DOG SHOW ────────────────────────────────────────────
+            function renderDogShow(title) {
+                $('dogshowTitle').textContent = title;
+                const episodes = dogEpisodes.filter(e => e.show_title === title);
+                const tbody = $('dogshowTableBody');
+                if (!episodes.length) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slateblue">No episodes found</td></tr>`;
+                    return;
+                }
+                episodes.sort((a, b) => new Date(a.air_date) - new Date(b.air_date));
+                tbody.innerHTML = episodes.map((ep, index) => {
+                    const overdue = isOverdue(ep.air_date, ep.status);
+                    const statusClass = ep.status === true ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
+                    const statusText = ep.status === true ? '✓' : (overdue ? 'Overdue' : 'To Air');
+                    return `
+                        <tr data-id="${ep.id}" style="animation: fadeUp 0.3s ease forwards; animation-delay: ${index * 0.05}s;">
+                            <td onclick="editCell(this, 'air_date', '${ep.id}', 'dog')" class="editable-cell">${formatDate(ep.air_date)} <span class="edit-icon">✏️</span></td>
+                            <td onclick="editCell(this, 'episode_number', '${ep.id}', 'dog')" class="editable-cell">${esc(ep.episode_number || '—')} <span class="edit-icon">✏️</span></td>
+                            <td class="text-center" onclick="toggleStatus('${ep.id}', ${ep.status === true}, 'dog')"><span class="${statusClass}">${statusText}</span></td>
+                            <td class="text-center"><button class="btn-delete-episode" onclick="deleteEpisode('${ep.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
 
-            // For completeness, here are the remaining function stubs:
+            // ─── CONCERT ─────────────────────────────────────────────
+            function renderConcert(title) {
+                $('concertTitle').textContent = title;
+                let airings = concertAirings.filter(a => a.concert_title === title);
+
+                if (concertSearchTerm) {
+                    airings = airings.filter(a =>
+                        (a.episode_title || '').toLowerCase().includes(concertSearchTerm) ||
+                        (a.air_date || '').toLowerCase().includes(concertSearchTerm) ||
+                        (a.notes || '').toLowerCase().includes(concertSearchTerm)
+                    );
+                }
+
+                airings.sort((a, b) => {
+                    const dateA = new Date(a.air_date);
+                    const dateB = new Date(b.air_date);
+                    return concertSortDirection === 'desc' ? dateB - dateA : dateA - dateB;
+                });
+
+                const tbody = $('concertTableBody');
+                if (!airings.length) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slateblue">No concerts found</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = airings.map((a, index) => {
+                    let titleHtml = esc(a.episode_title || '—');
+                    if (concertSearchTerm) {
+                        const regex = new RegExp(concertSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                        titleHtml = titleHtml.replace(regex, match => `<span class="search-highlight">${match}</span>`);
+                    }
+                    return `
+                        <tr data-id="${a.id}" style="animation: fadeUp 0.3s ease forwards; animation-delay: ${index * 0.05}s;">
+                            <td class="whitespace-nowrap">${formatDate(a.air_date)}</td>
+                            <td class="font-semibold">${titleHtml}</td>
+                            <td class="text-slateblue">${esc(a.notes || '—')}</td>
+                            <td class="text-center">
+                                <button class="btn-delete-episode" onclick="deleteConcertEntry('${a.id}')" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // ─── CONCERT SEARCH & SORT ──────────────────────────────
             window.searchConcerts = function(term) {
                 concertSearchTerm = term.toLowerCase().trim();
                 if (currentView === 'concert' && currentShowTitle) {
                     renderConcert(currentShowTitle);
                 }
             };
+
             window.sortConcertByDate = function() {
                 concertSortDirection = concertSortDirection === 'desc' ? 'asc' : 'desc';
                 const icon = $('dateSortIcon');
@@ -1070,27 +1139,252 @@
                     renderConcert(currentShowTitle);
                 }
             };
-            window.openConcertModal = function() { /* ... */ };
-            window.closeConcertModal = function() { /* ... */ };
-            window.saveConcertEntry = async function() { /* ... */ };
-            window.deleteConcertEntry = async function(id) { /* ... */ };
-            window.toggleStatus = async function(id, currentStatus, type) { /* ... */ };
-            window.editCell = function(td, field, id, type) { /* ... */ };
-            async function saveEdit(td, field, id, type, newValue) { /* ... */ }
-            window.deleteEpisode = async function(id) { /* ... */ };
-            window.addEpisode = async function() { /* ... */ };
-            window.showConfirm = function(message, callback) { /* ... */ };
-            window.closeConfirmModal = function(confirmed) { /* ... */ };
-            document.getElementById('confirmYesBtn').addEventListener('click', function() { closeConfirmModal(true); });
-            document.getElementById('confirmModal').addEventListener('click', function(e) { if (e.target === this) closeConfirmModal(false); });
-            window.logoutUser = async function() { /* ... */ };
-            document.addEventListener('keydown', function(e) { /* ... */ });
-            $('concertModal').addEventListener('click', function(e) { if (e.target === this) closeConcertModal(); });
-            $('concertModal').addEventListener('keydown', function(e) { /* focus trap */ });
-            document.addEventListener('DOMContentLoaded', async function() { /* init */ });
+
+            // ─── CONCERT MODAL ───────────────────────────────────────
+            window.openConcertModal = function() {
+                $('concertModal').classList.add('open');
+                const today = new Date();
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+                $('concertDateInput').value = todayStr;
+                $('concertTitleInput').value = '';
+                $('concertNotesInput').value = '';
+                setTimeout(() => $('concertTitleInput').focus(), 100);
+            };
+
+            window.closeConcertModal = function() {
+                $('concertModal').classList.remove('open');
+            };
+
+            window.saveConcertEntry = async function() {
+                const date = $('concertDateInput').value;
+                const title = $('concertTitleInput').value.trim();
+                const notes = $('concertNotesInput').value.trim();
+
+                if (!date || !title) {
+                    alert('Please enter both date and title');
+                    return;
+                }
+
+                try {
+                    const { data, error } = await supabaseClient
+                        .from(CONCERT_AIRINGS_TABLE)
+                        .insert({
+                            concert_title: currentShowTitle,
+                            air_date: date,
+                            episode_title: title,
+                            notes: notes || null,
+                            status: false
+                        })
+                        .select();
+
+                    if (error) throw error;
+                    if (data && data[0]) concertAirings.push(data[0]);
+
+                    closeConcertModal();
+                    renderConcert(currentShowTitle);
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                }
+            };
+
+            window.deleteConcertEntry = async function(id) {
+                showConfirm('Delete this concert entry?', async () => {
+                    try {
+                        const { error } = await supabaseClient.from(CONCERT_AIRINGS_TABLE).delete().eq('id', id);
+                        if (error) throw error;
+                        concertAirings = concertAirings.filter(a => a.id != id);
+                        renderConcert(currentShowTitle);
+                    } catch (err) {
+                        alert('Error: ' + err.message);
+                    }
+                });
+            };
+
+            // ─── EPISODE CRUD ────────────────────────────────────────
+            window.toggleStatus = async function(id, currentStatus, type) {
+                const newStatus = !currentStatus;
+                const table = type === 'dog' ? DOG_EPISODES_TABLE : CONCERT_AIRINGS_TABLE;
+                try {
+                    const { error } = await supabaseClient.from(table).update({ status: newStatus }).eq('id', id);
+                    if (error) throw error;
+                    if (type === 'dog') {
+                        const ep = dogEpisodes.find(e => e.id == id);
+                        if (ep) ep.status = newStatus;
+                        renderDogShow(currentShowTitle);
+                    }
+                } catch (err) { alert('Error: ' + err.message); }
+            };
+
+            window.editCell = function(td, field, id, type) {
+                if (editingCell) return;
+                const currentValue = td.textContent.replace('✏️', '').trim();
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue === '—' ? '' : currentValue;
+                input.className = 'edit-input';
+                td.textContent = '';
+                td.appendChild(input);
+                input.focus();
+                input.select();
+                editingCell = { td, field, id, type, oldValue: currentValue };
+                input.addEventListener('blur', function() { saveEdit(td, field, id, type, input.value); });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); saveEdit(td, field, id, type, input.value); }
+                    if (e.key === 'Escape') {
+                        td.textContent = editingCell.oldValue === '' ? '—' : editingCell.oldValue;
+                        editingCell = null;
+                    }
+                });
+            };
+
+            async function saveEdit(td, field, id, type, newValue) {
+                if (!editingCell) return;
+                const oldValue = editingCell.oldValue;
+                editingCell = null;
+                const finalValue = newValue.trim() || '—';
+                if (finalValue === oldValue) { td.textContent = oldValue; return; }
+                td.textContent = finalValue;
+                const updateData = {};
+                if (field === 'air_date') updateData.air_date = finalValue === '—' ? null : finalValue;
+                else if (field === 'episode_number') updateData.episode_number = finalValue;
+                const table = type === 'dog' ? DOG_EPISODES_TABLE : CONCERT_AIRINGS_TABLE;
+                try {
+                    const { error } = await supabaseClient.from(table).update(updateData).eq('id', id);
+                    if (error) throw error;
+                    if (type === 'dog') {
+                        const ep = dogEpisodes.find(e => e.id == id);
+                        if (ep) { if (field === 'air_date') ep.air_date = updateData.air_date; else ep.episode_number = updateData.episode_number; }
+                        renderDogShow(currentShowTitle);
+                    }
+                } catch (err) { alert('Error: ' + err.message); td.textContent = oldValue; }
+            }
+
+            window.deleteEpisode = async function(id) {
+                showConfirm('Delete this episode?', async () => {
+                    try {
+                        const { error } = await supabaseClient.from(DOG_EPISODES_TABLE).delete().eq('id', id);
+                        if (error) throw error;
+                        dogEpisodes = dogEpisodes.filter(e => e.id != id);
+                        renderDogShow(currentShowTitle);
+                    } catch (err) { alert('Error: ' + err.message); }
+                });
+            };
+
+            window.addEpisode = async function() {
+                const title = currentShowTitle;
+                try {
+                    const { data, error } = await supabaseClient.from(DOG_EPISODES_TABLE).insert({ show_title: title, air_date: null, episode_number: '', status: false }).select();
+                    if (error) throw error;
+                    if (data && data[0]) dogEpisodes.push(data[0]);
+                    renderDogShow(title);
+                } catch (err) { alert('Error: ' + err.message); }
+            };
+
+            // ─── CUSTOM CONFIRM MODAL ──────────────────────────────
+            window.showConfirm = function(message, callback) {
+                $('confirmMessage').textContent = message;
+                confirmCallback = callback;
+                $('confirmModal').classList.add('open');
+                $('confirmModal').querySelector('.modal-card').focus();
+            };
+
+            window.closeConfirmModal = function(confirmed) {
+                $('confirmModal').classList.remove('open');
+                if (confirmed && typeof confirmCallback === 'function') confirmCallback();
+                confirmCallback = null;
+            };
+
+            document.getElementById('confirmYesBtn').addEventListener('click', function() {
+                closeConfirmModal(true);
+            });
+
+            document.getElementById('confirmModal').addEventListener('click', function(e) {
+                if (e.target === this) closeConfirmModal(false);
+            });
+
+            // ─── LOGOUT ──────────────────────────────────────────────
+            window.logoutUser = async function() {
+                showConfirm('Sign out?', async () => {
+                    try { await supabaseClient.auth.signOut(); } catch (_) {}
+                    localStorage.removeItem('archivehub_user');
+                    window.location.href = '../index.html';
+                });
+            };
+
+            // ─── KEYBOARD SHORTCUTS ──────────────────────────────────
+            document.addEventListener('keydown', function(e) {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault();
+                    const searchInput = $('concertSearch');
+                    if (searchInput) {
+                        if (currentView !== 'concert' && concerts.length > 0) {
+                            switchView('concert', concerts[0].title);
+                        }
+                        if (currentView === 'concert') {
+                            searchInput.focus();
+                            searchInput.select();
+                        }
+                    }
+                }
+                if (e.key === 'Escape') {
+                    if ($('concertModal').classList.contains('open')) closeConcertModal();
+                    if ($('confirmModal').classList.contains('open')) closeConfirmModal(false);
+                    if (editingCell) {
+                        const { td, oldValue } = editingCell;
+                        td.textContent = oldValue === '' ? '—' : oldValue;
+                        editingCell = null;
+                    }
+                }
+            });
+
+            // ─── MODAL OVERLAY CLICK ────────────────────────────────
+            $('concertModal').addEventListener('click', function(e) {
+                if (e.target === this) closeConcertModal();
+            });
+
+            // Add focus trap to concert modal
+            $('concertModal').addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    const modalCard = $('concertModalCard');
+                    const focusable = modalCard.querySelectorAll('button, input, textarea, [tabindex]:not([tabindex="-1"])');
+                    if (focusable.length === 0) return;
+                    const first = focusable[0];
+                    const last = focusable[focusable.length - 1];
+                    if (e.shiftKey && document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    } else if (!e.shiftKey && document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            });
+
+            // ─── INIT ──────────────────────────────────────────────────
+            document.addEventListener('DOMContentLoaded', async function() {
+                if (!supabaseClient) {
+                    setStatus('⚠️ No Supabase', 'error');
+                    return;
+                }
+                setStatus('Checking...', 'waiting');
+                try {
+                    const { data } = await supabaseClient.auth.getSession();
+                    if (!data.session) {
+                        setStatus('🔓 Not logged in', 'error');
+                        setTimeout(() => window.location.href = '../index.html', 1500);
+                        return;
+                    }
+                    setStatus('✅ Live', 'ok');
+                    await loadAllData();
+                } catch (err) {
+                    console.error('Init error:', err);
+                    setStatus('❌ Error', 'error');
+                }
+            });
 
             // Attach logout event listener
             document.getElementById('logoutBtn').addEventListener('click', logoutUser);
+
         })();
     </script>
 </body>
