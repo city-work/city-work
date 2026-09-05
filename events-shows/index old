@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weekly Events · Executive Lounge</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    <script src="../config.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        midnight: '#18202F',
+                        slateblue: '#68748A',
+                        mist: '#DCE1E6',
+                        warmwhite: '#FAF7F2',
+                        copper: '#B8734F',
+                        copperhover: '#9D5D3C'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #DCE1E6; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .app-container { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
+
+        .status-ok { background: #e2e8f0; color: #18202F; border-color: #94a3b8; }
+        .status-error { background: #f5e6e6; color: #7a3b3b; border-color: #c9a1a1; }
+        .status-waiting { background: #f0ebe6; color: #6b5d4d; border-color: #cdbfae; }
+        .status-badge-top { font-size: 0.65rem; font-weight: 600; padding: 0.2rem 0.7rem; border-radius: 9999px; border: 1px solid; display: inline-flex; align-items: center; gap: 0.4rem; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status-dot.green { background: #22c55e; }
+        .status-dot.amber { background: #eab308; animation: pulse 1.5s ease-in-out infinite; }
+        .status-dot.red { background: #ef4444; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+        .sidebar {
+            background: rgba(220, 225, 230, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(24, 32, 47, 0.08);
+            min-width: 60px; max-width: 60px;
+            transition: all 0.3s ease;
+            box-shadow: 4px 0 30px rgba(0,0,0,0.03);
+            height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+        }
+        @media (min-width: 1024px) {
+            .sidebar:not(.sidebar-collapsed) { min-width: 200px; max-width: 200px; }
+            .sidebar:not(.sidebar-collapsed) .sidebar-item .label,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout .label { display: inline !important; margin-left: 8px; }
+            .sidebar:not(.sidebar-collapsed) .sidebar-item,
+            .sidebar:not(.sidebar-collapsed) .sidebar-signout { justify-content: flex-start; padding-left: 1rem; }
+        }
+        .sidebar.sidebar-collapsed { min-width: 60px; max-width: 60px; }
+        .sidebar.sidebar-collapsed .sidebar-item .label,
+        .sidebar.sidebar-collapsed .sidebar-signout .label { display: none !important; }
+        .sidebar.sidebar-collapsed .sidebar-item,
+        .sidebar.sidebar-collapsed .sidebar-signout { justify-content: center; padding-left: 0.5rem; }
+
+        .sidebar-scroll { flex: 1; overflow-y: auto; padding: 12px 8px; scrollbar-width: none; -ms-overflow-style: none; }
+        .sidebar-scroll::-webkit-scrollbar { width: 0; background: transparent; }
+
+        .sidebar-item, .sidebar-signout {
+            transition: all 0.2s ease; cursor: pointer; border-radius: 0.5rem; padding: 0.5rem;
+            display: flex; align-items: center; justify-content: center; color: #68748A;
+            text-decoration: none; font-size: 0.875rem; font-weight: 500; position: relative; width: 100%; margin-bottom: 2px;
+            white-space: nowrap; border: none; background: transparent;
+        }
+        .sidebar-item .icon, .sidebar-signout .icon { font-size: 1.1rem; width: 24px; text-align: center; transition: all 0.2s ease; }
+        .sidebar-item .label, .sidebar-signout .label { display: none; }
+        .sidebar-item:hover, .sidebar-signout:hover { background: rgba(184,115,79,0.15); color: #9D5D3C; }
+        .sidebar-item.active { background: rgba(184,115,79,0.2); color: #9D5D3C; }
+
+        .sidebar-divider { border-top: 1px solid rgba(24,32,47,0.08); margin: 4px 12px; }
+        .sidebar-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; padding: 0.5rem 0.75rem 0.25rem; font-weight: 600; }
+        .brand-city { color: #18202F; }
+        .brand-work { color: #B8734F; }
+
+        .main-content { flex: 1; min-width: 0; background: #DCE1E6; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { background: #DCE1E6; border-bottom: 1px solid rgba(24,32,47,0.08); flex-shrink: 0; padding: 0.75rem 1.5rem; min-height: 64px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+        .scrollable-content { flex: 1; overflow-y: auto; padding: 1.5rem; min-height: 0; }
+        .scrollable-content::-webkit-scrollbar { width: 5px; }
+        .scrollable-content::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
+
+        #loadingSpinner {
+            display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px);
+            z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
+        }
+        #loadingSpinner .spinner {
+            width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #B8734F;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .priority-groups-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .priority-groups-table th {
+            text-align: left; padding: 0.6rem 0.8rem; font-weight: 600; font-size: 0.6rem;
+            text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; border-bottom: 2px solid rgba(24,32,47,0.1); background: #FAF7F2;
+        }
+        .priority-groups-table td {
+            padding: 0.6rem 0.8rem; border-bottom: 1px solid rgba(24,32,47,0.05); color: #18202F; vertical-align: middle;
+        }
+        .priority-groups-table tr:last-child td { border-bottom: none; }
+        .priority-groups-table tr:hover td { background: rgba(220,225,230,0.3); }
+        .table-wrap { overflow-x: auto; }
+
+        .badge-done { background: #e2e8f0; color: #18202F; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
+        .badge-toair { background: #f0ebe6; color: #6b5d4d; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
+        .badge-overdue { background: #f5e6e6; color: #7a3b3b; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
+        .badge-done:hover, .badge-toair:hover, .badge-overdue:hover { transform: scale(1.05); }
+
+        .edit-icon { opacity: 0; transition: opacity 0.2s ease; font-size: 0.6rem; color: #94a3b8; margin-left: 0.25rem; }
+        .editable-cell:hover .edit-icon { opacity: 1; }
+        .editable-cell { cursor: pointer; }
+        .edit-input {
+            width: 100%; padding: 0.25rem 0.5rem; border: 1px solid #B8734F; border-radius: 0.25rem;
+            font-size: 0.8rem; background: #FFFFFF; color: #18202F; outline: none;
+        }
+        .edit-input:focus { border-color: #B8734F; box-shadow: 0 0 0 3px rgba(184,115,79,0.2); }
+        .btn-delete-episode { background: transparent; color: #b91c1c; border: none; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .btn-delete-episode:hover { background: rgba(185,28,28,0.1); transform: scale(1.1); }
+        .btn-export {
+            background: #18202F; color: #FAF7F2; border: none; padding: 0.4rem 1rem; border-radius: 9999px;
+            font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
+        }
+        .btn-export:hover { background: #2d3a4f; transform: scale(1.02); }
+
+        .week-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            padding: 1rem;
+        }
+        .week-day {
+            background: #FAF7F2;
+            border: 1px solid rgba(24, 32, 47, 0.08);
+            border-radius: 0.5rem;
+            min-height: 120px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .week-day.today {
+            background: rgba(184,115,79,0.08);
+            border-color: #B8734F;
+            box-shadow: 0 2px 8px rgba(184,115,79,0.15);
+        }
+        .week-day.has-events {
+            border-color: #B8734F;
+        }
+        .week-day-header {
+            text-align: center;
+            padding: 0.4rem;
+            border-bottom: 1px solid rgba(24, 32, 47, 0.08);
+            background: #f0ebe6;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: #475569;
+        }
+        .week-day.today .week-day-header {
+            background: #B8734F;
+            color: white;
+        }
+        .week-day-body {
+            padding: 0.4rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .week-event {
+            background: white;
+            border: 1px solid rgba(24, 32, 47, 0.1);
+            border-radius: 0.3rem;
+            padding: 0.3rem;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .week-event:hover {
+            transform: translateX(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .week-event.dog-live {
+            border-left: 3px solid #ef4444;
+        }
+        .week-event.dog-replay {
+            border-left: 3px solid #3b82f6;
+        }
+        .week-event.concert {
+            border-left: 3px solid #22c55e;
+        }
+        .week-event-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #18202F;
+        }
+        .check-icon {
+            color: #22c55e;
+            font-size: 0.7rem;
+        }
+
+        .search-bar {
+            display: flex; align-items: center; background: #FAF7F2; border-radius: 0.6rem;
+            padding: 0.25rem 0.7rem; border: 1px solid rgba(24,32,47,0.1); transition: all 0.2s; max-width: 300px;
+        }
+        .search-bar:focus-within { border-color: #B8734F; background: #FFFFFF; box-shadow: 0 0 0 3px rgba(184,115,79,0.1); }
+        .search-bar input { border: none; background: transparent; outline: none; padding: 0.25rem 0; font-size: 0.75rem; width: 100%; color: #18202F; }
+        .search-bar input::placeholder { color: #94a3b8; }
+        .search-bar i { color: #94a3b8; font-size: 0.75rem; margin-right: 0.4rem; }
+
+        .hidden { display: none !important; }
+
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            z-index: 200; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-card {
+            background: #FAF7F2; border-radius: 1rem; padding: 1.5rem; width: 90%; max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        .modal-input {
+            width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem;
+            font-size: 0.85rem; font-family: inherit; margin-bottom: 1rem;
+        }
+        .modal-label {
+            font-size: 0.7rem; font-weight: 600; color: #68748A; display: block; margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="px-2 py-4 border-b border-black/5 flex items-center justify-center flex-shrink-0">
+                <span class="text-lg font-extrabold tracking-tight whitespace-nowrap">
+                    <span class="brand-city">EL</span><span class="brand-work">·</span><span class="brand-city">Events</span>
+                </span>
+            </div>
+
+            <nav class="sidebar-scroll" id="sidebarNav">
+                <button class="sidebar-item active" id="overviewBtn" onclick="switchView('overview')">
+                    <span class="icon"><i class="fa-solid fa-gauge-high"></i></span>
+                    <span class="label">Overview</span>
+                </button>
+
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-label">Dog Shows</div>
+                <div id="dogShowButtons"></div>
+
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-label">Choice Concerts</div>
+                <div id="concertButtons"></div>
+
+                <div class="sidebar-divider"></div>
+                <button class="sidebar-item" onclick="window.location.href='../index.html'">
+                    <span class="icon"><i class="fa-solid fa-arrow-left"></i></span>
+                    <span class="label">Back to Dashboard</span>
+                </button>
+            </nav>
+
+            <div class="px-2 py-3 border-t border-black/5 flex-shrink-0">
+                <button class="sidebar-signout" onclick="logoutUser()">
+                    <span class="icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
+                    <span class="label">Sign Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-content">
+            <header>
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded-full bg-mist hover:bg-slate-200 text-slateblue transition flex items-center justify-center">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <span id="viewTitle" class="text-sm font-semibold text-midnight whitespace-nowrap">Weekly Events</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="statusBadge" class="status-badge-top status-waiting">
+                        <span class="status-dot amber"></span> Connecting...
+                    </span>
+                </div>
+            </header>
+
+            <div class="scrollable-content" id="scrollableContent">
+                <div id="overview-view">
+                    <div class="bg-warmwhite rounded-xl border border-slate-200/80 shadow-sm mb-6">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-mist">
+                            <button onclick="changeWeek(-1)" class="text-slateblue hover:text-midnight text-lg"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span id="weekLabel" class="font-semibold text-midnight text-sm">Loading...</span>
+                            <button onclick="changeWeek(1)" class="text-slateblue hover:text-midnight text-lg"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        <div class="week-calendar" id="weekCalendar"></div>
+                    </div>
+
+                    <div class="bg-warmwhite rounded-xl border border-slate-200/80 shadow-sm p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <h2 class="text-lg font-bold text-midnight"><i class="fa-regular fa-clock"></i> Upcoming Events</h2>
+                            <span class="text-xs bg-mist text-slateblue px-2 py-0.5 rounded-full">next 2 weeks</span>
+                        </div>
+                        <div id="upcomingEvents" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="text-slateblue text-sm">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dogshow-view" class="hidden">
+                    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+                        <div>
+                            <h1 class="text-xl font-extrabold text-midnight"><i class="fa-solid fa-dog"></i> <span id="dogshowTitle"></span></h1>
+                            <p class="text-xs text-slateblue mt-0.5">Dog Show Episodes</p>
+                        </div>
+                        <button class="btn-export" onclick="addEpisode()"><i class="fa-solid fa-plus"></i> Add Episode</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="priority-groups-table">
+                            <thead><tr><th>Air Date</th><th>Episode Number</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody id="dogshowTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="concert-view" class="hidden">
+                    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+                        <div>
+                            <h1 class="text-xl font-extrabold text-midnight"><i class="fa-solid fa-music"></i> <span id="concertTitle"></span></h1>
+                            <p class="text-xs text-slateblue mt-0.5">Concert Archive</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3 mb-4 flex-wrap">
+                        <div class="search-bar">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="concertSearch" placeholder="Search by title..." oninput="searchConcerts(this.value)" />
+                        </div>
+                        <button class="btn-export" onclick="openConcertModal()" style="margin-left:auto;">
+                            <i class="fa-solid fa-plus"></i> Add Entry
+                        </button>
+                    </div>
+                    
+                    <div class="table-wrap">
+                        <table class="priority-groups-table">
+                            <thead>
+                                <tr>
+                                    <th style="cursor:pointer;" onclick="sortConcertByDate()">
+                                        Date Aired <i class="fa-solid fa-sort-down" id="dateSortIcon"></i>
+                                    </th>
+                                    <th>Title</th>
+                                    <th>Notes</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="concertTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+        <p class="text-slateblue text-sm font-medium">Loading...</p>
+    </div>
+
+    <div class="modal-overlay" id="concertModal">
+        <div class="modal-card">
+            <h3 style="font-size:1.1rem;font-weight:700;color:#18202F;margin-bottom:1.5rem;">
+                <i class="fa-solid fa-music text-copper"></i> Add Concert Entry
+            </h3>
+            
+            <label class="modal-label">DATE AIRED</label>
+            <input type="date" id="concertDateInput" class="modal-input" />
+            
+            <label class="modal-label">TITLE</label>
+            <input type="text" id="concertTitleInput" placeholder="e.g., ELVIS NIGHT" class="modal-input" />
+            
+            <label class="modal-label">NOTES (optional)</label>
+            <textarea id="concertNotesInput" rows="3" placeholder="Add any notes..." class="modal-input" style="resize:vertical;"></textarea>
+            
+            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                <button onclick="closeConcertModal()" style="padding:0.5rem 1rem;border-radius:0.5rem;border:1px solid #cbd5e1;background:white;color:#68748A;font-size:0.8rem;cursor:pointer;font-weight:600;">Cancel</button>
+                <button onclick="saveConcertEntry()" style="padding:0.5rem 1rem;border-radius:0.5rem;border:none;background:#B8734F;color:white;font-size:0.8rem;font-weight:600;cursor:pointer;">
+                    <i class="fa-solid fa-save"></i> Save Entry
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            let SUPABASE_URL, SUPABASE_ANON_KEY;
+            try {
+                if (typeof design !== 'undefined' && design.supabase) {
+                    SUPABASE_URL = design.supabase.url;
+                    SUPABASE_ANON_KEY = design.supabase.anonKey;
+                } else {
+                    throw new Error('design.supabase not found');
+                }
+            } catch (e) {
+                document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#18202F;padding:20px;font-family:Plus Jakarta Sans,sans-serif;"><div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);"><h2 style="font-size:20px;font-weight:700;color:#FAF7F2;">Configuration Error</h2><p style="color:rgba(250,247,242,0.7);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check config.js.</p><a href="../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#B8734F;color:#FAF7F2;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a></div></div>`;
+                return;
+            }
+
+            const DOG_TITLES_TABLE = 'dog_show_titles';
+            const DOG_EPISODES_TABLE = 'dog_show_episodes';
+            const CONCERT_TITLES_TABLE = 'choice_concert_titles';
+            const CONCERT_AIRINGS_TABLE = 'choice_concert_airings';
+
+            let supabaseClient = null;
+            try {
+                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+            } catch (e) { console.error('Supabase error:', e.message); }
+
+            const $ = id => document.getElementById(id);
+            const statusBadge = $('statusBadge');
+            const loadingSpinner = $('loadingSpinner');
+            const viewTitle = $('viewTitle');
+            const sidebar = $('sidebar');
+
+            let dogShows = [], dogEpisodes = [];
+            let concerts = [], concertAirings = [];
+            let currentView = 'overview';
+            let currentShowTitle = null;
+            let weekOffset = 0;
+            let editingCell = null;
+            let concertSearchTerm = '';
+            let concertSortDirection = 'desc';
+
+            function setStatus(text, type) {
+                const colors = { ok: 'status-ok', error: 'status-error', waiting: 'status-waiting' };
+                const dots = { ok: 'green', error: 'red', waiting: 'amber' };
+                statusBadge.className = `status-badge-top ${colors[type] || 'status-waiting'}`;
+                statusBadge.innerHTML = `<span class="status-dot ${dots[type] || 'amber'}"></span> ${text}`;
+            }
+
+            function esc(s) { 
+                if (s == null || s === '') return '—'; 
+                return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); 
+            }
+
+            function parseDate(dateStr) {
+                if (!dateStr) return null;
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                }
+                return null;
+            }
+
+            function formatDate(dateStr) { 
+                if (!dateStr) return '—'; 
+                const d = parseDate(dateStr);
+                if (d && !isNaN(d)) return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+                return dateStr; 
+            }
+
+            function isOverdue(dateStr, status) { 
+                if (status === true) return false; 
+                if (!dateStr) return false; 
+                const today = new Date(); 
+                today.setHours(0,0,0,0); 
+                const d = parseDate(dateStr); 
+                if (!d) return false;
+                d.setHours(0,0,0,0); 
+                return d < today; 
+            }
+
+            async function fetchAllRows(table) {
+                let all = [], page = 0, size = 1000, more = true;
+                while (more) {
+                    const { data, error } = await supabaseClient.from(table).select('*').range(page*size, (page+1)*size-1);
+                    if (error) throw error;
+                    if (!data || data.length === 0) more = false;
+                    else { all = all.concat(data); page++; if (data.length < size) more = false; }
+                }
+                return all;
+            }
+
+            async function loadAllData() {
+                if (!loadingSpinner) return;
+                loadingSpinner.style.display = 'flex';
+                try {
+                    const [dTitles, dEpisodes, cTitles, cAirings] = await Promise.all([
+                        fetchAllRows(DOG_TITLES_TABLE),
+                        fetchAllRows(DOG_EPISODES_TABLE),
+                        fetchAllRows(CONCERT_TITLES_TABLE),
+                        fetchAllRows(CONCERT_AIRINGS_TABLE)
+                    ]);
+                    dogShows = dTitles || [];
+                    dogEpisodes = dEpisodes || [];
+                    concerts = cTitles || [];
+                    concertAirings = cAirings || [];
+                    renderSidebar();
+                    renderOverview();
+                } catch (err) {
+                    console.error('Load error:', err);
+                    setStatus('❌ Error: ' + err.message, 'error');
+                } finally {
+                    if (loadingSpinner) loadingSpinner.style.display = 'none';
+                }
+            }
+
+            function renderSidebar() {
+                let dogHtml = dogShows.map(s => {
+                    const title = esc(s.title);
+                    let isLive = s.title.includes('LIVE') || s.title.includes('First Run');
+                    let isReplay = s.title.includes('REPLAY') || s.title.includes('Second Run');
+                    
+                    let icon, color, mainTitle, subTitle;
+                    if (isLive) {
+                        icon = 'fa-tower-broadcast';
+                        color = '#ef4444';
+                        mainTitle = 'All About Dogs';
+                        subTitle = 'LIVE';
+                    } else if (isReplay) {
+                        icon = 'fa-rotate-left';
+                        color = '#3b82f6';
+                        mainTitle = 'All About Dogs';
+                        subTitle = 'REPLAY';
+                    } else {
+                        icon = 'fa-dog';
+                        color = '#68748A';
+                        mainTitle = s.title;
+                        subTitle = '';
+                    }
+                    
+                    return `<button class="sidebar-item" onclick="switchView('dogshow','${title.replace(/'/g, "\\'")}')" title="${title}">
+                        <span class="icon"><i class="fa-solid ${icon}" style="color:${color};"></i></span>
+                        <span class="label">${esc(mainTitle)} ${subTitle ? `<span style="font-size:0.6rem;color:#94a3b8;font-weight:500;">(${subTitle})</span>` : ''}</span>
+                    </button>`;
+                }).join('');
+                
+                let concertHtml = concerts.map(c => {
+                    const title = esc(c.title);
+                    const shortTitle = c.title.replace('Choice Concert', 'Concerts');
+                    return `<button class="sidebar-item" onclick="switchView('concert','${title.replace(/'/g, "\\'")}')" title="${title}">
+                        <span class="icon"><i class="fa-solid fa-music" style="color:#22c55e;"></i></span>
+                        <span class="label">${esc(shortTitle)}</span>
+                    </button>`;
+                }).join('');
+                
+                $('dogShowButtons').innerHTML = dogHtml || '<div class="text-xs text-slateblue p-2">No dog shows</div>';
+                $('concertButtons').innerHTML = concertHtml || '<div class="text-xs text-slateblue p-2">No concerts</div>';
+            }
+
+            window.switchView = function(view, title) {
+                currentView = view;
+                currentShowTitle = title || null;
+                document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+                $('overview-view').classList.add('hidden');
+                $('dogshow-view').classList.add('hidden');
+                $('concert-view').classList.add('hidden');
+                
+                if (view === 'overview') {
+                    $('overview-view').classList.remove('hidden');
+                    viewTitle.textContent = 'Weekly Events';
+                    $('overviewBtn').classList.add('active');
+                    renderOverview();
+                } else if (view === 'dogshow') {
+                    $('dogshow-view').classList.remove('hidden');
+                    viewTitle.textContent = title;
+                    renderDogShow(title);
+                } else if (view === 'concert') {
+                    $('concert-view').classList.remove('hidden');
+                    viewTitle.textContent = title;
+                    renderConcert(title);
+                }
+            };
+
+            window.changeWeek = function(dir) { 
+                weekOffset += dir; 
+                renderOverview(); 
+            };
+
+            function renderOverview() {
+                renderWeekCalendar();
+                renderUpcomingEvents();
+            }
+
+            function renderWeekCalendar() {
+                const today = new Date();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (weekOffset * 7));
+                
+                const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+                let calendarHTML = '';
+                
+                dayNames.forEach((dayName, idx) => {
+                    const date = new Date(startOfWeek);
+                    date.setDate(startOfWeek.getDate() + idx);
+                    
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const dateStr = `${year}-${month}-${day}`;
+                    
+                    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                    const isToday = dateStr === todayStr;
+                    
+                    const dogEvents = dogEpisodes.filter(e => e.air_date === dateStr);
+                    const concertEvents = concertAirings.filter(a => a.air_date === dateStr);
+                    
+                    let eventsHTML = '';
+                    
+                    dogEvents.forEach(e => {
+                        const isReplay = e.show_title.includes('REPLAY');
+                        const eventClass = isReplay ? 'dog-replay' : 'dog-live';
+                        const checkMark = e.status === true ? '<i class="fa-solid fa-circle-check check-icon"></i> ' : '';
+                        eventsHTML += `
+                            <div class="week-event ${eventClass}" onclick="switchView('dogshow','${e.show_title.replace(/'/g, "\\'")}')">
+                                <div class="week-event-title">${checkMark}${esc(e.episode_number || 'Episode')}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    concertEvents.forEach(a => {
+                        eventsHTML += `
+                            <div class="week-event concert" onclick="switchView('concert','${a.concert_title.replace(/'/g, "\\'")}')">
+                                <div class="week-event-title">${esc(a.episode_title || 'Concert')}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    calendarHTML += `
+                        <div class="week-day ${isToday ? 'today' : ''} ${(dogEvents.length + concertEvents.length) > 0 ? 'has-events' : ''}">
+                            <div class="week-day-header">${dayName} ${date.getDate()}</div>
+                            <div class="week-day-body">
+                                ${eventsHTML || '<div style="text-align:center;color:#d1d5db;font-size:0.7rem;padding-top:0.5rem;">—</div>'}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                $('weekCalendar').innerHTML = calendarHTML;
+                
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                const monthLabel = startOfWeek.toLocaleDateString('en-US', { month: 'long' });
+                $('weekLabel').textContent = `${monthLabel} ${startOfWeek.getDate()}-${endOfWeek.getDate()}, ${endOfWeek.getFullYear()}`;
+            }
+
+            function renderUpcomingEvents() {
+                const nowTime = new Date().getTime();
+                let upcoming = [];
+                
+                dogEpisodes.forEach(e => {
+                    if (!e.air_date) return;
+                    const d = parseDate(e.air_date);
+                    if (!d) return;
+                    const diff = d.getTime() - nowTime;
+                    if (diff > 0 && diff <= 14*24*60*60*1000) {
+                        const isReplay = e.show_title.includes('REPLAY');
+                        upcoming.push({
+                            date: e.air_date,
+                            title: `${e.episode_number || 'Episode'} - ${e.show_title}`,
+                            type: 'dog',
+                            runType: isReplay ? 'REPLAY' : 'LIVE',
+                            status: e.status
+                        });
+                    }
+                });
+                
+                concertAirings.forEach(a => {
+                    if (!a.air_date) return;
+                    const d = parseDate(a.air_date);
+                    if (!d) return;
+                    const diff = d.getTime() - nowTime;
+                    if (diff > 0 && diff <= 14*24*60*60*1000) {
+                        upcoming.push({
+                            date: a.air_date,
+                            title: a.episode_title || a.concert_title,
+                            type: 'concert',
+                            runType: 'CONCERT',
+                            status: a.status
+                        });
+                    }
+                });
+                
+                upcoming.sort((a,b) => new Date(a.date) - new Date(b.date));
+                
+                if (upcoming.length === 0) {
+                    $('upcomingEvents').innerHTML = `<div class="text-slateblue text-sm">No upcoming events in the next 2 weeks.</div>`;
+                } else {
+                    $('upcomingEvents').innerHTML = upcoming.map(ev => {
+                        const dayName = new Date(ev.date).toLocaleDateString('en-US', { weekday: 'long' });
+                        let icon, iconColor, badgeColor;
+                        if (ev.type === 'dog') {
+                            if (ev.runType === 'LIVE') {
+                                icon = 'fa-dog';
+                                iconColor = 'text-red-500';
+                                badgeColor = 'bg-red-100 text-red-700';
+                            } else {
+                                icon = 'fa-dog';
+                                iconColor = 'text-blue-500';
+                                badgeColor = 'bg-blue-100 text-blue-700';
+                            }
+                        } else {
+                            icon = 'fa-music';
+                            iconColor = 'text-green-500';
+                            badgeColor = 'bg-green-100 text-green-700';
+                        }
+                        return `
+                            <div class="flex items-start gap-3 p-3 bg-mist rounded-lg">
+                                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+                                    <i class="fa-solid ${icon} ${iconColor}"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-midnight text-sm truncate">${esc(ev.title)}</div>
+                                    <div class="text-xs text-slateblue mt-0.5">
+                                        <i class="fa-regular fa-calendar mr-1"></i>${dayName}, ${formatDate(ev.date)}
+                                    </div>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColor} inline-block mt-1">${ev.runType}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            function renderDogShow(title) {
+                $('dogshowTitle').textContent = title;
+                const episodes = dogEpisodes.filter(e => e.show_title === title);
+                const tbody = $('dogshowTableBody');
+                if (!episodes.length) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slateblue">No episodes found</td></tr>`;
+                    return;
+                }
+                episodes.sort((a,b) => new Date(a.air_date) - new Date(b.air_date));
+                tbody.innerHTML = episodes.map(ep => {
+                    const overdue = isOverdue(ep.air_date, ep.status);
+                    const statusClass = ep.status === true ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
+                    const statusText = ep.status === true ? '✓' : (overdue ? 'Overdue' : 'To Air');
+                    return `
+                        <tr data-id="${ep.id}">
+                            <td onclick="editCell(this, 'air_date', '${ep.id}', 'dog')" class="editable-cell">${formatDate(ep.air_date)} <span class="edit-icon">✏️</span></td>
+                            <td onclick="editCell(this, 'episode_number', '${ep.id}', 'dog')" class="editable-cell">${esc(ep.episode_number || '—')} <span class="edit-icon">✏️</span></td>
+                            <td class="text-center" onclick="toggleStatus('${ep.id}', ${ep.status === true}, 'dog')"><span class="${statusClass}">${statusText}</span></td>
+                            <td class="text-center"><button class="btn-delete-episode" onclick="deleteEpisode('${ep.id}')"><i class="fa-solid fa-trash-can"></i></button></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function renderConcert(title) {
+                $('concertTitle').textContent = title;
+                let airings = concertAirings.filter(a => a.concert_title === title);
+                
+                if (concertSearchTerm) {
+                    airings = airings.filter(a => 
+                        (a.episode_title || '').toLowerCase().includes(concertSearchTerm) ||
+                        (a.air_date || '').toLowerCase().includes(concertSearchTerm) ||
+                        (a.notes || '').toLowerCase().includes(concertSearchTerm)
+                    );
+                }
+                
+                airings.sort((a,b) => {
+                    const dateA = new Date(a.air_date);
+                    const dateB = new Date(b.air_date);
+                    return concertSortDirection === 'desc' ? dateB - dateA : dateA - dateB;
+                });
+                
+                const tbody = $('concertTableBody');
+                if (!airings.length) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slateblue">No concerts found</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = airings.map(a => {
+                    return `
+                        <tr data-id="${a.id}">
+                            <td class="whitespace-nowrap">${formatDate(a.air_date)}</td>
+                            <td class="font-semibold">${esc(a.episode_title || '—')}</td>
+                            <td class="text-slateblue">${esc(a.notes || '—')}</td>
+                            <td class="text-center">
+                                <button class="btn-delete-episode" onclick="deleteConcertEntry('${a.id}')" title="Delete">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            window.sortConcertByDate = function() {
+                concertSortDirection = concertSortDirection === 'desc' ? 'asc' : 'desc';
+                const icon = $('dateSortIcon');
+                if (icon) {
+                    icon.className = concertSortDirection === 'desc' ? 'fa-solid fa-sort-down' : 'fa-solid fa-sort-up';
+                }
+                if (currentView === 'concert' && currentShowTitle) {
+                    renderConcert(currentShowTitle);
+                }
+            };
+
+            window.searchConcerts = function(term) {
+                concertSearchTerm = term.toLowerCase().trim();
+                if (currentView === 'concert' && currentShowTitle) {
+                    renderConcert(currentShowTitle);
+                }
+            };
+
+            window.openConcertModal = function() {
+                $('concertModal').classList.add('open');
+                const today = new Date();
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+                $('concertDateInput').value = todayStr;
+                $('concertTitleInput').value = '';
+                $('concertNotesInput').value = '';
+                $('concertTitleInput').focus();
+            };
+
+            window.closeConcertModal = function() {
+                $('concertModal').classList.remove('open');
+            };
+
+            window.saveConcertEntry = async function() {
+                const date = $('concertDateInput').value;
+                const title = $('concertTitleInput').value.trim();
+                const notes = $('concertNotesInput').value.trim();
+                
+                if (!date || !title) {
+                    alert('Please enter both date and title');
+                    return;
+                }
+                
+                try {
+                    const { data, error } = await supabaseClient
+                        .from(CONCERT_AIRINGS_TABLE)
+                        .insert({ 
+                            concert_title: currentShowTitle,
+                            air_date: date,
+                            episode_title: title,
+                            notes: notes || null,
+                            status: false
+                        })
+                        .select();
+                    
+                    if (error) throw error;
+                    if (data && data[0]) concertAirings.push(data[0]);
+                    
+                    closeConcertModal();
+                    renderConcert(currentShowTitle);
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                }
+            };
+
+            window.deleteConcertEntry = async function(id) {
+                if (!confirm('Delete this entry?')) return;
+                try {
+                    const { error } = await supabaseClient.from(CONCERT_AIRINGS_TABLE).delete().eq('id', id);
+                    if (error) throw error;
+                    concertAirings = concertAirings.filter(a => a.id != id);
+                    renderConcert(currentShowTitle);
+                } catch (err) { alert('Error: ' + err.message); }
+            };
+
+            window.toggleStatus = async function(id, currentStatus, type) {
+                const newStatus = !currentStatus;
+                const table = type === 'dog' ? DOG_EPISODES_TABLE : CONCERT_AIRINGS_TABLE;
+                try {
+                    const { error } = await supabaseClient.from(table).update({ status: newStatus }).eq('id', id);
+                    if (error) throw error;
+                    if (type === 'dog') {
+                        const ep = dogEpisodes.find(e => e.id == id);
+                        if (ep) ep.status = newStatus;
+                        renderDogShow(currentShowTitle);
+                    }
+                } catch (err) { alert('Error: ' + err.message); }
+            };
+
+            window.editCell = function(td, field, id, type) {
+                if (editingCell) return;
+                const currentValue = td.textContent.replace('✏️','').trim();
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue === '—' ? '' : currentValue;
+                input.className = 'edit-input';
+                td.textContent = '';
+                td.appendChild(input);
+                input.focus(); input.select();
+                editingCell = { td, field, id, type, oldValue: currentValue };
+                input.addEventListener('blur', function() { saveEdit(td, field, id, type, input.value); });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); saveEdit(td, field, id, type, input.value); }
+                    if (e.key === 'Escape') { td.textContent = editingCell.oldValue === '' ? '—' : editingCell.oldValue; editingCell = null; }
+                });
+            };
+
+            async function saveEdit(td, field, id, type, newValue) {
+                if (!editingCell) return;
+                const oldValue = editingCell.oldValue;
+                editingCell = null;
+                const finalValue = newValue.trim() || '—';
+                if (finalValue === oldValue) { td.textContent = oldValue; return; }
+                td.textContent = finalValue;
+                const updateData = {};
+                if (field === 'air_date') updateData.air_date = finalValue === '—' ? null : finalValue;
+                else if (field === 'episode_number') updateData.episode_number = finalValue;
+                const table = type === 'dog' ? DOG_EPISODES_TABLE : CONCERT_AIRINGS_TABLE;
+                try {
+                    const { error } = await supabaseClient.from(table).update(updateData).eq('id', id);
+                    if (error) throw error;
+                    if (type === 'dog') {
+                        const ep = dogEpisodes.find(e => e.id == id);
+                        if (ep) { if (field === 'air_date') ep.air_date = updateData.air_date; else ep.episode_number = updateData.episode_number; }
+                        renderDogShow(currentShowTitle);
+                    }
+                } catch (err) { alert('Error: ' + err.message); td.textContent = oldValue; }
+            }
+
+            window.deleteEpisode = async function(id) {
+                if (!confirm('Delete this episode?')) return;
+                try {
+                    const { error } = await supabaseClient.from(DOG_EPISODES_TABLE).delete().eq('id', id);
+                    if (error) throw error;
+                    dogEpisodes = dogEpisodes.filter(e => e.id != id);
+                    renderDogShow(currentShowTitle);
+                } catch (err) { alert('Error: ' + err.message); }
+            };
+
+            window.addEpisode = async function() {
+                const title = currentShowTitle;
+                try {
+                    const { data, error } = await supabaseClient.from(DOG_EPISODES_TABLE).insert({ show_title: title, air_date: null, episode_number: '', status: false }).select();
+                    if (error) throw error;
+                    if (data && data[0]) dogEpisodes.push(data[0]);
+                    renderDogShow(title);
+                } catch (err) { alert('Error: ' + err.message); }
+            };
+
+            window.toggleSidebar = function() { sidebar.classList.toggle('sidebar-collapsed'); };
+
+            window.logoutUser = async function() {
+                if (!confirm('Sign out?')) return;
+                try { await supabaseClient.auth.signOut(); } catch (_) {}
+                localStorage.removeItem('archivehub_user');
+                window.location.href = '../index.html';
+            };
+
+            $('concertModal').addEventListener('click', function(e) {
+                if (e.target === this) closeConcertModal();
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeConcertModal();
+                    if (editingCell) {
+                        const { td, oldValue } = editingCell;
+                        td.textContent = oldValue === '' ? '—' : oldValue;
+                        editingCell = null;
+                    }
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', async function() {
+                if (!supabaseClient) {
+                    setStatus('⚠️ No Supabase', 'error');
+                    return;
+                }
+                setStatus('Checking...', 'waiting');
+                try {
+                    const { data } = await supabaseClient.auth.getSession();
+                    if (!data.session) {
+                        setStatus('🔓 Not logged in', 'error');
+                        setTimeout(() => window.location.href = '../index.html', 1500);
+                        return;
+                    }
+                    setStatus('✅ Live', 'ok');
+                    await loadAllData();
+                } catch (err) {
+                    console.error('Init error:', err);
+                    setStatus('❌ Error', 'error');
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
