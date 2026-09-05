@@ -228,23 +228,53 @@
         .section-header h3 { font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; color: #475569; margin: 0; }
         .section-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom: 1px solid rgba(24,32,47,0.08); }
 
+        /* ─── TWO COLUMN LAYOUT ─── */
+        .two-col-grid {
+            display: grid;
+            grid-template-columns: 70% 30%;
+            gap: 0.75rem;
+        }
+        .two-col-grid .col-titles { min-width: 0; }
+        .two-col-grid .col-schedule { min-width: 0; }
+
+        @media (max-width: 1024px) {
+            .two-col-grid {
+                grid-template-columns: 65% 35%;
+            }
+        }
+        @media (max-width: 768px) {
+            .two-col-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+        }
+
         /* ─── TITLES TABLE ─── */
         .table-wrap { overflow-x: auto; }
-        .table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .table-wrap th { text-align: left; padding: 0.6rem 1rem; font-weight: 600; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; border-bottom: 2px solid rgba(24, 32, 47, 0.1); background: #FAF7F2; white-space: nowrap; }
-        .table-wrap td { padding: 0.7rem 1rem; border-bottom: 1px solid rgba(24, 32, 47, 0.05); color: #18202F; vertical-align: middle; }
+        .table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .table-wrap th { text-align: left; padding: 0.4rem 0.6rem; font-weight: 600; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; border-bottom: 2px solid rgba(24, 32, 47, 0.1); background: #FAF7F2; white-space: nowrap; }
+        .table-wrap td { padding: 0.5rem 0.6rem; border-bottom: 1px solid rgba(24, 32, 47, 0.05); color: #18202F; vertical-align: middle; }
         .table-wrap tr:last-child td { border-bottom: none; }
         .table-wrap tr:hover td { background: rgba(220, 225, 230, 0.4); }
         .table-wrap tr { cursor: pointer; transition: background 0.2s ease; }
         .table-wrap tr .progress-complete { color: #22c55e; font-weight: 700; }
         .table-wrap tr .progress-incomplete { color: #68748A; }
 
-        /* ─── SCHEDULE ITEMS ─── */
-        .schedule-item { padding: 0.5rem 1rem; border-bottom: 1px solid rgba(24,32,47,0.06); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-        .schedule-item:last-child { border-bottom: none; }
-        .schedule-item .schedule-day { font-weight: 600; color: #475569; min-width: 90px; }
-        .schedule-item .schedule-time { font-weight: 600; color: #68748A; min-width: 130px; }
-        .schedule-item .schedule-title { font-weight: 500; color: #18202F; flex: 1; }
+        /* ─── SCHEDULE SIDEBAR ─── */
+        .schedule-compact .schedule-item { 
+            padding: 0.35rem 0.6rem; 
+            border-bottom: 1px solid rgba(24,32,47,0.04); 
+            display: flex; 
+            align-items: center; 
+            gap: 0.4rem; 
+            flex-wrap: wrap;
+            font-size: 0.7rem;
+        }
+        .schedule-compact .schedule-item:last-child { border-bottom: none; }
+        .schedule-compact .schedule-day { font-weight: 600; color: #475569; min-width: 65px; font-size: 0.65rem; }
+        .schedule-compact .schedule-time { font-weight: 500; color: #68748A; min-width: 80px; font-size: 0.65rem; }
+        .schedule-compact .schedule-title { font-weight: 500; color: #18202F; flex: 1; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .schedule-compact .no-schedule { padding: 0.75rem; text-align: center; color: #94a3b8; font-size: 0.75rem; }
 
         /* ─── TURNOVERS CARDS ─── */
         .turnover-item { padding: 0.6rem 1rem; border-bottom: 1px solid rgba(24,32,47,0.06); }
@@ -522,39 +552,46 @@
                     <div class="calendar-grid" id="calendarGrid"></div>
                 </div>
 
-                <!-- Titles -->
+                <!-- Titles + Schedule Side by Side -->
                 <div class="section-card">
-                    <div class="section-header">
-                        <i class="fa-solid fa-list text-copper"></i>
-                        <h3>Titles</h3>
-                        <div class="hide-finished-wrapper">
-                            <label for="hideFinishedToggle">Hide Finished</label>
-                            <input type="checkbox" id="hideFinishedToggle" onchange="toggleHideFinished()" />
+                    <div class="two-col-grid">
+                        <!-- Titles Column (70%) -->
+                        <div class="col-titles">
+                            <div class="section-header" style="border-bottom: 1px solid rgba(24,32,47,0.08); background: #f0ebe6; border-radius: 0.75rem 0 0 0;">
+                                <i class="fa-solid fa-list text-copper"></i>
+                                <h3>Titles</h3>
+                                <div class="hide-finished-wrapper">
+                                    <label for="hideFinishedToggle">Hide Finished</label>
+                                    <input type="checkbox" id="hideFinishedToggle" onchange="toggleHideFinished()" />
+                                </div>
+                            </div>
+                            <div class="table-wrap">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th style="width:45%;">Title</th>
+                                            <th style="width:30%;">Available Until</th>
+                                            <th style="width:25%;text-align:right;">Progress</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="overviewTableBody">
+                                        <tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Schedule Column (30%) -->
+                        <div class="col-schedule">
+                            <div class="section-header" style="border-bottom: 1px solid rgba(24,32,47,0.08); background: #f0ebe6; border-radius: 0 0.75rem 0 0;">
+                                <i class="fa-regular fa-calendar text-copper"></i>
+                                <h3>Schedule</h3>
+                            </div>
+                            <div class="schedule-compact" id="scheduleCompactContainer">
+                                <div class="no-schedule">Loading...</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Available Until</th>
-                                    <th style="text-align:right;">Progress</th>
-                                </tr>
-                            </thead>
-                            <tbody id="overviewTableBody">
-                                <tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Schedule -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <i class="fa-regular fa-calendar"></i>
-                        <h3>Schedule</h3>
-                    </div>
-                    <div id="scheduleContainer"></div>
                 </div>
 
                 <!-- Turnovers -->
@@ -643,7 +680,7 @@
 
 <script>
     // ═══════════════════════════════════════════════════════════════════
-    //  CLASSIC MOVIES — Final Version
+    //  CLASSIC MOVIES — Final Version with Side by Side Layout
     // ═══════════════════════════════════════════════════════════════════
 
     (function() {
@@ -998,24 +1035,24 @@
             }
 
             renderCalendar('calendarGrid', weekendData);
-            renderOverviewSchedule('scheduleContainer', weekendData);
+            renderCompactSchedule('scheduleCompactContainer', weekendData);
             renderTurnovers('turnoversContainer', turnoverData);
             updateWeekLabel();
         }
 
-        // ─── RENDER OVERVIEW SCHEDULE ────────────────────────────
-        function renderOverviewSchedule(containerId, data) {
+        // ─── RENDER COMPACT SCHEDULE ──────────────────────────────
+        function renderCompactSchedule(containerId, data) {
             const container = document.getElementById(containerId);
             if (!container) return;
             if (!data || !data.length) {
-                container.innerHTML = '<div style="padding:0.75rem 1rem;font-size:0.8rem;color:#94a3b8;text-align:center;">No schedule items</div>';
+                container.innerHTML = '<div class="no-schedule">No schedule items</div>';
                 return;
             }
             container.innerHTML = data.map(item => `
                 <div class="schedule-item">
                     <span class="schedule-day">${esc(item.day || '—')}</span>
                     <span class="schedule-time">${esc(item.time_slot || '—')}</span>
-                    <span class="schedule-title">${esc(item.title || '')}</span>
+                    <span class="schedule-title" title="${esc(item.title || '')}">${esc(item.title || '')}</span>
                 </div>
             `).join('');
         }
