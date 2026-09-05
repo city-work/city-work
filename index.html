@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- FIX: Removed maximum-scale and user-scalable to allow zoom for accessibility -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>City Work – Login</title>
 
@@ -13,15 +12,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
 
-  <!-- Font Awesome: only needed styles for better performance -->
+  <!-- Font Awesome: only needed styles -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/regular.min.css" />
 
   <style>
-    /* ==========================================================================
-       DESIGN TOKENS
-       ========================================================================== */
     :root {
       --color-bg: #0f172a;
       --color-glass-bg: rgba(255, 255, 255, 0.10);
@@ -43,11 +39,7 @@
       --transition-quick: 0.25s ease;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       min-height: 100dvh;
@@ -56,8 +48,7 @@
       justify-content: center;
       font-family: var(--font-family);
       background-color: var(--color-bg);
-      /* FIX: Add gradient fallback before remote image */
-      background-image:url('https://yffqtbqnzrcctfnjibbo.supabase.co/storage/v1/object/public/cats/FB_IMG_1787604930204.jpg');
+      background-image: url('https://yffqtbqnzrcctfnjibbo.supabase.co/storage/v1/object/public/cats/FB_IMG_1787604930204.jpg');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -70,7 +61,6 @@
       100% { background-size: 110% 110%; }
     }
 
-    /* Loading spinner */
     #loadingSpinner {
       display: none;
       position: fixed;
@@ -98,7 +88,6 @@
       font-size: 14px;
     }
 
-    /* Trigger bar */
     .trigger-bar {
       position: fixed;
       bottom: 40px;
@@ -153,7 +142,6 @@
       transform: translateY(-3px);
     }
 
-    /* Overlay */
     .overlay {
       position: fixed;
       inset: 0;
@@ -170,7 +158,6 @@
       pointer-events: all;
     }
 
-    /* Login modal */
     .login-sheet {
       position: fixed;
       top: 50%;
@@ -232,7 +219,6 @@
       outline-offset: 2px;
     }
 
-    /* Login card */
     .login-card {
       width: 100%;
       margin: 0 auto;
@@ -271,10 +257,9 @@
       margin-bottom: 5px;
     }
 
-    /* FIX: Added extra right padding for validation icon and show-password button */
     input {
       width: 100%;
-      padding: 14px 40px 14px 18px;
+      padding: 14px 40px 14px 18px; /* default right padding for validation icon */
       background: rgba(255, 255, 255, 0.10);
       border: 2px solid rgba(255, 255, 255, 0.12);
       border-radius: var(--radius-input);
@@ -295,7 +280,7 @@
       outline: none;
     }
 
-    /* Validation icons */
+    /* Validation icon */
     .input-group .input-icon {
       position: absolute;
       right: 14px;
@@ -306,6 +291,7 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity var(--transition-quick);
+      z-index: 1;
     }
     .input-group .input-icon.visible {
       opacity: 1;
@@ -315,6 +301,18 @@
     }
     .input-group .input-icon.invalid {
       color: var(--color-error);
+    }
+
+    /* FIX: Password field with both validation icon and show-password button */
+    /* We need extra padding and adjusted positions */
+    .input-group.password-group input {
+      padding-right: 70px; /* space for both icons */
+    }
+    .input-group.password-group .input-icon {
+      right: 42px; /* validation icon to the left of the eye */
+    }
+    .input-group.password-group .toggle-password {
+      right: 14px; /* eye button on far right */
     }
 
     .input-error {
@@ -335,7 +333,6 @@
     /* Show password toggle button */
     .toggle-password {
       position: absolute;
-      right: 40px; /* leaves space for validation icon */
       top: 50%;
       transform: translateY(-50%);
       background: transparent;
@@ -431,6 +428,45 @@
       outline-offset: 2px;
     }
 
+    /* Toggle wrapper (Email/Phone) */
+    .toggle-wrapper {
+      display: flex;
+      gap: 8px;
+      margin-top: 18px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 40px;
+      padding: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .toggle-option {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      border-radius: 32px;
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all var(--transition-quick);
+      user-select: none;
+    }
+    .toggle-option.active {
+      background: rgba(255, 255, 255, 0.18);
+      color: var(--color-text);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .toggle-option:not(.active):hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+    /* FIX: Disabled phone option */
+    .toggle-option.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .toggle-option.disabled:hover {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
     .auth-toggle {
       text-align: center;
       font-size: 14px;
@@ -455,7 +491,6 @@
       outline-offset: 2px;
     }
 
-    /* Form error */
     .form-error {
       text-align: center;
       font-size: 14px;
@@ -482,7 +517,6 @@
       margin-right: 6px;
     }
 
-    /* Success state */
     #successContent {
       flex: 1;
       display: flex;
@@ -559,7 +593,6 @@
       display: none !important;
     }
 
-    /* Responsive */
     @media (max-width: 480px) {
       .trigger-bar {
         bottom: 30px;
@@ -584,6 +617,15 @@
         padding: 12px 36px 12px 16px;
         font-size: 14px;
       }
+      .input-group.password-group input {
+        padding-right: 60px;
+      }
+      .input-group.password-group .input-icon {
+        right: 36px;
+      }
+      .input-group.password-group .toggle-password {
+        right: 12px;
+      }
       .close-btn {
         top: 14px;
         right: 16px;
@@ -606,9 +648,6 @@
       }
       .success-wrapper h2 {
         font-size: 20px;
-      }
-      .toggle-password {
-        right: 36px;
       }
     }
 
@@ -648,7 +687,6 @@
       }
     }
 
-    /* Reduced motion */
     @media (prefers-reduced-motion: reduce) {
       * {
         animation-duration: 0.01ms !important;
@@ -660,26 +698,21 @@
 </head>
 <body>
 
-  <!-- LOADING SPINNER -->
   <div id="loadingSpinner" role="status" aria-live="polite">
     <i class="fa-solid fa-spinner" aria-hidden="true"></i>
     <p>Checking session...</p>
   </div>
 
-  <!-- TRIGGER BAR -->
   <div class="trigger-bar" id="triggerBar" role="button" tabindex="0" aria-label="Open login form">
     Log In <span class="arrow">↑</span>
   </div>
 
-  <!-- OVERLAY -->
   <div class="overlay" id="overlay" aria-hidden="true"></div>
 
-  <!-- LOGIN MODAL -->
   <div class="login-sheet" id="loginSheet" role="dialog" aria-modal="true" aria-labelledby="formTitle">
     <button class="close-btn" id="closeBtn" aria-label="Close login form">✕</button>
 
     <div class="login-card" id="loginCard">
-      <!-- Form Content -->
       <div id="formContent">
         <h1 id="formTitle">Welcome Back!</h1>
         <p id="formSubtitle" class="sub-text">
@@ -689,14 +722,12 @@
         <form id="loginForm" novalidate>
           <div class="input-group">
             <label for="email" id="emailLabel">Email</label>
-            <!-- FIX: autocomplete="email" for better password manager support -->
             <input type="email" id="email" placeholder="you@example.com" autocomplete="email" aria-describedby="emailError" />
             <i class="fa-regular input-icon" id="emailIcon" aria-hidden="true"></i>
           </div>
 
-          <div class="input-group">
+          <div class="input-group password-group">
             <label for="password">Password</label>
-            <!-- FIX: autocomplete="current-password" (will be updated to "new-password" in signup mode) -->
             <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" aria-describedby="passwordError" />
             <button type="button" class="toggle-password" id="togglePassword" aria-label="Show password">
               <i class="fa-regular fa-eye" aria-hidden="true"></i>
@@ -723,22 +754,23 @@
           </div>
         </form>
 
-        <!-- FIX: Removed phone toggle entirely to avoid confusion (Supabase only supports email login) -->
+        <!-- Toggle wrapper restored with phone disabled -->
+        <div class="toggle-wrapper" id="toggleWrapper" role="group" aria-label="Login method">
+          <div class="toggle-option active" data-type="email" tabindex="0" role="button">Email</div>
+          <div class="toggle-option disabled" data-type="phone" tabindex="0" role="button" title="Phone login coming soon">Phone <span style="font-size:10px;opacity:0.6;">(soon)</span></div>
+        </div>
 
-        <!-- AUTH TOGGLE -->
         <div class="auth-toggle">
           <span id="authPromptText">Don't have an account?</span>
-          <button id="toggleAuthModeBtn">Create one</button>
+          <button id="toggleAuthModeBtn">Why?</button>
         </div>
       </div>
 
-      <!-- SUCCESS STATE -->
       <div id="successContent" class="hidden">
         <div class="success-wrapper">
           <div class="success-circle" aria-hidden="true">
             <div class="checkmark"></div>
           </div>
-          <!-- FIX: Success message now includes user email dynamically -->
           <h2 id="successTitle">Welcome to City Work!</h2>
           <p id="successMessage">Redirecting you to your dashboard...</p>
         </div>
@@ -750,7 +782,6 @@
     (function() {
       'use strict';
 
-      // ─── READ SUPABASE CONFIG ──────────────────────────────────────
       let SUPABASE_URL, SUPABASE_ANON_KEY;
       try {
         if (typeof design !== 'undefined' && design.supabase) {
@@ -777,7 +808,6 @@
 
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // ─── DOM REFS ──────────────────────────────────────────────
       const form = document.getElementById('loginForm');
       const formTitle = document.getElementById('formTitle');
       const formSubtitle = document.getElementById('formSubtitle');
@@ -798,7 +828,6 @@
       const successTitle = document.getElementById('successTitle');
       const successMessage = document.getElementById('successMessage');
 
-      // Modal elements
       const triggerBar = document.getElementById('triggerBar');
       const overlay = document.getElementById('overlay');
       const loginSheet = document.getElementById('loginSheet');
@@ -806,9 +835,10 @@
       const formContent = document.getElementById('formContent');
       const successContent = document.getElementById('successContent');
 
+      const toggleOptions = document.querySelectorAll('.toggle-option');
+
       let isSignupMode = false;
 
-      // ─── MODAL CONTROLS ──────────────────────────────────────────
       function openModal() {
         triggerBar.classList.add('hidden');
         overlay.classList.add('active');
@@ -819,7 +849,6 @@
         password.classList.remove('input-error');
         formError.classList.remove('show', 'error', 'success');
         resetValidationIcons();
-        // Focus email when modal opens
         setTimeout(() => email.focus(), 300);
       }
 
@@ -833,7 +862,6 @@
         password.classList.remove('input-error');
         formError.classList.remove('show', 'error', 'success');
         resetValidationIcons();
-        // Return focus to trigger bar for accessibility
         triggerBar.focus();
       }
 
@@ -847,15 +875,11 @@
       closeBtn.addEventListener('click', closeModal);
       overlay.addEventListener('click', closeModal);
 
-      // ─── FOCUS TRAP (FIX: keep focus inside modal) ─────────────────
       loginSheet.addEventListener('keydown', (e) => {
         if (e.key === 'Tab') {
-          const focusable = loginSheet.querySelectorAll(
-            'button, input, [tabindex]:not([tabindex="-1"])'
-          );
+          const focusable = loginSheet.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])');
           const first = focusable[0];
           const last = focusable[focusable.length - 1];
-
           if (e.shiftKey && document.activeElement === first) {
             e.preventDefault();
             last.focus();
@@ -866,17 +890,14 @@
         }
       });
 
-      // ─── SHOW PASSWORD TOGGLE (FIX: added) ────────────────────────
       togglePassword.addEventListener('click', function() {
         const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
         password.setAttribute('type', type);
-        // Toggle icon
         const icon = this.querySelector('i');
         icon.className = type === 'password' ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
         this.setAttribute('aria-label', type === 'password' ? 'Show password' : 'Hide password');
       });
 
-      // ─── REAL‑TIME VALIDATION ──────────────────────────────────────
       function validateField(input, icon) {
         const val = input.value.trim();
         if (val.length === 0) {
@@ -915,7 +936,6 @@
         });
       }
 
-      // ─── FORM ERROR HANDLING ─────────────────────────────────────
       function setFormError(message, isSuccess = false) {
         if (message) {
           formErrorText.textContent = message;
@@ -931,7 +951,6 @@
         }
       }
 
-      // ─── SESSION CHECK ──────────────────────────────────────────
       (async function checkSession() {
         loadingSpinner.style.display = 'flex';
         try {
@@ -967,7 +986,6 @@
         }
       })();
 
-      // ─── PROFILE HELPERS ──────────────────────────────────────────
       async function fetchUserRole(userId) {
         try {
           const { data, error } = await supabase
@@ -998,7 +1016,6 @@
         }
       }
 
-      // ─── UI MODE TOGGLE ──────────────────────────────────────────
       function updateUIMode() {
         if (isSignupMode) {
           formTitle.textContent = 'Create Account';
@@ -1007,7 +1024,6 @@
           authPromptText.textContent = 'Already have an account?';
           toggleAuthModeBtn.textContent = 'Sign in';
           forgotPasswordBtn.style.display = 'none';
-          // FIX: change autocomplete for signup
           email.setAttribute('autocomplete', 'email');
           password.setAttribute('autocomplete', 'new-password');
         } else {
@@ -1030,7 +1046,6 @@
         updateUIMode();
       });
 
-      // ─── FORGOT PASSWORD ──────────────────────────────────────────
       forgotPasswordBtn.addEventListener('click', async function(e) {
         e.preventDefault();
         if (forgotPasswordBtn.style.display === 'none') return;
@@ -1063,7 +1078,6 @@
         }
       });
 
-      // ─── LOGIN / SIGNUP HANDLERS ──────────────────────────────────
       async function handleLogin(emailVal, passwordVal) {
         const persistSession = rememberMe.checked ? 'local' : 'session';
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -1099,7 +1113,6 @@
         return data;
       }
 
-      // ─── FORM SUBMIT ──────────────────────────────────────────────
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -1120,7 +1133,6 @@
           valid = false;
         }
         if (!valid) {
-          // FIX: Removed useless form shake; input shake is handled by input-error class
           return;
         }
 
@@ -1142,7 +1154,6 @@
             }, 3000);
           } else {
             const userData = await handleLogin(emailVal, passwordVal);
-            // FIX: Personalised success message with user's email or name
             successTitle.textContent = `Welcome, ${userData.email.split('@')[0]}!`;
             successMessage.textContent = 'Redirecting you to your dashboard...';
             formContent.classList.add('hidden');
@@ -1170,10 +1181,8 @@
         }
       });
 
-      // ─── ENTER KEY SUPPORT ──────────────────────────────────────
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && loginSheet.classList.contains('active')) {
-          // Only trigger if focus is not on a button that has its own action (e.g., forgot password)
           if (document.activeElement.tagName !== 'BUTTON') {
             loginBtn.click();
           }
@@ -1183,7 +1192,26 @@
         }
       });
 
-      // ─── INIT ──────────────────────────────────────────────────────
+      // Initialize toggle wrapper (make phone disabled unclickable)
+      toggleOptions.forEach(opt => {
+        if (opt.classList.contains('disabled')) {
+          opt.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Optionally show a message
+            setFormError('Phone login is not available yet.', false);
+            setTimeout(() => setFormError(''), 3000);
+          });
+        } else {
+          opt.addEventListener('click', function() {
+            toggleOptions.forEach(o => o.classList.remove('active'));
+            this.classList.add('active');
+            // since phone is disabled, we only have email active
+            // No need to change input type
+          });
+        }
+      });
+
       updateUIMode();
       triggerBar.setAttribute('tabindex', '0');
       triggerBar.setAttribute('role', 'button');
