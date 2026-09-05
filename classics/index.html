@@ -262,8 +262,8 @@
         .turnover-item { padding: 0.6rem 1rem; border-bottom: 1px solid rgba(24,32,47,0.06); }
         .turnover-item:last-child { border-bottom: none; }
         .turnover-item .turnover-title { font-weight: 700; font-size: 0.85rem; color: #18202F; }
-        .turnover-item .turnover-dates { font-size: 0.8rem; color: #68748A; margin-top: 0.15rem; }
-        .turnover-item .turnover-notes { font-size: 0.75rem; color: #94a3b8; margin-top: 0.1rem; font-style: italic; }
+        .turnover-item .turnover-dates { font-size: 0.8rem; color: #18202F; margin-top: 0.15rem; }
+        .turnover-item .turnover-notes { font-size: 0.75rem; color: #18202F; margin-top: 0.1rem; }
         .turnover-divider { border: none; border-top: 1px dashed rgba(24,32,47,0.1); margin: 0.25rem 1rem; }
 
         /* ─── CALENDAR ─── */
@@ -770,9 +770,9 @@
                 if (isNaN(d.getTime())) {
                     const d2 = new Date(dateStr + 'T00:00:00');
                     if (isNaN(d2.getTime())) return dateStr;
-                    return d2.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    return d2.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                 }
-                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
             } catch { return dateStr; }
         }
 
@@ -963,7 +963,7 @@
                 animatePanelIn(showViewPanel);
                 renderShowView(showTitle);
             }
-        }
+        };
 
         // ─── RENDER OVERVIEW ──────────────────────────────────────
         function renderOverview() {
@@ -1010,7 +1010,7 @@
             updateWeekLabel();
         }
 
-        // ─── RENDER CALENDAR ──────────────────────────────────────
+        // ─── RENDER CALENDAR - EPISODE ONLY ──────────────────────
         function renderCalendar(gridId, scheduleData) {
             const grid = document.getElementById(gridId);
             if (!grid) return;
@@ -1030,22 +1030,17 @@
                 // Get episodes for this date
                 const dayEpisodes = allEpisodes.filter(ep => ep.air_date === dateStr);
                 
-                // Get schedule items for this day (case insensitive)
-                const dayScheduleItems = scheduleData.filter(item => {
-                    return item.day && item.day.toLowerCase() === day.toLowerCase();
-                });
-                
-                if (dayEpisodes.length > 0 || dayScheduleItems.length > 0) {
-                    daysWithEvents.push({ day, date, episodes: dayEpisodes, schedule: dayScheduleItems });
+                if (dayEpisodes.length > 0) {
+                    daysWithEvents.push({ day, date, episodes: dayEpisodes });
                 }
             });
             
             if (daysWithEvents.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:1rem;color:#94a3b8;font-size:0.8rem;">No events this week</div>';
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:1rem;color:#94a3b8;font-size:0.8rem;">No episodes this week</div>';
                 return;
             }
             
-            grid.innerHTML = daysWithEvents.map(({ day, date, episodes, schedule }) => {
+            grid.innerHTML = daysWithEvents.map(({ day, date, episodes }) => {
                 return `<div class="calendar-day has-events">
                     <div class="day-header">
                         <span>${day}</span>
@@ -1056,12 +1051,6 @@
                             return `<div class="cal-event">
                                 <div class="cal-event-title">${esc(ep.episode_name || 'Untitled')}</div>
                                 <div class="cal-event-show">${esc(ep.show_title)}</div>
-                            </div>`;
-                        }).join('')}
-                        ${schedule.map(item => {
-                            return `<div class="cal-event" style="border-color:rgba(184,115,79,0.3);">
-                                <div class="cal-event-title">📺 ${esc(item.title || 'Untitled')}</div>
-                                ${item.time_slot ? `<div class="cal-event-time">🕐 ${esc(item.time_slot)}</div>` : ''}
                             </div>`;
                         }).join('')}
                     </div>
@@ -1089,7 +1078,7 @@
             }
         }
 
-        // ─── RENDER TURNOVERS ─────────────────────────────────────
+        // ─── RENDER TURNOVERS - CLEAN CARD LAYOUT ────────────────
         function renderTurnovers(containerId, data) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -1112,12 +1101,17 @@
                 const items = grouped[showTitle];
                 items.forEach(item => {
                     if (index > 0) html += `<hr class="turnover-divider" />`;
+                    
+                    // Format dates nicely
+                    const startDate = item.start_date ? formatDate(item.start_date) : '—';
+                    const endDate = item.end_date ? formatDate(item.end_date) : '—';
+                    
                     html += `
                         <div class="turnover-item">
                             <div class="turnover-title">${esc(showTitle)}</div>
                             <div class="turnover-dates">
-                                ${item.start_date ? esc(item.start_date) : '—'} — ${item.end_date ? esc(item.end_date) : '—'}
-                                ${item.notes ? `<span style="color:#94a3b8;font-style:italic;margin-left:0.5rem;">${esc(item.notes)}</span>` : ''}
+                                ${startDate} — ${endDate}
+                                ${item.notes ? `<span style="color:#18202F;margin-left:0.5rem;">${esc(item.notes)}</span>` : ''}
                             </div>
                         </div>
                     `;
@@ -1475,14 +1469,18 @@
             let html = '';
             data.forEach((item, index) => {
                 if (index > 0) html += `<hr class="turnover-divider" />`;
+                
+                const startDate = item.start_date ? formatDate(item.start_date) : '—';
+                const endDate = item.end_date ? formatDate(item.end_date) : '—';
+                
                 html += `
                     <div class="turnover-item" data-id="${item.id}">
                         <div class="turnover-title editable-cell" onclick="editTurnoverCell(this, 'title', '${item.id}')" style="cursor:pointer;">
                             ${esc(item.title)} <span class="edit-icon">✏️</span>
                         </div>
                         <div class="turnover-dates editable-cell" onclick="editTurnoverCell(this, 'dates', '${item.id}')" style="cursor:pointer;">
-                            ${item.start_date ? esc(item.start_date) : '—'} — ${item.end_date ? esc(item.end_date) : '—'}
-                            ${item.notes ? `<span style="color:#94a3b8;font-style:italic;margin-left:0.5rem;">${esc(item.notes)}</span>` : ''}
+                            ${startDate} — ${endDate}
+                            ${item.notes ? `<span style="color:#18202F;margin-left:0.5rem;">${esc(item.notes)}</span>` : ''}
                             <span class="edit-icon">✏️</span>
                         </div>
                     </div>
