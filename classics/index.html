@@ -224,18 +224,24 @@
 
         /* ─── SECTION CARDS ─── */
         .section-card { background: #FAF7F2; border: 1px solid rgba(24,32,47,0.08); border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 1.5rem; }
-        .section-header { padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid rgba(24,32,47,0.08); background: #f0ebe6; }
+        .section-header { padding: 0.6rem 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid rgba(24,32,47,0.08); background: #f0ebe6; }
         .section-header h3 { font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; color: #475569; margin: 0; }
-        .section-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom: 1px solid rgba(24,32,47,0.08); }
 
         /* ─── TWO COLUMN LAYOUT ─── */
         .two-col-grid {
             display: grid;
-            grid-template-columns: 70% 30%;
-            gap: 0.75rem;
+            grid-template-columns: 68% 32%;
+            gap: 0;
         }
-        .two-col-grid .col-titles { min-width: 0; }
-        .two-col-grid .col-schedule { min-width: 0; }
+        .two-col-grid .col-titles { 
+            min-width: 0; 
+            border-right: 2px solid rgba(24, 32, 47, 0.12);
+            padding-right: 0;
+        }
+        .two-col-grid .col-schedule { 
+            min-width: 0; 
+            padding-left: 0;
+        }
 
         @media (max-width: 1024px) {
             .two-col-grid {
@@ -247,13 +253,21 @@
                 grid-template-columns: 1fr;
                 gap: 0.75rem;
             }
+            .two-col-grid .col-titles { 
+                border-right: none;
+                border-bottom: 2px solid rgba(24, 32, 47, 0.12);
+                padding-bottom: 0.75rem;
+            }
+            .two-col-grid .col-schedule { 
+                padding-top: 0;
+            }
         }
 
         /* ─── TITLES TABLE ─── */
         .table-wrap { overflow-x: auto; }
         .table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        .table-wrap th { text-align: left; padding: 0.4rem 0.6rem; font-weight: 600; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; border-bottom: 2px solid rgba(24, 32, 47, 0.1); background: #FAF7F2; white-space: nowrap; }
-        .table-wrap td { padding: 0.5rem 0.6rem; border-bottom: 1px solid rgba(24, 32, 47, 0.05); color: #18202F; vertical-align: middle; }
+        .table-wrap th { text-align: left; padding: 0.4rem 0.8rem; font-weight: 600; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; border-bottom: 2px solid rgba(24, 32, 47, 0.1); background: #FAF7F2; white-space: nowrap; }
+        .table-wrap td { padding: 0.5rem 0.8rem; border-bottom: 1px solid rgba(24, 32, 47, 0.05); color: #18202F; vertical-align: middle; }
         .table-wrap tr:last-child td { border-bottom: none; }
         .table-wrap tr:hover td { background: rgba(220, 225, 230, 0.4); }
         .table-wrap tr { cursor: pointer; transition: background 0.2s ease; }
@@ -262,18 +276,38 @@
 
         /* ─── SCHEDULE SIDEBAR ─── */
         .schedule-compact .schedule-item { 
-            padding: 0.35rem 0.6rem; 
+            padding: 0.3rem 0.6rem; 
             border-bottom: 1px solid rgba(24,32,47,0.04); 
             display: flex; 
             align-items: center; 
-            gap: 0.4rem; 
+            gap: 0.3rem; 
             flex-wrap: wrap;
             font-size: 0.7rem;
         }
         .schedule-compact .schedule-item:last-child { border-bottom: none; }
-        .schedule-compact .schedule-day { font-weight: 600; color: #475569; min-width: 65px; font-size: 0.65rem; }
-        .schedule-compact .schedule-time { font-weight: 500; color: #68748A; min-width: 80px; font-size: 0.65rem; }
-        .schedule-compact .schedule-title { font-weight: 500; color: #18202F; flex: 1; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .schedule-compact .schedule-day { 
+            font-weight: 700; 
+            color: #475569; 
+            min-width: 60px; 
+            font-size: 0.6rem; 
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .schedule-compact .schedule-time { 
+            font-weight: 500; 
+            color: #68748A; 
+            min-width: 75px; 
+            font-size: 0.65rem; 
+        }
+        .schedule-compact .schedule-title { 
+            font-weight: 500; 
+            color: #18202F; 
+            flex: 1; 
+            font-size: 0.7rem; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
         .schedule-compact .no-schedule { padding: 0.75rem; text-align: center; color: #94a3b8; font-size: 0.75rem; }
 
         /* ─── TURNOVERS CARDS ─── */
@@ -553,11 +587,11 @@
                 </div>
 
                 <!-- Titles + Schedule Side by Side -->
-                <div class="section-card">
+                <div class="section-card" style="overflow:hidden;">
                     <div class="two-col-grid">
-                        <!-- Titles Column (70%) -->
+                        <!-- Titles Column (68%) -->
                         <div class="col-titles">
-                            <div class="section-header" style="border-bottom: 1px solid rgba(24,32,47,0.08); background: #f0ebe6; border-radius: 0.75rem 0 0 0;">
+                            <div class="section-header" style="border-radius: 0; border-bottom: 1px solid rgba(24,32,47,0.08);">
                                 <i class="fa-solid fa-list text-copper"></i>
                                 <h3>Titles</h3>
                                 <div class="hide-finished-wrapper">
@@ -569,8 +603,8 @@
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th style="width:45%;">Title</th>
-                                            <th style="width:30%;">Available Until</th>
+                                            <th style="width:42%;">Title</th>
+                                            <th style="width:33%;">Available Until</th>
                                             <th style="width:25%;text-align:right;">Progress</th>
                                         </tr>
                                     </thead>
@@ -581,9 +615,9 @@
                             </div>
                         </div>
 
-                        <!-- Schedule Column (30%) -->
+                        <!-- Schedule Column (32%) -->
                         <div class="col-schedule">
-                            <div class="section-header" style="border-bottom: 1px solid rgba(24,32,47,0.08); background: #f0ebe6; border-radius: 0 0.75rem 0 0;">
+                            <div class="section-header" style="border-radius: 0; border-bottom: 1px solid rgba(24,32,47,0.08);">
                                 <i class="fa-regular fa-calendar text-copper"></i>
                                 <h3>Schedule</h3>
                             </div>
@@ -680,7 +714,7 @@
 
 <script>
     // ═══════════════════════════════════════════════════════════════════
-    //  CLASSIC MOVIES — Final Version with Side by Side Layout
+    //  CLASSIC MOVIES — Final Version with Clear Separation
     // ═══════════════════════════════════════════════════════════════════
 
     (function() {
