@@ -1240,8 +1240,8 @@
                         }
                     } catch (e) { console.warn('Profile fetch error:', e.message); }
                     userRole = role;
-                    const roleDisplay = role === 'admin' ? '🕹' : '👤 User';
-                    setStatus(`✅ ${roleDisplay}`, 'ok');
+                    const roleDisplay = role === 'admin' ? '👻' : '👤';
+                    setStatus(`♙ ${roleDisplay}`, 'ok');
                     localStorage.setItem('archivehub_user', JSON.stringify({
                         id: session.user.id,
                         email: session.user.email,
