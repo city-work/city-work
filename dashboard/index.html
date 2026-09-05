@@ -542,61 +542,87 @@
             border-radius: 2px;
         }
 
-        /* ─── KPI CARDS ─── */
-        .kpi-card {
+        /* ─── MASTERLIST CARDS ─── */
+        .masterlist-card {
             background: var(--color-warmwhite);
-            border-radius: var(--radius-lg);
-            padding: 1.25rem 1.5rem;
             border: 1px solid rgba(24, 32, 47, 0.06);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            color: inherit;
             box-shadow: var(--shadow-card);
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+        .masterlist-card:hover {
+            border-color: var(--color-copper);
+            box-shadow: var(--shadow-lift);
+            transform: translateY(-6px) scale(1.01);
+        }
+        .masterlist-card .icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            background: var(--color-mist);
+            color: var(--color-slateblue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            transition: var(--transition-smooth);
+            margin-bottom: 0.75rem;
+        }
+        .masterlist-card:hover .icon-wrap {
+            background: var(--color-copper);
+            color: var(--color-warmwhite);
+            transform: scale(1.05) rotate(-4deg);
+        }
+        .masterlist-card h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--color-midnight);
+        }
+        .masterlist-card p {
+            font-size: 0.75rem;
+            color: var(--color-slateblue);
+            margin-top: 0.25rem;
+            line-height: 1.4;
+        }
+        .masterlist-card .card-footer {
+            margin-top: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--color-copper);
+        }
+        .masterlist-card .card-footer .arrow {
             transition: var(--transition-smooth);
         }
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lift);
-            border-color: rgba(184, 115, 79, 0.2);
+        .masterlist-card:hover .card-footer .arrow {
+            transform: translateX(6px);
         }
-        .kpi-card .kpi-number {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--color-midnight);
-            line-height: 1.1;
-        }
-        .kpi-card .kpi-label {
+        .masterlist-card .remove-btn {
+            background: transparent;
+            color: #b91c1c;
+            border: none;
+            padding: 0.15rem 0.4rem;
+            border-radius: var(--radius-sm);
             font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: var(--color-slateblue);
-            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            opacity: 0;
         }
-        .kpi-card .kpi-trend {
-            font-size: 0.7rem;
-            font-weight: 600;
+        .masterlist-card:hover .remove-btn {
+            opacity: 1;
         }
-        .kpi-card .kpi-trend.up {
-            color: #2d7a4a;
-        }
-        .kpi-card .kpi-trend.down {
-            color: #b04a4a;
-        }
-
-        /* ─── CONTENT PANELS ─── */
-        .content-panel {
-            display: none;
-            animation: panelIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        .content-panel.active {
-            display: block;
-        }
-        @keyframes panelIn {
-            0% {
-                opacity: 0;
-                transform: translateY(12px) scale(0.98);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+        .masterlist-card .remove-btn:hover {
+            background: rgba(185, 28, 28, 0.1);
+            transform: scale(1.1);
         }
 
         /* ─── EMPTY STATE ─── */
@@ -765,6 +791,27 @@
             transform: rotate(45deg);
         }
 
+        /* ─── ADD BUTTON (header) ─── */
+        .btn-add-header {
+            background: transparent;
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 9999px;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-weight: 600;
+        }
+        .btn-add-header:hover {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.4);
+            transform: scale(1.05);
+        }
+
         /* ─── SIDEBAR TOGGLE ─── */
         .btn-toggle {
             display: none;
@@ -838,15 +885,12 @@
                 padding: 1rem;
             }
             .search-input {
-                width: 140px;
+                width: 120px;
                 font-size: 0.7rem;
                 padding: 0.25rem 1.8rem 0.25rem 1.8rem;
             }
             .search-input:focus {
-                width: 180px;
-            }
-            .kpi-card .kpi-number {
-                font-size: 1.5rem;
+                width: 160px;
             }
             #syncIndicator {
                 display: none;
@@ -888,22 +932,16 @@
                 padding: 0.6rem;
             }
             .search-input {
-                width: 90px;
+                width: 80px;
                 font-size: 0.6rem;
                 padding: 0.2rem 1.4rem 0.2rem 1.4rem;
             }
             .search-input:focus {
-                width: 120px;
+                width: 100px;
             }
             .search-clear {
                 right: 1.6rem;
                 font-size: 0.55rem;
-            }
-            .kpi-card {
-                padding: 0.75rem 1rem;
-            }
-            .kpi-card .kpi-number {
-                font-size: 1.2rem;
             }
             .brand-icon {
                 font-size: 1rem;
@@ -1068,13 +1106,18 @@
                     <span id="statusBadge" class="status-badge waiting">
                         <span class="spinner"></span>
                     </span>
+                    <button class="btn-retry" onclick="location.reload()" aria-label="Retry" title="Retry">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
                 </div>
 
                 <div class="flex items-center gap-1.5 sm:gap-3 flex-wrap">
+                    <button class="btn-add-header" id="addMasterlistBtn" onclick="openMasterlistModal()" title="Add New Item">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
                     <span id="syncIndicator" class="text-xs text-slateblue whitespace-nowrap">
                         <i class="fa-solid fa-cloud-arrow-up mr-1"></i>Synced just now
                     </span>
-
                     <div class="search-wrapper">
                         <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none"></i>
                         <input type="text" id="globalSearchInput" placeholder="Search..."
@@ -1090,10 +1133,6 @@
                         <span id="searchResultsCount" class="search-results-count hidden">0</span>
                         <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-bold text-slate-400 bg-slate-100 px-1 py-0.5 rounded hidden sm:block">⌘K</span>
                     </div>
-
-                    <button class="btn-retry" onclick="location.reload()" aria-label="Retry" title="Retry">
-                        <i class="fa-solid fa-rotate-right"></i>
-                    </button>
                 </div>
             </header>
 
@@ -1104,29 +1143,6 @@
 
                 <!-- ═══ DASHBOARD ═══ -->
                 <div id="panel-dashboard" class="content-panel active" data-panel="dashboard">
-
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
-                        <div class="kpi-card">
-                            <div class="kpi-label">Total Records</div>
-                            <div class="kpi-number" id="kpiRecords">—</div>
-                            <span class="kpi-trend up" id="kpiRecordsTrend" style="display:none;"><i class="fa-solid fa-arrow-up mr-0.5"></i>12%</span>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-label">Tasks Today</div>
-                            <div class="kpi-number" id="kpiTasks">—</div>
-                            <span class="text-xs text-slateblue" id="kpiTasksSub" style="display:none;">3 pending</span>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-label">Active Sessions</div>
-                            <div class="kpi-number" id="kpiSessions">—</div>
-                            <span class="text-xs text-copper" id="kpiSessionsSub" style="display:none;">all synced</span>
-                        </div>
-                        <div class="kpi-card">
-                            <div class="kpi-label">Modules</div>
-                            <div class="kpi-number">8</div>
-                            <span class="text-xs text-slateblue">5 active</span>
-                        </div>
-                    </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                         <a href="#masterlist" onclick="showPanel('masterlist');return false;" class="bg-warmwhite p-4 rounded-2xl border border-mist/50 text-center hover:border-copper transition-all hover:shadow-lift hover:-translate-y-1">
@@ -1163,42 +1179,12 @@
                 <!-- ═══ MASTERLIST ═══ -->
                 <div id="panel-masterlist" class="content-panel" data-panel="masterlist">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4" id="masterlistCards">
-                        <a href="../lg-masterlist/index.html" class="bg-warmwhite p-4 rounded-2xl border border-mist/50 hover:border-copper transition-all hover:shadow-lift hover:-translate-y-1" data-search="lg masterlist complete database operational roster">
-                            <div class="w-10 h-10 rounded-xl bg-mist flex items-center justify-center text-slateblue mb-3"><i class="fa-solid fa-list-check"></i></div>
-                            <h3 class="text-sm font-bold text-midnight">LG Masterlist</h3>
-                            <p class="text-xs text-slateblue mt-0.5">Complete database and operational roster for LG.</p>
-                            <div class="mt-3 flex items-center text-xs font-semibold text-copper">
-                                <span>Open</span>
-                                <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
-                            </div>
-                        </a>
-                        <a href="../bravo-masterlist/index.html" class="bg-warmwhite p-4 rounded-2xl border border-mist/50 hover:border-copper transition-all hover:shadow-lift hover:-translate-y-1" data-search="bravo masterlist roster logs tracking operations">
-                            <div class="w-10 h-10 rounded-xl bg-mist flex items-center justify-center text-slateblue mb-3"><i class="fa-solid fa-clipboard-list"></i></div>
-                            <h3 class="text-sm font-bold text-midnight">Bravo Masterlist</h3>
-                            <p class="text-xs text-slateblue mt-0.5">Roster, logs, and tracking for Bravo operations.</p>
-                            <div class="mt-3 flex items-center text-xs font-semibold text-copper">
-                                <span>Open</span>
-                                <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
-                            </div>
-                        </a>
-                        <a href="../tgirj-masterlist/index.html" class="bg-warmwhite p-4 rounded-2xl border border-mist/50 hover:border-copper transition-all hover:shadow-lift hover:-translate-y-1" data-search="tgirj masterlist database records">
-                            <div class="w-10 h-10 rounded-xl bg-mist flex items-center justify-center text-slateblue mb-3"><i class="fa-solid fa-database"></i></div>
-                            <h3 class="text-sm font-bold text-midnight">TGIRJ Masterlist</h3>
-                            <p class="text-xs text-slateblue mt-0.5">Master database records for TGIRJ.</p>
-                            <div class="mt-3 flex items-center text-xs font-semibold text-copper">
-                                <span>Open</span>
-                                <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
-                            </div>
-                        </a>
-                        <a href="./lets-groove/index.html" class="bg-warmwhite p-4 rounded-2xl border border-mist/50 hover:border-copper transition-all hover:shadow-lift hover:-translate-y-1" data-search="lets groove music entertainment records schedules">
-                            <div class="w-10 h-10 rounded-xl bg-mist flex items-center justify-center text-slateblue mb-3"><i class="fa-solid fa-music"></i></div>
-                            <h3 class="text-sm font-bold text-midnight">Let's Groove</h3>
-                            <p class="text-xs text-slateblue mt-0.5">Music and entertainment records and schedules.</p>
-                            <div class="mt-3 flex items-center text-xs font-semibold text-copper">
-                                <span>Open</span>
-                                <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
-                            </div>
-                        </a>
+                        <!-- Cards rendered by JavaScript -->
+                    </div>
+                    <div id="masterlistEmpty" class="empty-state" style="display:none;">
+                        <div class="icon"><i class="fa-solid fa-folder-open"></i></div>
+                        <h3>No items yet</h3>
+                        <p>Click the <strong>+</strong> button to add your first masterlist item.</p>
                     </div>
                 </div>
 
@@ -1295,11 +1281,48 @@
         </div>
     </div>
 
+    <!-- ═══ ADD MASTERLIST ITEM MODAL ═══ -->
+    <div class="modal-overlay" id="addMasterlistModal" role="dialog" aria-modal="true" aria-labelledby="addMasterlistTitle">
+        <div class="modal-card" tabindex="-1">
+            <h3 id="addMasterlistTitle"><i class="fa-solid fa-folder-plus text-copper"></i> Add Masterlist Item</h3>
+
+            <label class="modal-label">ITEM NAME</label>
+            <input type="text" id="newItemName" placeholder="e.g., HR Masterlist" class="modal-input" />
+
+            <label class="modal-label">DESCRIPTION</label>
+            <input type="text" id="newItemDesc" placeholder="Brief description of this item" class="modal-input" />
+
+            <label class="modal-label">URL / PATH</label>
+            <input type="text" id="newItemUrl" placeholder="../folder/index.html" class="modal-input" />
+
+            <label class="modal-label">ICON</label>
+            <div class="modal-icon-grid" id="masterlistIconGrid">
+                <div class="modal-icon-option selected" data-icon="fa-folder-open"><i class="fa-solid fa-folder-open"></i></div>
+                <div class="modal-icon-option" data-icon="fa-list-check"><i class="fa-solid fa-list-check"></i></div>
+                <div class="modal-icon-option" data-icon="fa-clipboard-list"><i class="fa-solid fa-clipboard-list"></i></div>
+                <div class="modal-icon-option" data-icon="fa-database"><i class="fa-solid fa-database"></i></div>
+                <div class="modal-icon-option" data-icon="fa-music"><i class="fa-solid fa-music"></i></div>
+                <div class="modal-icon-option" data-icon="fa-users"><i class="fa-solid fa-users"></i></div>
+                <div class="modal-icon-option" data-icon="fa-box"><i class="fa-solid fa-box"></i></div>
+                <div class="modal-icon-option" data-icon="fa-file"><i class="fa-solid fa-file"></i></div>
+                <div class="modal-icon-option" data-icon="fa-chart-simple"><i class="fa-solid fa-chart-simple"></i></div>
+                <div class="modal-icon-option" data-icon="fa-gear"><i class="fa-solid fa-gear"></i></div>
+                <div class="modal-icon-option" data-icon="fa-tag"><i class="fa-solid fa-tag"></i></div>
+                <div class="modal-icon-option" data-icon="fa-star"><i class="fa-solid fa-star"></i></div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeMasterlistModal()">Cancel</button>
+                <button class="btn-add" onclick="addMasterlistItem()"><i class="fa-solid fa-plus mr-1"></i> Add Item</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         (function() {
             'use strict';
 
-            console.log('🚀 [CITY WORK] Dashboard with Add Panel feature');
+            console.log('🚀 [CITY WORK] Dashboard with Add Panel & Masterlist features');
 
             // ─── CONFIG ──────────────────────────────────────────────
             let SUPABASE_URL, SUPABASE_ANON_KEY;
@@ -1348,7 +1371,9 @@
             // ─── STATE ──────────────────────────────────────────────────
             let currentPanel = 'dashboard';
             let dynamicPanels = [];
+            let masterlistItems = [];
             let selectedIcon = 'fa-star';
+            let selectedMasterlistIcon = 'fa-folder-open';
 
             // ─── PANEL NAMES ──────────────────────────────────────────
             const panelNames = {
@@ -1361,6 +1386,33 @@
                 weekly: 'Weekly Schedule',
                 classics: 'Classics'
             };
+
+            // ─── DEFAULT MASTERLIST ITEMS ─────────────────────────────
+            const defaultMasterlistItems = [{
+                id: 'default-1',
+                name: 'LG Masterlist',
+                description: 'Complete database and operational roster for LG.',
+                url: '../lg-masterlist/index.html',
+                icon: 'fa-list-check'
+            }, {
+                id: 'default-2',
+                name: 'Bravo Masterlist',
+                description: 'Roster, logs, and tracking for Bravo operations.',
+                url: '../bravo-masterlist/index.html',
+                icon: 'fa-clipboard-list'
+            }, {
+                id: 'default-3',
+                name: 'TGIRJ Masterlist',
+                description: 'Master database records for TGIRJ.',
+                url: '../tgirj-masterlist/index.html',
+                icon: 'fa-database'
+            }, {
+                id: 'default-4',
+                name: "Let's Groove",
+                description: 'Music and entertainment records and schedules.',
+                url: './lets-groove/index.html',
+                icon: 'fa-music'
+            }];
 
             // ─── HELPERS ──────────────────────────────────────────────
             function setStatus(text, type) {
@@ -1389,6 +1441,10 @@
                 const now = new Date();
                 syncIndicator.innerHTML =
                     `<i class="fa-solid fa-cloud-arrow-up mr-1"></i>Synced ${now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+            }
+
+            function generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
             }
 
             // ─── ANIME.JS ──────────────────────────────────────────────
@@ -1436,7 +1492,6 @@
                     return;
                 }
 
-                // Sidebar items
                 sidebarContainer.innerHTML = dynamicPanels.map((panel, index) => `
                     <button class="nav-item" data-panel="dynamic_${index}" data-search="${panel.name.toLowerCase()}"
                         onclick="showPanel('dynamic_${index}')"
@@ -1447,7 +1502,6 @@
                     </button>
                 `).join('');
 
-                // Content panels
                 contentContainer.innerHTML = dynamicPanels.map((panel, index) => `
                     <div id="panel-dynamic_${index}" class="content-panel" data-panel="dynamic_${index}">
                         <div class="empty-state">
@@ -1473,7 +1527,6 @@
                     return;
                 }
 
-                // Check for duplicate
                 if (dynamicPanels.some(p => p.name.toLowerCase() === name.toLowerCase())) {
                     showMessage('A panel with this name already exists', 'error');
                     return;
@@ -1490,7 +1543,6 @@
 
                 showMessage(`✅ Panel "${name}" added successfully`, 'success');
 
-                // Switch to the new panel
                 const newIndex = dynamicPanels.length - 1;
                 showPanel(`dynamic_${newIndex}`);
 
@@ -1506,12 +1558,114 @@
                 saveDynamicPanels();
                 renderDynamicPanels();
 
-                // If we're on the removed panel, go to dashboard
                 if (currentPanel === `dynamic_${index}` || currentPanel === `dynamic_${index+1}`) {
                     showPanel('dashboard');
                 }
 
                 showMessage(`🗑️ Panel "${panelName}" removed`, 'warning');
+            };
+
+            // ─── MASTERLIST FUNCTIONS ──────────────────────────────────
+            function loadMasterlistItems() {
+                try {
+                    const saved = localStorage.getItem('citywork_masterlist_items');
+                    if (saved) {
+                        masterlistItems = JSON.parse(saved);
+                    } else {
+                        masterlistItems = JSON.parse(JSON.stringify(defaultMasterlistItems));
+                        saveMasterlistItems();
+                    }
+                } catch (_) {
+                    masterlistItems = JSON.parse(JSON.stringify(defaultMasterlistItems));
+                    saveMasterlistItems();
+                }
+                renderMasterlist();
+            }
+
+            function saveMasterlistItems() {
+                try {
+                    localStorage.setItem('citywork_masterlist_items', JSON.stringify(masterlistItems));
+                } catch (_) {}
+            }
+
+            function renderMasterlist() {
+                const container = $('masterlistCards');
+                const empty = $('masterlistEmpty');
+
+                if (!container) return;
+
+                if (masterlistItems.length === 0) {
+                    container.innerHTML = '';
+                    if (empty) empty.style.display = 'block';
+                    return;
+                }
+
+                if (empty) empty.style.display = 'none';
+
+                container.innerHTML = masterlistItems.map(item => `
+                    <a href="${item.url}" class="masterlist-card" data-search="${item.name} ${item.description} ${item.url}">
+                        <div class="icon-wrap"><i class="fa-solid ${item.icon}"></i></div>
+                        <h3>${item.name}</h3>
+                        <p>${item.description}</p>
+                        <div class="card-footer">
+                            <span>Open <i class="fa-solid fa-arrow-right arrow"></i></span>
+                            <button class="remove-btn" onclick="event.preventDefault(); event.stopPropagation(); removeMasterlistItem('${item.id}')" title="Remove item">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </a>
+                `).join('');
+            }
+
+            window.addMasterlistItem = function() {
+                const nameInput = $('newItemName');
+                const descInput = $('newItemDesc');
+                const urlInput = $('newItemUrl');
+
+                const name = nameInput.value.trim();
+                const description = descInput.value.trim();
+                const url = urlInput.value.trim();
+
+                if (!name) {
+                    showMessage('Please enter an item name', 'error');
+                    nameInput.focus();
+                    return;
+                }
+
+                if (!url) {
+                    showMessage('Please enter a URL or path', 'error');
+                    urlInput.focus();
+                    return;
+                }
+
+                masterlistItems.push({
+                    id: generateId(),
+                    name: name,
+                    description: description || 'No description provided.',
+                    url: url,
+                    icon: selectedMasterlistIcon || 'fa-folder-open'
+                });
+
+                saveMasterlistItems();
+                renderMasterlist();
+                closeMasterlistModal();
+
+                showMessage(`✅ "${name}" added to Masterlist`, 'success');
+
+                nameInput.value = '';
+                descInput.value = '';
+                urlInput.value = '';
+            };
+
+            window.removeMasterlistItem = function(id) {
+                const item = masterlistItems.find(i => i.id === id);
+                if (!item) return;
+                if (!confirm(`Remove "${item.name}" from Masterlist?`)) return;
+
+                masterlistItems = masterlistItems.filter(i => i.id !== id);
+                saveMasterlistItems();
+                renderMasterlist();
+                showMessage(`🗑️ "${item.name}" removed from Masterlist`, 'warning');
             };
 
             // ─── MODAL CONTROLS ─────────────────────────────────────────
@@ -1521,7 +1675,7 @@
                 $('newPanelName').value = '';
                 $('newPanelName').focus();
                 selectedIcon = 'fa-star';
-                document.querySelectorAll('.modal-icon-option').forEach(el => {
+                document.querySelectorAll('#iconGrid .modal-icon-option').forEach(el => {
                     el.classList.toggle('selected', el.dataset.icon === 'fa-star');
                 });
             };
@@ -1530,13 +1684,37 @@
                 $('addPanelModal').classList.remove('open');
             };
 
+            window.openMasterlistModal = function() {
+                const modal = $('addMasterlistModal');
+                modal.classList.add('open');
+                $('newItemName').value = '';
+                $('newItemDesc').value = '';
+                $('newItemUrl').value = '';
+                $('newItemName').focus();
+                selectedMasterlistIcon = 'fa-folder-open';
+                document.querySelectorAll('#masterlistIconGrid .modal-icon-option').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.icon === 'fa-folder-open');
+                });
+            };
+
+            window.closeMasterlistModal = function() {
+                $('addMasterlistModal').classList.remove('open');
+            };
+
             // ─── ICON SELECTION ────────────────────────────────────────
             document.addEventListener('click', function(e) {
                 const iconOption = e.target.closest('.modal-icon-option');
                 if (iconOption) {
-                    document.querySelectorAll('.modal-icon-option').forEach(el => el.classList.remove('selected'));
-                    iconOption.classList.add('selected');
-                    selectedIcon = iconOption.dataset.icon;
+                    const grid = iconOption.closest('.modal-icon-grid');
+                    if (grid) {
+                        grid.querySelectorAll('.modal-icon-option').forEach(el => el.classList.remove('selected'));
+                        iconOption.classList.add('selected');
+                        if (grid.id === 'iconGrid') {
+                            selectedIcon = iconOption.dataset.icon;
+                        } else if (grid.id === 'masterlistIconGrid') {
+                            selectedMasterlistIcon = iconOption.dataset.icon;
+                        }
+                    }
                 }
             });
 
@@ -1545,10 +1723,35 @@
                 if (e.target === this) closeAddPanelModal();
             });
 
-            // ─── ENTER KEY IN MODAL ────────────────────────────────────
+            $('addMasterlistModal').addEventListener('click', function(e) {
+                if (e.target === this) closeMasterlistModal();
+            });
+
+            // ─── ENTER KEY IN MODALS ────────────────────────────────────
             $('newPanelName').addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') addNewPanel();
                 if (e.key === 'Escape') closeAddPanelModal();
+            });
+
+            $('newItemName').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $('newItemDesc').focus();
+                }
+                if (e.key === 'Escape') closeMasterlistModal();
+            });
+
+            $('newItemDesc').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $('newItemUrl').focus();
+                }
+                if (e.key === 'Escape') closeMasterlistModal();
+            });
+
+            $('newItemUrl').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') addMasterlistItem();
+                if (e.key === 'Escape') closeMasterlistModal();
             });
 
             // ─── PANEL SWITCHING ────────────────────────────────────────
@@ -1567,7 +1770,14 @@
                     item.classList.toggle('active', item.dataset.panel === panelId);
                 });
 
-                // Check if it's a dynamic panel
+                // Show/hide add button for masterlist
+                const addBtn = $('addMasterlistBtn');
+                if (panelId === 'masterlist') {
+                    addBtn.style.display = 'inline-flex';
+                } else {
+                    addBtn.style.display = 'none';
+                }
+
                 if (panelId.startsWith('dynamic_')) {
                     const index = parseInt(panelId.split('_')[1]);
                     if (dynamicPanels[index]) {
@@ -1591,8 +1801,7 @@
 
                 clearBtn.classList.toggle('visible', hasQuery);
 
-                // Reset all
-                document.querySelectorAll('.bg-warmwhite.p-4.rounded-2xl').forEach(c => c.style.display = '');
+                document.querySelectorAll('.masterlist-card').forEach(c => c.style.display = '');
                 document.querySelectorAll('.search-highlight').forEach(h => {
                     const parent = h.parentNode;
                     parent.replaceChild(document.createTextNode(h.textContent), h);
@@ -1603,12 +1812,11 @@
                 if (!hasQuery) return;
 
                 let matchCount = 0;
-                document.querySelectorAll('.bg-warmwhite.p-4.rounded-2xl').forEach(card => {
+                document.querySelectorAll('.masterlist-card').forEach(card => {
                     const text = card.textContent.toLowerCase();
                     if (text.includes(q)) {
                         card.style.display = '';
                         matchCount++;
-                        // Highlight title
                         const h3 = card.querySelector('h3');
                         if (h3) {
                             const title = h3.textContent;
@@ -1642,7 +1850,7 @@
                 input.value = '';
                 clearBtn.classList.remove('visible');
                 count.classList.add('hidden');
-                document.querySelectorAll('.bg-warmwhite.p-4.rounded-2xl').forEach(c => c.style.display = '');
+                document.querySelectorAll('.masterlist-card').forEach(c => c.style.display = '');
                 document.querySelectorAll('.search-highlight').forEach(h => {
                     const parent = h.parentNode;
                     parent.replaceChild(document.createTextNode(h.textContent), h);
@@ -1715,6 +1923,7 @@
                 }
                 if (e.key === 'Escape') {
                     if ($('addPanelModal').classList.contains('open')) closeAddPanelModal();
+                    if ($('addMasterlistModal').classList.contains('open')) closeMasterlistModal();
                     if (searchInput) searchInput.blur();
                 }
             });
@@ -1743,11 +1952,14 @@
                 sidebarToggle.addEventListener('click', toggleSidebar);
 
                 loadDynamicPanels();
+                loadMasterlistItems();
                 updateSyncIndicator();
                 setInterval(updateSyncIndicator, 60000);
                 showPanel('dashboard');
 
-                // Brand icon animation
+                // Hide add button initially (only shows on masterlist)
+                $('addMasterlistBtn').style.display = 'none';
+
                 const brandIcon = document.querySelector('.brand-icon');
                 if (brandIcon && typeof anime !== 'undefined') {
                     anime({
@@ -1761,35 +1973,8 @@
 
                 setTimeout(checkSession, 200);
 
-                // KPI animations
-                const kpis = document.querySelectorAll('.kpi-number');
-                kpis.forEach((kpi, i) => {
-                    const target = parseInt(kpi.textContent);
-                    if (!isNaN(target) && target > 0) {
-                        setTimeout(() => {
-                            animateNumber(kpi, target);
-                        }, 300 + i * 150);
-                    }
-                });
-
-                console.log('✅ [CITY WORK] Ready with Add Panel feature');
+                console.log('✅ [CITY WORK] Ready with Add Panel & Masterlist features');
             });
-
-            // ─── NUMBER ANIMATION ──────────────────────────────────────
-            function animateNumber(el, target) {
-                if (!el || isNaN(target)) return;
-                const duration = 800;
-                const start = performance.now();
-                const from = 0;
-
-                function tick(now) {
-                    const progress = Math.min((now - start) / duration, 1);
-                    const eased = 1 - Math.pow(1 - progress, 3);
-                    el.textContent = Math.round(from + (target - from) * eased).toLocaleString();
-                    if (progress < 1) requestAnimationFrame(tick);
-                }
-                requestAnimationFrame(tick);
-            }
 
             // Expose for inline onclick
             window.showPanel = showPanel;
@@ -1797,6 +1982,10 @@
             window.removePanel = removePanel;
             window.openAddPanelModal = openAddPanelModal;
             window.closeAddPanelModal = closeAddPanelModal;
+            window.openMasterlistModal = openMasterlistModal;
+            window.closeMasterlistModal = closeMasterlistModal;
+            window.addMasterlistItem = addMasterlistItem;
+            window.removeMasterlistItem = removeMasterlistItem;
             window.showMessage = showMessage;
 
         })();
