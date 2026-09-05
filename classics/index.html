@@ -198,25 +198,6 @@
         }
         .btn-retry:hover { background: #e8edf2; color: #18202F; transform: rotate(45deg); }
 
-        .btn-toggle-finish {
-            background: #FAF7F2;
-            color: #68748A;
-            border: 1px solid rgba(24, 32, 47, 0.1);
-            padding: 0.25rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            white-space: nowrap;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-        .btn-toggle-finish:hover { background: #e8edf2; border-color: #94a3b8; }
-        .btn-toggle-finish.active { background: #B8734F; color: white; border-color: #B8734F; }
-
         /* ─── SEARCH INPUT ─── */
         .search-wrapper { position: relative; display: inline-flex; align-items: center; }
         .search-input {
@@ -257,6 +238,13 @@
         .table-wrap tr { cursor: pointer; transition: background 0.2s ease; }
         .table-wrap tr .progress-complete { color: #22c55e; font-weight: 700; }
         .table-wrap tr .progress-incomplete { color: #68748A; }
+
+        /* ─── SCHEDULE ITEMS ─── */
+        .schedule-item { padding: 0.5rem 1rem; border-bottom: 1px solid rgba(24,32,47,0.06); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .schedule-item:last-child { border-bottom: none; }
+        .schedule-item .schedule-day { font-weight: 600; color: #475569; min-width: 90px; }
+        .schedule-item .schedule-time { font-weight: 600; color: #68748A; min-width: 130px; }
+        .schedule-item .schedule-title { font-weight: 500; color: #18202F; flex: 1; }
 
         /* ─── TURNOVERS CARDS ─── */
         .turnover-item { padding: 0.6rem 1rem; border-bottom: 1px solid rgba(24,32,47,0.06); }
@@ -339,11 +327,6 @@
         .cal-event-show {
             font-size: 0.55rem;
             color: #68748A;
-            margin-top: 0.1rem;
-        }
-        .cal-event-time {
-            font-size: 0.5rem;
-            color: #94a3b8;
             margin-top: 0.1rem;
         }
         .calendar-nav { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; border-bottom: 1px solid rgba(24,32,47,0.08); background: #f0ebe6; }
@@ -563,6 +546,15 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- Schedule -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <i class="fa-regular fa-calendar"></i>
+                        <h3>Schedule</h3>
+                    </div>
+                    <div id="scheduleContainer"></div>
                 </div>
 
                 <!-- Turnovers -->
@@ -1006,8 +998,26 @@
             }
 
             renderCalendar('calendarGrid', weekendData);
+            renderOverviewSchedule('scheduleContainer', weekendData);
             renderTurnovers('turnoversContainer', turnoverData);
             updateWeekLabel();
+        }
+
+        // ─── RENDER OVERVIEW SCHEDULE ────────────────────────────
+        function renderOverviewSchedule(containerId, data) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            if (!data || !data.length) {
+                container.innerHTML = '<div style="padding:0.75rem 1rem;font-size:0.8rem;color:#94a3b8;text-align:center;">No schedule items</div>';
+                return;
+            }
+            container.innerHTML = data.map(item => `
+                <div class="schedule-item">
+                    <span class="schedule-day">${esc(item.day || '—')}</span>
+                    <span class="schedule-time">${esc(item.time_slot || '—')}</span>
+                    <span class="schedule-title">${esc(item.title || '')}</span>
+                </div>
+            `).join('');
         }
 
         // ─── RENDER CALENDAR - EPISODE ONLY ──────────────────────
@@ -1027,7 +1037,6 @@
                 date.setDate(startOfWeek.getDate() + idx);
                 const dateStr = date.toISOString().split('T')[0];
                 
-                // Get episodes for this date
                 const dayEpisodes = allEpisodes.filter(ep => ep.air_date === dateStr);
                 
                 if (dayEpisodes.length > 0) {
@@ -1087,7 +1096,6 @@
                 return;
             }
             
-            // Group turnovers by title
             const grouped = {};
             data.forEach(item => {
                 const key = item.title || 'Untitled';
@@ -1102,7 +1110,6 @@
                 items.forEach(item => {
                     if (index > 0) html += `<hr class="turnover-divider" />`;
                     
-                    // Format dates nicely
                     const startDate = item.start_date ? formatDate(item.start_date) : '—';
                     const endDate = item.end_date ? formatDate(item.end_date) : '—';
                     
@@ -1177,7 +1184,6 @@
             document.getElementById('countToAir').textContent = toairCount;
             document.getElementById('countOverdue').textContent = overdueCount;
 
-            // Desktop table
             if (!filtered.length) {
                 showViewTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">No episodes match.</td></tr>';
             } else {
@@ -1196,7 +1202,6 @@
                 }).join('');
             }
 
-            // Mobile cards
             if (!filtered.length) {
                 episodesCardsContainer.innerHTML = '<div style="padding:0.75rem;text-align:center;color:#94a3b8;font-size:0.8rem;">No episodes match.</div>';
             } else {
@@ -1352,13 +1357,14 @@
                 return;
             }
             container.innerHTML = data.map(item => `
-                <div class="schedule-item" style="padding:0.5rem 1rem;border-bottom:1px solid rgba(24,32,47,0.06);display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-                    <span class="editable-cell" onclick="editScheduleDay(this, '${item.id}')" style="font-weight:600;color:#475569;min-width:90px;cursor:pointer;">
+                <div class="schedule-item" style="border-bottom:1px solid rgba(24,32,47,0.06);">
+                    <span class="editable-cell schedule-day" onclick="editScheduleDay(this, '${item.id}')" style="cursor:pointer;min-width:90px;">
                         ${esc(item.day || '—')} <span class="edit-icon">✏️</span>
                     </span>
-                    <span class="editable-cell" onclick="editScheduleTime(this, '${item.id}')" style="font-weight:600;color:#68748A;min-width:130px;cursor:pointer;">
+                    <span class="editable-cell schedule-time" onclick="editScheduleTime(this, '${item.id}')" style="cursor:pointer;min-width:130px;">
                         ${esc(item.time_slot || '—')} <span class="edit-icon">✏️</span>
                     </span>
+                    <span class="schedule-title">${esc(item.title || '')}</span>
                     <button class="btn-delete-episode" onclick="deleteScheduleItem('${item.id}')" style="margin-left:auto;"><i class="fa-solid fa-trash-can"></i></button>
                 </div>
             `).join('');
