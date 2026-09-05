@@ -98,27 +98,36 @@
         }
         @media (min-width: 1024px) {
             .sidebar:not(.sidebar-collapsed) {
-                min-width: 200px;
-                max-width: 200px;
+                min-width: 220px;
+                max-width: 220px;
             }
             .sidebar:not(.sidebar-collapsed) .sidebar-item .label,
-            .sidebar:not(.sidebar-collapsed) .sidebar-signout .label {
+            .sidebar:not(.sidebar-collapsed) .sidebar-back .label {
                 display: inline !important;
                 margin-left: 8px;
             }
             .sidebar:not(.sidebar-collapsed) .sidebar-item,
-            .sidebar:not(.sidebar-collapsed) .sidebar-signout {
+            .sidebar:not(.sidebar-collapsed) .sidebar-back {
                 justify-content: flex-start;
                 padding-left: 1rem;
             }
             .sidebar:not(.sidebar-collapsed) .sidebar-item .icon,
-            .sidebar:not(.sidebar-collapsed) .sidebar-signout .icon {
+            .sidebar:not(.sidebar-collapsed) .sidebar-back .icon {
                 width: auto;
                 margin-right: 0;
             }
             .sidebar:not(.sidebar-collapsed) .sidebar-item .tooltip,
-            .sidebar:not(.sidebar-collapsed) .sidebar-signout .tooltip {
+            .sidebar:not(.sidebar-collapsed) .sidebar-back .tooltip {
                 display: none;
+            }
+            .sidebar:not(.sidebar-collapsed) .brand-text {
+                display: block !important;
+            }
+            .sidebar:not(.sidebar-collapsed) .brand-sub {
+                display: block !important;
+            }
+            .sidebar:not(.sidebar-collapsed) .brand-dot {
+                display: flex !important;
             }
         }
         .sidebar.sidebar-collapsed {
@@ -126,13 +135,22 @@
             max-width: 60px;
         }
         .sidebar.sidebar-collapsed .sidebar-item .label,
-        .sidebar.sidebar-collapsed .sidebar-signout .label {
+        .sidebar.sidebar-collapsed .sidebar-back .label {
             display: none !important;
         }
         .sidebar.sidebar-collapsed .sidebar-item,
-        .sidebar.sidebar-collapsed .sidebar-signout {
+        .sidebar.sidebar-collapsed .sidebar-back {
             justify-content: center;
             padding-left: 0.5rem;
+        }
+        .sidebar.sidebar-collapsed .brand-text {
+            display: none !important;
+        }
+        .sidebar.sidebar-collapsed .brand-sub {
+            display: none !important;
+        }
+        .sidebar.sidebar-collapsed .brand-dot {
+            display: none !important;
         }
 
         .sidebar-scroll {
@@ -225,10 +243,49 @@
             font-weight: 600;
         }
 
-        .brand-city { color: #18202F; }
-        .brand-work { color: #B8734F; }
+        /* ─── BRAND ─── */
+        .brand-container {
+            padding: 0.75rem 1rem 0.5rem;
+            border-bottom: 1px solid rgba(24, 32, 47, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .brand-group {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        .brand-text {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #18202F;
+            display: none;
+        }
+        .brand-sub {
+            font-size: 0.5rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            display: none;
+        }
+        .brand-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: none;
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+        .brand-dot.green { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.3); }
+        .brand-dot.amber { background: #eab308; box-shadow: 0 0 8px rgba(234,179,8,0.3); animation: pulse 1.5s ease-in-out infinite; }
+        .brand-dot.red { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.3); }
 
-        .sidebar-signout {
+        /* ─── SIDEBAR BACK BUTTON ─── */
+        .sidebar-back {
             transition: all 0.2s ease;
             cursor: pointer;
             border-radius: 0.5rem;
@@ -246,20 +303,19 @@
             position: relative;
             white-space: nowrap;
         }
-        .sidebar-signout .icon {
+        .sidebar-back .icon {
             font-size: 1.1rem;
             width: 24px;
             text-align: center;
             transition: all 0.2s ease;
         }
-        .sidebar-signout .label { display: none; }
-        .sidebar-signout:hover {
+        .sidebar-back .label { display: none; }
+        .sidebar-back:hover {
             background: rgba(184, 115, 79, 0.15);
             color: #9D5D3C;
         }
-        .sidebar-signout:hover .icon { transform: scale(1.15); }
-
-        .sidebar-signout .tooltip {
+        .sidebar-back:hover .icon { transform: translateX(-4px); }
+        .sidebar-back .tooltip {
             position: absolute;
             left: calc(100% + 12px);
             top: 50%;
@@ -277,7 +333,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             z-index: 100;
         }
-        .sidebar-signout .tooltip::before {
+        .sidebar-back .tooltip::before {
             content: '';
             position: absolute;
             left: -6px;
@@ -287,7 +343,13 @@
             border-top: 6px solid transparent;
             border-bottom: 6px solid transparent;
         }
-        .sidebar-signout:hover .tooltip { opacity: 1; }
+        .sidebar-back:hover .tooltip { opacity: 1; }
+
+        .sidebar-back-bottom {
+            border-top: 1px solid rgba(24, 32, 47, 0.06);
+            padding: 8px 0;
+            flex-shrink: 0;
+        }
 
         /* ═══ MAIN CONTENT ═══ */
         .main-content {
@@ -483,7 +545,6 @@
             flex: 1;
         }
 
-        /* Artist group in modal */
         .modal-artist-group {
             margin-bottom: 1rem;
         }
@@ -725,18 +786,21 @@
         }
         .btn-export:hover { background: #2d3a4f; transform: scale(1.02); }
 
-        /* Responsive */
+        /* ─── RESPONSIVE ─── */
         @media (max-width: 1023px) {
             .sidebar { min-width: 60px; max-width: 60px; }
             .sidebar-item .label,
-            .sidebar-signout .label { display: none !important; }
+            .sidebar-back .label { display: none !important; }
             .sidebar-item,
-            .sidebar-signout { justify-content: center; padding-left: 0.5rem; }
+            .sidebar-back { justify-content: center; padding-left: 0.5rem; }
+            .brand-text { display: none !important; }
+            .brand-sub { display: none !important; }
+            .brand-dot { display: none !important; }
         }
         @media (max-width: 768px) {
             .sidebar { min-width: 50px; max-width: 50px; }
             .sidebar-item .icon { font-size: 0.95rem; }
-            .sidebar-signout .icon { font-size: 0.95rem; }
+            .sidebar-back .icon { font-size: 0.95rem; }
             header { padding: 0.5rem 1rem; min-height: 56px; }
             .scrollable-content { padding: 1rem; }
             .modal-card { max-width: 95%; }
@@ -745,9 +809,8 @@
         }
         @media (max-width: 480px) {
             .sidebar { min-width: 44px; max-width: 44px; }
-            .sidebar-item, .sidebar-signout { padding: 0.35rem; }
-            .sidebar-item .icon, .sidebar-signout .icon { font-size: 0.85rem; width: 20px; }
-            .brand-city, .brand-work { font-size: 0.8rem; }
+            .sidebar-item, .sidebar-back { padding: 0.35rem; }
+            .sidebar-item .icon, .sidebar-back .icon { font-size: 0.85rem; width: 20px; }
             header { padding: 0.4rem 0.75rem; min-height: 48px; }
             .scrollable-content { padding: 0.75rem; }
             .modal-card { max-width: 100%; border-radius: 1rem; }
@@ -767,12 +830,16 @@
 
         <!-- ═══ SIDEBAR ═══ -->
         <aside class="sidebar" id="sidebar">
-            <div class="px-2 py-4 border-b border-black/5 flex items-center justify-center flex-shrink-0">
-                <span class="text-lg font-extrabold tracking-tight whitespace-nowrap">
-                    <span class="brand-city">EL</span><span class="brand-work">·</span><span class="brand-city">Bravo</span>
-                </span>
+            <!-- Brand -->
+            <div class="brand-container">
+                <div class="brand-group">
+                    <span class="brand-text">BRAVO</span>
+                    <span class="brand-sub">Executive Lounge</span>
+                </div>
+                <span class="brand-dot amber" id="brandDot"></span>
             </div>
 
+            <!-- Navigation -->
             <nav class="sidebar-scroll" id="sidebarNav">
                 <button class="sidebar-item active" id="nav-masterlist" onclick="switchView('masterlist')">
                     <span class="icon"><i class="fa-solid fa-list-check"></i></span>
@@ -823,21 +890,14 @@
                         </button>
                     </div>
                 </div>
+            </nav>
 
-                <div class="sidebar-divider"></div>
-
-                <button class="sidebar-item" onclick="window.location.href='../index.html'">
+            <!-- Bottom: Back to Dashboard -->
+            <div class="sidebar-back-bottom">
+                <button class="sidebar-back" onclick="window.location.href='../index.html'">
                     <span class="icon"><i class="fa-solid fa-arrow-left"></i></span>
                     <span class="label">Back to Dashboard</span>
                     <span class="tooltip">Back to Dashboard</span>
-                </button>
-            </nav>
-
-            <div class="px-2 py-3 border-t border-black/5 flex-shrink-0">
-                <button class="sidebar-signout" id="logoutBtn" onclick="logoutUser()">
-                    <span class="icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
-                    <span class="label">Sign Out</span>
-                    <span class="tooltip">Sign Out</span>
                 </button>
             </div>
         </aside>
@@ -1002,6 +1062,7 @@
             const yearSection = $('yearSection');
             const priorityFilterSection = $('priorityFilterSection');
             const viewTitle = $('viewTitle');
+            const brandDot = $('brandDot');
 
             // Note modal elements
             const noteModal = $('noteModal');
@@ -1025,6 +1086,18 @@
                 const dots = { ok: 'green', error: 'red', waiting: 'amber' };
                 statusBadge.className = `status-badge-top ${colors[type] || 'status-waiting'}`;
                 statusBadge.innerHTML = `<span class="status-dot ${dots[type] || 'amber'}"></span> ${text}`;
+
+                // Update brand dot
+                if (brandDot) {
+                    brandDot.className = 'brand-dot';
+                    if (type === 'ok') {
+                        brandDot.classList.add('green');
+                    } else if (type === 'error') {
+                        brandDot.classList.add('red');
+                    } else {
+                        brandDot.classList.add('amber');
+                    }
+                }
             }
 
             function esc(s) {
@@ -1316,11 +1389,9 @@
                     });
                 }
 
-                // Check if search is active
                 const isSearching = searchTerm.length > 0;
 
                 if (isSearching) {
-                    // SEARCH MODE - Show flat list
                     const results = filteredData.filter(e => {
                         const title = (e.TITLE || '').toLowerCase();
                         const artist = (e.ARTIST || '').toLowerCase();
@@ -1337,7 +1408,6 @@
                         return;
                     }
 
-                    // Show search results as a clean table
                     let html = `
                         <div class="flex items-center gap-3 mb-4">
                             <span class="text-sm font-semibold text-midnight">
@@ -1379,7 +1449,6 @@
                     return;
                 }
 
-                // NORMAL MODE - Grouped by date
                 if (!filteredData.length) {
                     masterlistContent.innerHTML = `
                         <div class="text-center text-slateblue text-sm py-8">
@@ -1540,7 +1609,6 @@
                 modalTitle.textContent = displayDate;
                 modalEntryCount.textContent = `${entries.length} entries`;
 
-                // Group by artist
                 const grouped = {};
                 entries.forEach((row, idx) => {
                     const artist = row.ARTIST || 'Unknown Artist';
@@ -1745,13 +1813,6 @@
                 link.download = 'bravo_masterlist.csv';
                 link.click();
                 URL.revokeObjectURL(link.href);
-            };
-
-            window.logoutUser = async function() {
-                if (!confirm('Are you sure you want to sign out?')) return;
-                try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
-                localStorage.removeItem('archivehub_user');
-                window.location.href = '../index.html';
             };
 
             window.toggleSidebar = function() {
