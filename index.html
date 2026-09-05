@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- FIX: Removed maximum-scale and user-scalable to allow zoom for accessibility -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>City Work – Login</title>
 
   <!-- Fonts -->
@@ -12,7 +13,36 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
 
+  <!-- Font Awesome: only needed styles for better performance -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/regular.min.css" />
+
   <style>
+    /* ==========================================================================
+       DESIGN TOKENS
+       ========================================================================== */
+    :root {
+      --color-bg: #0f172a;
+      --color-glass-bg: rgba(255, 255, 255, 0.10);
+      --color-glass-border: rgba(255, 255, 255, 0.15);
+      --color-glass-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+      --color-primary: #00b4d8;
+      --color-primary-hover: #0284c7;
+      --color-success: #22c55e;
+      --color-error: #f87171;
+      --color-text: #ffffff;
+      --color-text-muted: rgba(255, 255, 255, 0.7);
+      --color-text-dim: rgba(255, 255, 255, 0.35);
+      --radius-modal: 40px;
+      --radius-input: 16px;
+      --radius-btn: 16px;
+      --radius-pill: 60px;
+      --font-family: 'Inter', sans-serif;
+      --transition-smooth: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      --transition-quick: 0.25s ease;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -24,16 +54,23 @@
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      font-family: 'Inter', sans-serif;
-      background-image: url('https://yffqtbqnzrcctfnjibbo.supabase.co/storage/v1/object/public/cats/FB_IMG_1787604930204.jpg');
+      font-family: var(--font-family);
+      background-color: var(--color-bg);
+      /* FIX: Add gradient fallback before remote image */
+      background-image: linear-gradient(135deg, #0f172a 0%, #1e293b 100%), url('https://yffqtbqnzrcctfnjibbo.supabase.co/storage/v1/object/public/cats/FB_IMG_1787604930204.jpg');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      background-color: #0f172a;
       padding: 20px;
+      animation: bgZoom 8s ease-in-out infinite alternate;
     }
 
-    /* ---------- LOADING SPINNER ---------- */
+    @keyframes bgZoom {
+      0% { background-size: 100% 100%; }
+      100% { background-size: 110% 110%; }
+    }
+
+    /* Loading spinner */
     #loadingSpinner {
       display: none;
       position: fixed;
@@ -47,7 +84,7 @@
     }
     #loadingSpinner i {
       font-size: 2.5rem;
-      color: #00b4d8;
+      color: var(--color-primary);
       animation: spin 1s linear infinite;
     }
     @keyframes spin {
@@ -61,22 +98,22 @@
       font-size: 14px;
     }
 
-    /* ---------- 1. BOTTOM TRIGGER BAR ---------- */
+    /* Trigger bar */
     .trigger-bar {
       position: fixed;
       bottom: 40px;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) translateY(20px);
       width: calc(100% - 40px);
       max-width: 400px;
-      background: rgba(255, 255, 255, 0.15);
+      background: var(--color-glass-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 60px;
+      border: 1px solid var(--color-glass-border);
+      border-radius: var(--radius-pill);
       padding: 18px 24px;
       text-align: center;
-      color: #ffffff;
+      color: var(--color-text);
       font-size: 18px;
       font-weight: 600;
       letter-spacing: 0.5px;
@@ -85,12 +122,12 @@
       transition: all 0.3s ease;
       z-index: 20;
       opacity: 0;
-      transform: translateX(-50%) translateY(20px);
-      animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: fadeUp 0.6s var(--transition-smooth) forwards;
     }
     .trigger-bar:hover {
       background: rgba(255, 255, 255, 0.25);
       transform: translateX(-50%) scale(1.02);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
     }
     .trigger-bar:active {
       transform: translateX(-50%) scale(0.96);
@@ -110,9 +147,13 @@
     .trigger-bar .arrow {
       display: inline-block;
       margin-left: 10px;
+      transition: transform 0.3s ease;
+    }
+    .trigger-bar:hover .arrow {
+      transform: translateY(-3px);
     }
 
-    /* ---------- 2. DARK OVERLAY ---------- */
+    /* Overlay */
     .overlay {
       position: fixed;
       inset: 0;
@@ -129,7 +170,7 @@
       pointer-events: all;
     }
 
-    /* ---------- 3. CENTERED LOGIN MODAL ---------- */
+    /* Login modal */
     .login-sheet {
       position: fixed;
       top: 50%;
@@ -138,17 +179,17 @@
       max-width: 420px;
       min-height: 380px;
       max-height: 85vh;
-      background: rgba(255, 255, 255, 0.10);
+      background: var(--color-glass-bg);
       backdrop-filter: blur(32px) saturate(1.6);
       -webkit-backdrop-filter: blur(32px) saturate(1.6);
-      border-radius: 40px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+      border-radius: var(--radius-modal);
+      border: 1px solid var(--color-glass-border);
+      box-shadow: var(--color-glass-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
       padding: 32px 28px 28px;
       z-index: 30;
       opacity: 0;
       transform: translate(-50%, -50%) scale(0.92);
-      transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: opacity 0.4s ease, transform 0.5s var(--transition-smooth);
       pointer-events: none;
       overflow-y: auto;
     }
@@ -170,7 +211,7 @@
       right: 20px;
       background: rgba(255, 255, 255, 0.12);
       border: none;
-      color: #fff;
+      color: var(--color-text);
       width: 38px;
       height: 38px;
       border-radius: 50%;
@@ -186,8 +227,12 @@
     .close-btn:hover {
       background: rgba(255, 255, 255, 0.25);
     }
+    .close-btn:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
 
-    /* ---------- 4. FORM ---------- */
+    /* Login card */
     .login-card {
       width: 100%;
       margin: 0 auto;
@@ -199,22 +244,23 @@
     h1 {
       font-size: 28px;
       font-weight: 700;
-      color: #ffffff;
+      color: var(--color-text);
       margin-bottom: 6px;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       text-align: center;
     }
 
     .sub-text {
       font-size: 14px;
       line-height: 1.5;
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--color-text-muted);
       margin-bottom: 28px;
       text-align: center;
     }
 
     .input-group {
       margin-bottom: 18px;
+      position: relative;
     }
 
     label {
@@ -225,28 +271,54 @@
       margin-bottom: 5px;
     }
 
+    /* FIX: Added extra right padding for validation icon and show-password button */
     input {
       width: 100%;
-      padding: 14px 18px;
+      padding: 14px 40px 14px 18px;
       background: rgba(255, 255, 255, 0.10);
       border: 2px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
+      border-radius: var(--radius-input);
       font-size: 15px;
-      color: #ffffff;
-      transition: all 0.25s ease;
+      color: var(--color-text);
+      transition: all var(--transition-quick);
       outline: none;
     }
     input::placeholder {
-      color: rgba(255, 255, 255, 0.35);
+      color: var(--color-text-dim);
     }
     input:focus {
-      border-color: #00b4d8;
+      border-color: var(--color-primary);
       background: rgba(255, 255, 255, 0.15);
       box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.15);
     }
+    input:focus-visible {
+      outline: none;
+    }
+
+    /* Validation icons */
+    .input-group .input-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: var(--color-text-dim);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity var(--transition-quick);
+    }
+    .input-group .input-icon.visible {
+      opacity: 1;
+    }
+    .input-group .input-icon.valid {
+      color: var(--color-success);
+    }
+    .input-group .input-icon.invalid {
+      color: var(--color-error);
+    }
 
     .input-error {
-      border-color: #f87171 !important;
+      border-color: var(--color-error) !important;
       background: rgba(248, 113, 113, 0.12) !important;
       box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.2) !important;
       animation: shake 0.45s ease-in-out;
@@ -258,6 +330,29 @@
       40% { transform: translateX(12px); }
       60% { transform: translateX(-6px); }
       80% { transform: translateX(6px); }
+    }
+
+    /* Show password toggle button */
+    .toggle-password {
+      position: absolute;
+      right: 40px; /* leaves space for validation icon */
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--color-text-dim);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      transition: color 0.2s;
+      z-index: 2;
+    }
+    .toggle-password:hover {
+      color: var(--color-text-muted);
+    }
+    .toggle-password:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
     }
 
     .forgot-row {
@@ -272,13 +367,13 @@
       gap: 8px;
       font-size: 13px;
       font-weight: 500;
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--color-text-muted);
       cursor: pointer;
     }
     .forgot-row label input[type="checkbox"] {
       width: 16px;
       height: 16px;
-      accent-color: #00b4d8;
+      accent-color: var(--color-primary);
       padding: 0;
       margin: 0;
     }
@@ -293,20 +388,24 @@
       font-family: inherit;
     }
     .forgot-link:hover {
-      color: #ffffff;
+      color: var(--color-text);
+    }
+    .forgot-link:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
     }
 
     button.login-btn {
       width: 100%;
       padding: 16px;
-      background: #00b4d8;
+      background: var(--color-primary);
       border: none;
-      border-radius: 16px;
-      color: #fff;
+      border-radius: var(--radius-btn);
+      color: var(--color-text);
       font-size: 17px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all var(--transition-quick);
       box-shadow: 0 6px 20px rgba(0, 180, 216, 0.35);
       font-family: inherit;
       display: flex;
@@ -315,7 +414,7 @@
       gap: 8px;
     }
     button.login-btn:hover {
-      background: #0284c7;
+      background: var(--color-primary-hover);
       transform: translateY(-2px);
       box-shadow: 0 8px 28px rgba(0, 180, 216, 0.45);
     }
@@ -327,69 +426,15 @@
       cursor: not-allowed;
       transform: none;
     }
-
-    .toggle-wrapper {
-      display: flex;
-      gap: 8px;
-      margin-top: 18px;
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 40px;
-      padding: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .toggle-option {
-      flex: 1;
-      text-align: center;
-      padding: 10px 0;
-      border-radius: 32px;
-      font-size: 14px;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.5);
-      cursor: pointer;
-      transition: all 0.25s ease;
-      user-select: none;
-    }
-    .toggle-option.active {
-      background: rgba(255, 255, 255, 0.18);
-      color: #ffffff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    .toggle-option:not(.active):hover {
-      color: rgba(255, 255, 255, 0.8);
+    button.login-btn:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
     }
 
-    /* ---------- FORM ERROR ---------- */
-    .form-error {
-      text-align: center;
-      font-size: 14px;
-      font-weight: 500;
-      margin-top: 12px;
-      padding: 10px 14px;
-      border-radius: 12px;
-      display: none;
-    }
-    .form-error.show {
-      display: block;
-    }
-    .form-error.error {
-      color: #f87171;
-      background: rgba(248, 113, 113, 0.1);
-      border: 1px solid rgba(248, 113, 113, 0.2);
-    }
-    .form-error.success {
-      color: #4ade80;
-      background: rgba(74, 222, 128, 0.1);
-      border: 1px solid rgba(74, 222, 128, 0.2);
-    }
-    .form-error i {
-      margin-right: 6px;
-    }
-
-    /* ---------- AUTH TOGGLE ---------- */
     .auth-toggle {
       text-align: center;
       font-size: 14px;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--color-text-muted);
       margin-top: 16px;
     }
     .auth-toggle button {
@@ -403,10 +448,41 @@
       transition: color 0.2s;
     }
     .auth-toggle button:hover {
-      color: #ffffff;
+      color: var(--color-text);
+    }
+    .auth-toggle button:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
     }
 
-    /* ---------- 5. SUCCESS STATE ---------- */
+    /* Form error */
+    .form-error {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      display: none;
+    }
+    .form-error.show {
+      display: block;
+    }
+    .form-error.error {
+      color: var(--color-error);
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+    }
+    .form-error.success {
+      color: var(--color-success);
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.2);
+    }
+    .form-error i {
+      margin-right: 6px;
+    }
+
+    /* Success state */
     #successContent {
       flex: 1;
       display: flex;
@@ -425,22 +501,21 @@
     .success-circle {
       width: 80px;
       height: 80px;
-      background: #22c55e;
+      background: var(--color-success);
       border-radius: 50%;
       margin: 0 auto 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      animation: popIn 0.6s var(--transition-smooth);
+      box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.2);
       position: relative;
     }
-
     .success-circle .checkmark {
       position: relative;
       width: 40px;
       height: 40px;
     }
-
     .success-circle .checkmark::after {
       content: '';
       position: absolute;
@@ -453,20 +528,26 @@
       border-width: 0 5px 5px 0;
       border-radius: 2px;
     }
-
     @keyframes popIn {
       0% { transform: scale(0); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
 
+    .success-circle {
+      animation: popIn 0.6s var(--transition-smooth), pulseGlow 2s ease-in-out 0.6s infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.2); }
+      50% { box-shadow: 0 0 0 16px rgba(34, 197, 94, 0.05); }
+    }
+
     .success-wrapper h2 {
-      color: #22c55e;
+      color: var(--color-success);
       font-weight: 700;
       font-size: 24px;
       margin-bottom: 4px;
       word-break: break-word;
     }
-
     .success-wrapper p {
       color: rgba(255, 255, 255, 0.85);
       font-size: 15px;
@@ -478,7 +559,7 @@
       display: none !important;
     }
 
-    /* ---------- RESPONSIVE ---------- */
+    /* Responsive */
     @media (max-width: 480px) {
       .trigger-bar {
         bottom: 30px;
@@ -500,7 +581,7 @@
         margin-bottom: 20px;
       }
       input {
-        padding: 12px 16px;
+        padding: 12px 36px 12px 16px;
         font-size: 14px;
       }
       .close-btn {
@@ -525,6 +606,9 @@
       }
       .success-wrapper h2 {
         font-size: 20px;
+      }
+      .toggle-password {
+        right: 36px;
       }
     }
 
@@ -563,27 +647,36 @@
         border-width: 0 3px 3px 0;
       }
     }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
 
   <!-- LOADING SPINNER -->
-  <div id="loadingSpinner">
-    <i class="fa-solid fa-spinner"></i>
+  <div id="loadingSpinner" role="status" aria-live="polite">
+    <i class="fa-solid fa-spinner" aria-hidden="true"></i>
     <p>Checking session...</p>
   </div>
 
-  <!-- 1. BOTTOM TRIGGER BAR -->
-  <div class="trigger-bar" id="triggerBar">
+  <!-- TRIGGER BAR -->
+  <div class="trigger-bar" id="triggerBar" role="button" tabindex="0" aria-label="Open login form">
     Log In <span class="arrow">↑</span>
   </div>
 
-  <!-- 2. OVERLAY -->
-  <div class="overlay" id="overlay"></div>
+  <!-- OVERLAY -->
+  <div class="overlay" id="overlay" aria-hidden="true"></div>
 
-  <!-- 3. CENTERED LOGIN MODAL -->
-  <div class="login-sheet" id="loginSheet">
-    <button class="close-btn" id="closeBtn">✕</button>
+  <!-- LOGIN MODAL -->
+  <div class="login-sheet" id="loginSheet" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+    <button class="close-btn" id="closeBtn" aria-label="Close login form">✕</button>
 
     <div class="login-card" id="loginCard">
       <!-- Form Content -->
@@ -596,12 +689,19 @@
         <form id="loginForm" novalidate>
           <div class="input-group">
             <label for="email" id="emailLabel">Email</label>
-            <input type="email" id="email" placeholder="you@example.com" autocomplete="off" />
+            <!-- FIX: autocomplete="email" for better password manager support -->
+            <input type="email" id="email" placeholder="you@example.com" autocomplete="email" aria-describedby="emailError" />
+            <i class="fa-regular input-icon" id="emailIcon" aria-hidden="true"></i>
           </div>
 
           <div class="input-group">
             <label for="password">Password</label>
-            <input type="password" id="password" placeholder="••••••••" />
+            <!-- FIX: autocomplete="current-password" (will be updated to "new-password" in signup mode) -->
+            <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" aria-describedby="passwordError" />
+            <button type="button" class="toggle-password" id="togglePassword" aria-label="Show password">
+              <i class="fa-regular fa-eye" aria-hidden="true"></i>
+            </button>
+            <i class="fa-regular input-icon" id="passwordIcon" aria-hidden="true"></i>
           </div>
 
           <div class="forgot-row">
@@ -614,22 +714,18 @@
 
           <button type="submit" id="loginBtn" class="login-btn">
             <span>Login</span>
-            <i class="fa-solid fa-arrow-right"></i>
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
           </button>
 
-          <div id="formError" class="form-error">
-            <i class="fa-solid fa-circle-exclamation"></i>
+          <div id="formError" class="form-error" role="alert">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
             <span id="formErrorText">Invalid email or password.</span>
           </div>
         </form>
 
-        <!-- TOGGLE WRAPPER (Email/Phone) -->
-        <div class="toggle-wrapper" id="toggleWrapper">
-          <div class="toggle-option active" data-type="email">Email</div>
-          <div class="toggle-option" data-type="phone">Phone</div>
-        </div>
+        <!-- FIX: Removed phone toggle entirely to avoid confusion (Supabase only supports email login) -->
 
-        <!-- AUTH TOGGLE (Login / Signup) -->
+        <!-- AUTH TOGGLE -->
         <div class="auth-toggle">
           <span id="authPromptText">Don't have an account?</span>
           <button id="toggleAuthModeBtn">Create one</button>
@@ -639,24 +735,22 @@
       <!-- SUCCESS STATE -->
       <div id="successContent" class="hidden">
         <div class="success-wrapper">
-          <div class="success-circle">
+          <div class="success-circle" aria-hidden="true">
             <div class="checkmark"></div>
           </div>
-          <h2>Welcome to City Work!</h2>
-          <p>Redirecting you to your dashboard...</p>
+          <!-- FIX: Success message now includes user email dynamically -->
+          <h2 id="successTitle">Welcome to City Work!</h2>
+          <p id="successMessage">Redirecting you to your dashboard...</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Font Awesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-
   <script>
     (function() {
       'use strict';
 
-      // ─── READ SUPABASE CONFIG FROM config.js ──────────────────────
+      // ─── READ SUPABASE CONFIG ──────────────────────────────────────
       let SUPABASE_URL, SUPABASE_ANON_KEY;
       try {
         if (typeof design !== 'undefined' && design.supabase) {
@@ -698,6 +792,11 @@
       const rememberMe = document.getElementById('rememberMe');
       const loadingSpinner = document.getElementById('loadingSpinner');
       const emailLabel = document.getElementById('emailLabel');
+      const emailIcon = document.getElementById('emailIcon');
+      const passwordIcon = document.getElementById('passwordIcon');
+      const togglePassword = document.getElementById('togglePassword');
+      const successTitle = document.getElementById('successTitle');
+      const successMessage = document.getElementById('successMessage');
 
       // Modal elements
       const triggerBar = document.getElementById('triggerBar');
@@ -706,9 +805,6 @@
       const closeBtn = document.getElementById('closeBtn');
       const formContent = document.getElementById('formContent');
       const successContent = document.getElementById('successContent');
-
-      // Toggle elements (Email/Phone)
-      const toggleOptions = document.querySelectorAll('.toggle-option');
 
       let isSignupMode = false;
 
@@ -722,6 +818,9 @@
         email.classList.remove('input-error');
         password.classList.remove('input-error');
         formError.classList.remove('show', 'error', 'success');
+        resetValidationIcons();
+        // Focus email when modal opens
+        setTimeout(() => email.focus(), 300);
       }
 
       function closeModal() {
@@ -733,35 +832,109 @@
         email.classList.remove('input-error');
         password.classList.remove('input-error');
         formError.classList.remove('show', 'error', 'success');
+        resetValidationIcons();
+        // Return focus to trigger bar for accessibility
+        triggerBar.focus();
       }
 
       triggerBar.addEventListener('click', openModal);
+      triggerBar.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openModal();
+        }
+      });
       closeBtn.addEventListener('click', closeModal);
       overlay.addEventListener('click', closeModal);
 
-      // ─── EMAIL/PHONE TOGGLE ──────────────────────────────────
-      toggleOptions.forEach(opt => {
-        opt.addEventListener('click', function() {
-          toggleOptions.forEach(o => o.classList.remove('active'));
-          this.classList.add('active');
-          if (this.dataset.type === 'phone') {
-            email.placeholder = 'e.g. +62 812 3456 7890';
-            emailLabel.textContent = 'Phone Number';
-          } else {
-            email.placeholder = 'you@example.com';
-            emailLabel.textContent = 'Email';
+      // ─── FOCUS TRAP (FIX: keep focus inside modal) ─────────────────
+      loginSheet.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+          const focusable = loginSheet.querySelectorAll(
+            'button, input, [tabindex]:not([tabindex="-1"])'
+          );
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
           }
-          email.classList.remove('input-error');
-          password.classList.remove('input-error');
-          formError.classList.remove('show', 'error', 'success');
-        });
+        }
       });
 
-      // ─── CHECK SESSION ──────────────────────────────────────────
+      // ─── SHOW PASSWORD TOGGLE (FIX: added) ────────────────────────
+      togglePassword.addEventListener('click', function() {
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        // Toggle icon
+        const icon = this.querySelector('i');
+        icon.className = type === 'password' ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+        this.setAttribute('aria-label', type === 'password' ? 'Show password' : 'Hide password');
+      });
+
+      // ─── REAL‑TIME VALIDATION ──────────────────────────────────────
+      function validateField(input, icon) {
+        const val = input.value.trim();
+        if (val.length === 0) {
+          icon.classList.remove('visible', 'valid', 'invalid');
+          return;
+        }
+        icon.classList.add('visible');
+        if (input.id === 'email') {
+          const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+          icon.className = isEmail
+            ? 'fa-regular fa-circle-check input-icon visible valid'
+            : 'fa-regular fa-circle-xmark input-icon visible invalid';
+        } else if (input.id === 'password') {
+          if (val.length >= 6) {
+            icon.className = 'fa-regular fa-circle-check input-icon visible valid';
+          } else {
+            icon.className = 'fa-regular fa-circle-xmark input-icon visible invalid';
+          }
+        }
+      }
+
+      email.addEventListener('input', function() {
+        validateField(this, emailIcon);
+        this.classList.remove('input-error');
+        formError.classList.remove('show', 'error', 'success');
+      });
+      password.addEventListener('input', function() {
+        validateField(this, passwordIcon);
+        this.classList.remove('input-error');
+        formError.classList.remove('show', 'error', 'success');
+      });
+
+      function resetValidationIcons() {
+        [emailIcon, passwordIcon].forEach(icon => {
+          icon.classList.remove('visible', 'valid', 'invalid');
+        });
+      }
+
+      // ─── FORM ERROR HANDLING ─────────────────────────────────────
+      function setFormError(message, isSuccess = false) {
+        if (message) {
+          formErrorText.textContent = message;
+          formError.classList.add('show');
+          formError.classList.remove('error', 'success');
+          formError.classList.add(isSuccess ? 'success' : 'error');
+          const icon = formError.querySelector('i');
+          if (icon) {
+            icon.className = isSuccess ? 'fa-regular fa-circle-check' : 'fa-solid fa-circle-exclamation';
+          }
+        } else {
+          formError.classList.remove('show', 'error', 'success');
+        }
+      }
+
+      // ─── SESSION CHECK ──────────────────────────────────────────
       (async function checkSession() {
         loadingSpinner.style.display = 'flex';
         try {
-          // Check localStorage first
           const saved = localStorage.getItem('citywork_user');
           if (saved) {
             const userData = JSON.parse(saved);
@@ -782,8 +955,6 @@
               }
             }
           }
-
-          // Check active session
           const { data } = await supabase.auth.getSession();
           if (data && data.session) {
             window.location.href = 'dashboard/index.html';
@@ -796,35 +967,7 @@
         }
       })();
 
-      // ─── REAL‑TIME VALIDATION ──────────────────────────────────
-      email.addEventListener('input', function() {
-        if (this.value.trim().length > 0) {
-          this.classList.remove('input-error');
-          formError.classList.remove('show', 'error', 'success');
-        }
-      });
-      password.addEventListener('input', function() {
-        if (this.value.trim().length > 0) {
-          this.classList.remove('input-error');
-          formError.classList.remove('show', 'error', 'success');
-        }
-      });
-
-      function setFormError(message, isSuccess = false) {
-        if (message) {
-          formErrorText.textContent = message;
-          formError.classList.add('show');
-          formError.classList.remove('error', 'success');
-          formError.classList.add(isSuccess ? 'success' : 'error');
-          const icon = formError.querySelector('i');
-          if (icon) {
-            icon.className = isSuccess ? 'fa-regular fa-circle-check' : 'fa-solid fa-circle-exclamation';
-          }
-        } else {
-          formError.classList.remove('show', 'error', 'success');
-        }
-      }
-
+      // ─── PROFILE HELPERS ──────────────────────────────────────────
       async function fetchUserRole(userId) {
         try {
           const { data, error } = await supabase
@@ -855,23 +998,30 @@
         }
       }
 
+      // ─── UI MODE TOGGLE ──────────────────────────────────────────
       function updateUIMode() {
         if (isSignupMode) {
           formTitle.textContent = 'Create Account';
           formSubtitle.textContent = 'Sign up to get started with City Work';
-          loginBtn.innerHTML = '<span>Sign Up</span><i class="fa-solid fa-arrow-right"></i>';
+          loginBtn.innerHTML = '<span>Sign Up</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i>';
           authPromptText.textContent = 'Already have an account?';
           toggleAuthModeBtn.textContent = 'Sign in';
           forgotPasswordBtn.style.display = 'none';
+          // FIX: change autocomplete for signup
+          email.setAttribute('autocomplete', 'email');
+          password.setAttribute('autocomplete', 'new-password');
         } else {
           formTitle.textContent = 'Welcome Back!';
           formSubtitle.textContent = 'Sign in to your City Work account';
-          loginBtn.innerHTML = '<span>Login</span><i class="fa-solid fa-arrow-right"></i>';
+          loginBtn.innerHTML = '<span>Login</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i>';
           authPromptText.textContent = "Don't have an account?";
           toggleAuthModeBtn.textContent = 'Create one';
           forgotPasswordBtn.style.display = 'inline-block';
+          email.setAttribute('autocomplete', 'email');
+          password.setAttribute('autocomplete', 'current-password');
         }
         setFormError('');
+        resetValidationIcons();
       }
 
       toggleAuthModeBtn.addEventListener('click', function(e) {
@@ -880,7 +1030,7 @@
         updateUIMode();
       });
 
-      // ─── FORGOT PASSWORD ──────────────────────────────────────
+      // ─── FORGOT PASSWORD ──────────────────────────────────────────
       forgotPasswordBtn.addEventListener('click', async function(e) {
         e.preventDefault();
         if (forgotPasswordBtn.style.display === 'none') return;
@@ -913,7 +1063,7 @@
         }
       });
 
-      // ─── HANDLE LOGIN ──────────────────────────────────────────
+      // ─── LOGIN / SIGNUP HANDLERS ──────────────────────────────────
       async function handleLogin(emailVal, passwordVal) {
         const persistSession = rememberMe.checked ? 'local' : 'session';
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -935,7 +1085,6 @@
         return userData;
       }
 
-      // ─── HANDLE SIGNUP ──────────────────────────────────────────
       async function handleSignup(emailVal, passwordVal) {
         if (passwordVal.length < 6) {
           throw new Error('Password must be at least 6 characters.');
@@ -950,7 +1099,7 @@
         return data;
       }
 
-      // ─── FORM SUBMIT ──────────────────────────────────────────
+      // ─── FORM SUBMIT ──────────────────────────────────────────────
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -971,16 +1120,13 @@
           valid = false;
         }
         if (!valid) {
-          setTimeout(() => {
-            email.classList.remove('shake');
-            password.classList.remove('shake');
-          }, 500);
+          // FIX: Removed useless form shake; input shake is handled by input-error class
           return;
         }
 
         loginBtn.innerHTML = isSignupMode
-          ? '<span>Creating...</span><i class="fa-solid fa-spinner fa-spin"></i>'
-          : '<span>Logging in...</span><i class="fa-solid fa-spinner fa-spin"></i>';
+          ? '<span>Creating...</span><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>'
+          : '<span>Logging in...</span><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>';
         loginBtn.disabled = true;
 
         try {
@@ -991,10 +1137,14 @@
               isSignupMode = false;
               updateUIMode();
               password.value = '';
+              resetValidationIcons();
               setFormError('');
             }, 3000);
           } else {
-            await handleLogin(emailVal, passwordVal);
+            const userData = await handleLogin(emailVal, passwordVal);
+            // FIX: Personalised success message with user's email or name
+            successTitle.textContent = `Welcome, ${userData.email.split('@')[0]}!`;
+            successMessage.textContent = 'Redirecting you to your dashboard...';
             formContent.classList.add('hidden');
             successContent.classList.remove('hidden');
             setTimeout(() => {
@@ -1012,26 +1162,31 @@
             message = 'Too many attempts. Please wait a moment.';
           }
           setFormError(message);
-          form.classList.add('shake');
-          setTimeout(() => form.classList.remove('shake'), 500);
         } finally {
           loginBtn.innerHTML = isSignupMode
-            ? '<span>Sign Up</span><i class="fa-solid fa-arrow-right"></i>'
-            : '<span>Login</span><i class="fa-solid fa-arrow-right"></i>';
+            ? '<span>Sign Up</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i>'
+            : '<span>Login</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i>';
           loginBtn.disabled = false;
         }
       });
 
-      // ─── ENTER KEY SUPPORT ──────────────────────────────────
+      // ─── ENTER KEY SUPPORT ──────────────────────────────────────
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && loginSheet.classList.contains('active')) {
-          loginBtn.click();
+          // Only trigger if focus is not on a button that has its own action (e.g., forgot password)
+          if (document.activeElement.tagName !== 'BUTTON') {
+            loginBtn.click();
+          }
+        }
+        if (e.key === 'Escape' && loginSheet.classList.contains('active')) {
+          closeModal();
         }
       });
 
-      // ─── INIT ──────────────────────────────────────────────────
+      // ─── INIT ──────────────────────────────────────────────────────
       updateUIMode();
-      email.focus();
+      triggerBar.setAttribute('tabindex', '0');
+      triggerBar.setAttribute('role', 'button');
     })();
   </script>
 </body>
