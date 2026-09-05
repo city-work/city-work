@@ -186,13 +186,7 @@
 
         .sidebar-divider { border-top: 1px solid rgba(24,32,47,0.08); margin: 8px 12px; }
         .sidebar-label {
-            font-size: 0.55rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #94a3b8;
-            padding: 0.5rem 0.75rem 0.25rem;
-            font-weight: 600;
-            text-align: center;
+            display: none;
         }
 
         .brand-icon { font-size: 1.5rem; color: var(--color-copper); }
@@ -605,11 +599,9 @@
                 </button>
 
                 <div class="sidebar-divider"></div>
-                <div class="sidebar-label">Dogs</div>
                 <div id="dogShowButtons"></div>
 
                 <div class="sidebar-divider"></div>
-                <div class="sidebar-label">Concerts</div>
                 <div id="concertButtons"></div>
 
                 <div class="sidebar-divider"></div>
@@ -898,21 +890,40 @@
                 }
             }
 
-            // ─── RENDER SIDEBAR ──────────────────────────────────────
+            // ─── RENDER SIDEBAR - ICONS ONLY ────────────────────────
             function renderSidebar() {
+                // Dog shows - icons only, no text labels
                 let dogHtml = dogShows.map(s => {
                     const title = esc(s.title);
                     let isLive = s.title.includes('LIVE') || s.title.includes('First Run');
                     let isReplay = s.title.includes('REPLAY') || s.title.includes('Second Run');
-                    let icon, color;
-                    if (isLive) { icon = 'fa-tower-broadcast'; color = '#ef4444'; }
-                    else if (isReplay) { icon = 'fa-rotate-left'; color = '#3b82f6'; }
-                    else { icon = 'fa-dog'; color = '#68748A'; }
+                    let icon, color, tooltipText;
+                    
+                    // Rename to "All About Dogs (LIVE)" and "All About Dogs (REPLAY)"
+                    let displayTitle = s.title;
+                    if (isLive) {
+                        displayTitle = 'All About Dogs (LIVE)';
+                        icon = 'fa-dog';
+                        color = '#ef4444';
+                        tooltipText = 'All About Dogs (LIVE)';
+                    } else if (isReplay) {
+                        displayTitle = 'All About Dogs (REPLAY)';
+                        icon = 'fa-dog';
+                        color = '#3b82f6';
+                        tooltipText = 'All About Dogs (REPLAY)';
+                    } else {
+                        icon = 'fa-dog';
+                        color = '#68748A';
+                        tooltipText = title;
+                    }
+                    
                     return `<button class="sidebar-item" data-view="dogshow" data-title="${esc(s.title)}">
                         <span class="icon"><i class="fa-solid ${icon}" style="color:${color};"></i></span>
-                        <span class="tooltip">${title}</span>
+                        <span class="tooltip">${tooltipText}</span>
                     </button>`;
                 }).join('');
+                
+                // Concerts - icons only
                 let concertHtml = concerts.map(c => {
                     const title = esc(c.title);
                     return `<button class="sidebar-item" data-view="concert" data-title="${esc(c.title)}">
@@ -920,6 +931,7 @@
                         <span class="tooltip">${title}</span>
                     </button>`;
                 }).join('');
+                
                 $('dogShowButtons').innerHTML = dogHtml || '<div class="text-xs text-slateblue p-2 text-center">—</div>';
                 $('concertButtons').innerHTML = concertHtml || '<div class="text-xs text-slateblue p-2 text-center">—</div>';
             }
@@ -952,7 +964,14 @@
                     if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true }); }
                 } else if (view === 'dogshow') {
                     $('dogshow-view').classList.remove('hidden');
-                    viewTitle.textContent = title;
+                    // Show the display name
+                    let displayTitle = title;
+                    if (title && title.includes('LIVE')) {
+                        displayTitle = 'All About Dogs (LIVE)';
+                    } else if (title && title.includes('REPLAY')) {
+                        displayTitle = 'All About Dogs (REPLAY)';
+                    }
+                    viewTitle.textContent = displayTitle;
                     renderDogShow(title);
                     animatePanelIn($('dogshow-view'));
                     const heading = $('dogshow-view').querySelector('h1');
@@ -1008,10 +1027,14 @@
                         const eventClass = isReplay ? 'dog-replay' : 'dog-live';
                         const checkMark = e.status === true ? '<i class="fa-solid fa-circle-check check-icon"></i> ' : '';
                         const episodeLabel = e.episode_number ? `Ep ${e.episode_number}` : 'No Episode #';
+                        // Use display name
+                        let displayTitle = e.show_title;
+                        if (displayTitle.includes('LIVE')) displayTitle = 'All About Dogs (LIVE)';
+                        else if (displayTitle.includes('REPLAY')) displayTitle = 'All About Dogs (REPLAY)';
                         eventsHTML += `
                             <div class="week-event ${eventClass}" data-view="dogshow" data-title="${esc(e.show_title)}" onclick="weekEventClick(this)">
                                 <div class="week-event-title">${checkMark}${esc(episodeLabel)}</div>
-                                <div class="week-event-subtitle">${esc(e.show_title)}</div>
+                                <div class="week-event-subtitle">${esc(displayTitle)}</div>
                             </div>
                         `;
                     });
@@ -1062,7 +1085,7 @@
                 if (view && title) switchView(view, title);
             };
 
-            // ─── UPDATED UPCOMING EVENTS - INTEGRATED DESIGN ────────
+            // ─── UPCOMING EVENTS - INTEGRATED DESIGN ────────────────
             function renderUpcomingEvents() {
                 const nowTime = new Date().getTime();
                 let upcoming = [];
@@ -1074,9 +1097,14 @@
                     const diff = d.getTime() - nowTime;
                     if (diff > 0 && diff <= 14 * 24 * 60 * 60 * 1000) {
                         const isReplay = e.show_title.includes('REPLAY');
+                        // Use display names
+                        let displayTitle = e.show_title;
+                        if (displayTitle.includes('LIVE')) displayTitle = 'All About Dogs (LIVE)';
+                        else if (displayTitle.includes('REPLAY')) displayTitle = 'All About Dogs (REPLAY)';
+                        
                         upcoming.push({
                             date: e.air_date,
-                            title: e.show_title,
+                            title: displayTitle,
                             subtitle: e.episode_number ? `Episode ${e.episode_number}` : 'No Episode #',
                             type: 'dog',
                             runType: isReplay ? 'REPLAY' : 'LIVE',
@@ -1120,7 +1148,6 @@
                         const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
                         const monthDay = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         
-                        // Determine icon, colors, and badge based on type
                         let iconClass = 'fa-dog';
                         let iconWrapperClass = 'icon-live';
                         let badgeClass = 'event-badge-live';
@@ -1134,26 +1161,22 @@
                             borderClass = 'border-concert';
                             badgeText = 'CONCERT';
                         } else if (ev.runType === 'REPLAY') {
-                            iconClass = 'fa-rotate-left';
+                            iconClass = 'fa-dog';
                             iconWrapperClass = 'icon-replay';
                             badgeClass = 'event-badge-replay';
                             borderClass = 'border-replay';
                             badgeText = 'REPLAY';
                         }
                         
-                        // Generate a default time (since we don't have time data, use a placeholder)
-                        // In a real implementation, you'd pull this from your data
                         const timeStr = '09:00 AM';
                         
                         return `
                             <div class="upcoming-event-card" onclick="switchView('${ev.type === 'dog' ? 'dogshow' : 'concert'}', '${esc(ev.showTitle)}')" style="animation: fadeUp 0.4s ease forwards; animation-delay: ${index * 0.08}s;">
                                 <div class="event-content ${borderClass}">
-                                    <!-- Icon -->
                                     <div class="event-icon-wrapper ${iconWrapperClass}">
                                         <i class="fa-solid ${iconClass} text-sm"></i>
                                     </div>
                                     
-                                    <!-- Text Content -->
                                     <div class="flex-1 min-w-0">
                                         <div class="event-title">${esc(ev.title)}</div>
                                         <div class="event-subtitle">${esc(ev.subtitle)}</div>
@@ -1163,7 +1186,6 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- Badge -->
                                     <span class="event-badge ${badgeClass}">${badgeText}</span>
                                 </div>
                             </div>
@@ -1174,7 +1196,11 @@
 
             // ─── DOG SHOW ────────────────────────────────────────────
             function renderDogShow(title) {
-                $('dogshowTitle').textContent = title;
+                let displayTitle = title;
+                if (title && title.includes('LIVE')) displayTitle = 'All About Dogs (LIVE)';
+                else if (title && title.includes('REPLAY')) displayTitle = 'All About Dogs (REPLAY)';
+                $('dogshowTitle').textContent = displayTitle;
+                
                 const episodes = dogEpisodes.filter(e => e.show_title === title);
                 const tbody = $('dogshowTableBody');
                 if (!episodes.length) {
