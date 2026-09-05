@@ -1240,7 +1240,7 @@
                         }
                     } catch (e) { console.warn('Profile fetch error:', e.message); }
                     userRole = role;
-                    const roleDisplay = role === 'admin' ? '👑 Admin' : '👤 User';
+                    const roleDisplay = role === 'admin' ? '🕹' : '👤 User';
                     setStatus(`✅ ${roleDisplay}`, 'ok');
                     localStorage.setItem('archivehub_user', JSON.stringify({
                         id: session.user.id,
@@ -1285,6 +1285,9 @@
             function renderYearFilter() {
                 const years = new Set();
                 masterlistData.forEach(e => {
+                    // Skip empty entries for year filter
+                    if (!e.TITLE || e.TITLE === '' || e.TITLE === 'EMPTY') return;
+                    if (!e.DATE || e.DATE === '') return;
                     const d = parseDateFlexible(e.DATE);
                     if (d && !isNaN(d)) years.add(d.getFullYear());
                 });
@@ -1309,6 +1312,8 @@
                 `;
                 sortedYears.forEach(year => {
                     const count = masterlistData.filter(e => {
+                        if (!e.TITLE || e.TITLE === '' || e.TITLE === 'EMPTY') return false;
+                        if (!e.DATE || e.DATE === '') return false;
                         const d = parseDateFlexible(e.DATE);
                         return d && !isNaN(d) && d.getFullYear() === year;
                     }).length;
@@ -1380,7 +1385,15 @@
 
             // ─── RENDER MASTERLIST ──────────────────────────────────────
             function renderMasterlist() {
-                let filteredData = masterlistData;
+                // Filter out empty rows FIRST
+                let filteredData = masterlistData.filter(row => {
+                    // Skip if TITLE is empty, null, or "EMPTY"
+                    if (!row.TITLE || row.TITLE === '' || row.TITLE === 'EMPTY') return false;
+                    // Skip if DATE is null or empty
+                    if (!row.DATE || row.DATE === '') return false;
+                    return true;
+                });
+
                 if (currentYear !== 'all') {
                     const yearNum = parseInt(currentYear);
                     filteredData = filteredData.filter(e => {
@@ -1461,14 +1474,13 @@
 
                 const grouped = {};
                 filteredData.forEach(row => {
-                    const key = getNormalizedDate(row.DATE) || '__unknown__';
+                    const key = getNormalizedDate(row.DATE);
+                    if (!key) return; // Skip if no valid date
                     if (!grouped[key]) grouped[key] = [];
                     grouped[key].push(row);
                 });
 
                 const keys = Object.keys(grouped).sort((a, b) => {
-                    if (a === '__unknown__') return 1;
-                    if (b === '__unknown__') return -1;
                     const da = parseDateFlexible(a);
                     const db = parseDateFlexible(b);
                     if (da && db && !isNaN(da) && !isNaN(db)) return da - db;
@@ -1478,106 +1490,86 @@
                 const yearMap = {};
                 keys.forEach(key => {
                     const entries = grouped[key];
-                    if (key === '__unknown__') {
-                        yearMap['Unknown'] = { 'Unknown': { 'Unknown': entries } };
-                    } else {
-                        const d = parseDateFlexible(key);
-                        const year = d.getFullYear();
-                        const month = d.getMonth();
-                        const day = d.getDate();
-                        if (!yearMap[year]) yearMap[year] = {};
-                        if (!yearMap[year][month]) yearMap[year][month] = {};
-                        if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
-                        yearMap[year][month][day] = entries;
-                    }
+                    const d = parseDateFlexible(key);
+                    if (!d || isNaN(d)) return;
+                    const year = d.getFullYear();
+                    const month = d.getMonth();
+                    const day = d.getDate();
+                    if (!yearMap[year]) yearMap[year] = {};
+                    if (!yearMap[year][month]) yearMap[year][month] = {};
+                    if (!yearMap[year][month][day]) yearMap[year][month][day] = [];
+                    yearMap[year][month][day] = entries;
                 });
 
-                masterlistContent.innerHTML = Object.keys(yearMap).sort((a,b) => {
-                    if (a === 'Unknown') return 1;
-                    if (b === 'Unknown') return -1;
-                    return b - a;
-                }).map(year => {
-                    if (year === 'Unknown') {
-                        const entries = yearMap['Unknown']['Unknown']['Unknown'];
-                        return `
-                            <div class="year-section">
-                                <button class="year-header" onclick="toggleYear('year-unknown')">
-                                    <span class="font-bold text-midnight"><i class="fa-solid fa-folder"></i> Unknown</span>
-                                    <span class="text-xs text-slateblue">${entries.length} entries</span>
-                                    <span class="toggle-icon" id="icon-year-unknown"><i class="fa-solid fa-chevron-down"></i></span>
-                                </button>
-                                <div class="year-content" id="content-year-unknown">
-                                    <div class="grid grid-cols-1 gap-2 ml-2">
-                                        ${entries.map(row => `
-                                            <div class="date-card-compact" onclick="openDateModal('__unknown__')">
-                                                <div class="flex items-center justify-between">
-                                                    <span class="font-semibold text-sm text-midnight"><i class="fa-solid fa-calendar"></i> ${esc(row.DATE)}</span>
+                const sortedYears = Object.keys(yearMap).sort((a, b) => b - a);
+
+                if (!sortedYears.length) {
+                    masterlistContent.innerHTML = `
+                        <div class="text-center text-slateblue text-sm py-8">
+                            <i class="fa-solid fa-folder-open text-2xl mb-2"></i><br>
+                            No valid entries found
+                        </div>
+                    `;
+                    return;
+                }
+
+                masterlistContent.innerHTML = sortedYears.map(year => {
+                    const months = yearMap[year];
+                    const sortedMonths = Object.keys(months).sort((a,b) => b - a);
+                    const totalInYear = Object.values(months).reduce((sum, days) => sum + Object.values(days).reduce((s, entries) => s + entries.length, 0), 0);
+                    return `
+                        <div class="year-section">
+                            <button class="year-header" onclick="toggleYear('year-${year}')">
+                                <span class="font-bold text-midnight"><i class="fa-solid fa-folder"></i> ${year}</span>
+                                <span class="text-xs text-slateblue">${totalInYear} entries</span>
+                                <span class="toggle-icon" id="icon-year-${year}"><i class="fa-solid fa-chevron-down"></i></span>
+                            </button>
+                            <div class="year-content" id="content-year-${year}">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-2">
+                                    ${sortedMonths.map(month => {
+                                        const days = months[month];
+                                        const sortedDays = Object.keys(days).sort((a,b) => b - a);
+                                        const totalInMonth = Object.values(days).reduce((sum, dayEntries) => sum + dayEntries.length, 0);
+                                        const monthName = new Date(parseInt(year), parseInt(month), 1).toLocaleString('en-US', { month: 'long' });
+                                        return `
+                                            <div class="month-section col-span-1">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <h4 class="text-sm font-bold text-midnight"><i class="fa-solid fa-folder-open"></i> ${monthName}</h4>
+                                                    <span class="text-[10px] text-slateblue bg-mist px-2 py-0.5 rounded-full">${totalInMonth} entries</span>
                                                 </div>
-                                                <div class="text-[10px] text-slateblue">${esc(row.TITLE)}${row.ARTIST ? ' - ' + esc(row.ARTIST) : ''}</div>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        const months = yearMap[year];
-                        const sortedMonths = Object.keys(months).sort((a,b) => b - a);
-                        const totalInYear = Object.values(months).reduce((sum, days) => sum + Object.values(days).reduce((s, entries) => s + entries.length, 0), 0);
-                        return `
-                            <div class="year-section">
-                                <button class="year-header" onclick="toggleYear('year-${year}')">
-                                    <span class="font-bold text-midnight"><i class="fa-solid fa-folder"></i> ${year}</span>
-                                    <span class="text-xs text-slateblue">${totalInYear} entries</span>
-                                    <span class="toggle-icon" id="icon-year-${year}"><i class="fa-solid fa-chevron-down"></i></span>
-                                </button>
-                                <div class="year-content" id="content-year-${year}">
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-2">
-                                        ${sortedMonths.map(month => {
-                                            const days = months[month];
-                                            const sortedDays = Object.keys(days).sort((a,b) => b - a);
-                                            const totalInMonth = Object.values(days).reduce((sum, dayEntries) => sum + dayEntries.length, 0);
-                                            const monthName = new Date(parseInt(year), parseInt(month), 1).toLocaleString('en-US', { month: 'long' });
-                                            return `
-                                                <div class="month-section col-span-1">
-                                                    <div class="flex items-center gap-2 mb-2">
-                                                        <h4 class="text-sm font-bold text-midnight"><i class="fa-solid fa-folder-open"></i> ${monthName}</h4>
-                                                        <span class="text-[10px] text-slateblue bg-mist px-2 py-0.5 rounded-full">${totalInMonth} entries</span>
-                                                    </div>
-                                                    <div class="space-y-2 ml-3">
-                                                        ${sortedDays.map(day => {
-                                                            const entries = days[day];
-                                                            const dateObj = new Date(parseInt(year), parseInt(month), parseInt(day));
-                                                            const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                                                            const dateKey = `${year}-${String(parseInt(month)+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-                                                            const note = dateNotes[dateKey] || '';
-                                                            return `
-                                                                <div class="date-card-compact" onclick="openDateModal('${dateKey}')">
-                                                                    <div class="flex items-center justify-between">
-                                                                        <span class="font-semibold text-sm text-midnight"><i class="fa-solid fa-calendar-day"></i> ${dateStr}</span>
-                                                                        <div class="flex items-center gap-1">
-                                                                            <span class="text-xs font-medium text-slateblue bg-mist px-2 py-0.5 rounded-full">${entries.length}</span>
-                                                                            <button class="note-edit-btn" onclick="openNoteEditor('${dateKey}', event)" title="Edit note">
-                                                                                <i class="fa-regular fa-pen-to-square"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                    ${note ? `<div class="note-text">📝 ${esc(note)}</div>` : ''}
-                                                                    <div class="text-[10px] text-slateblue mt-1 truncate">
-                                                                        ${entries.slice(0, 3).map(e => esc(e.TITLE)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
+                                                <div class="space-y-2 ml-3">
+                                                    ${sortedDays.map(day => {
+                                                        const entries = days[day];
+                                                        const dateObj = new Date(parseInt(year), parseInt(month), parseInt(day));
+                                                        const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                                                        const dateKey = `${year}-${String(parseInt(month)+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                                                        const note = dateNotes[dateKey] || '';
+                                                        return `
+                                                            <div class="date-card-compact" onclick="openDateModal('${dateKey}')">
+                                                                <div class="flex items-center justify-between">
+                                                                    <span class="font-semibold text-sm text-midnight"><i class="fa-solid fa-calendar-day"></i> ${dateStr}</span>
+                                                                    <div class="flex items-center gap-1">
+                                                                        <span class="text-xs font-medium text-slateblue bg-mist px-2 py-0.5 rounded-full">${entries.length}</span>
+                                                                        <button class="note-edit-btn" onclick="openNoteEditor('${dateKey}', event)" title="Edit note">
+                                                                            <i class="fa-regular fa-pen-to-square"></i>
+                                                                        </button>
                                                                     </div>
                                                                 </div>
-                                                            `;
-                                                        }).join('')}
-                                                    </div>
+                                                                ${note ? `<div class="note-text">📝 ${esc(note)}</div>` : ''}
+                                                                <div class="text-[10px] text-slateblue mt-1 truncate">
+                                                                    ${entries.slice(0, 3).map(e => esc(e.TITLE)).join(' · ')}${entries.length > 3 ? ' · +' + (entries.length - 3) + ' more' : ''}
+                                                                </div>
+                                                            </div>
+                                                        `;
+                                                    }).join('')}
                                                 </div>
-                                            `;
-                                        }).join('')}
-                                    </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
                                 </div>
                             </div>
-                        `;
-                    }
+                        </div>
+                    `;
                 }).join('');
             }
 
@@ -1590,11 +1582,18 @@
 
             // ─── MODAL FUNCTIONS ────────────────────────────────────────
             window.openDateModal = function(dateKey) {
+                // Filter out empty entries first
+                const validEntries = masterlistData.filter(row => {
+                    if (!row.TITLE || row.TITLE === '' || row.TITLE === 'EMPTY') return false;
+                    if (!row.DATE || row.DATE === '') return false;
+                    return true;
+                });
+
                 let entries = [];
                 if (dateKey === '__unknown__') {
-                    entries = masterlistData.filter(row => getNormalizedDate(row.DATE) === null);
+                    entries = validEntries.filter(row => getNormalizedDate(row.DATE) === null);
                 } else {
-                    entries = masterlistData.filter(row => getNormalizedDate(row.DATE) === dateKey);
+                    entries = validEntries.filter(row => getNormalizedDate(row.DATE) === dateKey);
                 }
 
                 if (!entries.length) {
@@ -1609,6 +1608,7 @@
                 modalTitle.textContent = displayDate;
                 modalEntryCount.textContent = `${entries.length} entries`;
 
+                // Group by artist
                 const grouped = {};
                 entries.forEach((row, idx) => {
                     const artist = row.ARTIST || 'Unknown Artist';
@@ -1795,12 +1795,19 @@
             };
 
             window.exportCSV = function() {
-                if (!masterlistData.length) {
-                    alert('No data to export.');
+                // Filter out empty rows for export
+                const validData = masterlistData.filter(row => {
+                    if (!row.TITLE || row.TITLE === '' || row.TITLE === 'EMPTY') return false;
+                    if (!row.DATE || row.DATE === '') return false;
+                    return true;
+                });
+
+                if (!validData.length) {
+                    alert('No valid data to export.');
                     return;
                 }
                 const headers = ['Title', 'Artist', 'Date', 'Notes'];
-                const rows = masterlistData.map(row => [
+                const rows = validData.map(row => [
                     row.TITLE || '',
                     row.ARTIST || '',
                     row.DATE || '',
@@ -1836,7 +1843,7 @@
                 }
             });
 
-            console.log('📋 Executive Lounge – Bravo Masterlist ready');
+            console.log('📋 Executive Lounge – Bravo Masterlist ready (empty entries hidden)');
         })();
     </script>
 
