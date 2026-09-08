@@ -943,7 +943,7 @@
             if (!supabaseClient) return;
             try {
                 const [titlesRes, episodesRes, weekendRes, turnoversRes] = await Promise.all([
-                    supabaseClient.schema('CLASSICS').from('classic_titles').select('*').order('title'),
+                    supabaseClient.from('classic_titles').select('*').order('title'),
                     supabaseClient.from('classic_episodes').select('*').order('air_date', { ascending: true }),
                     supabaseClient.from('classic_schedule').select('*').order('day'),
                     supabaseClient.from('classic_turnovers').select('*').order('start_date')
