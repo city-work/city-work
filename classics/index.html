@@ -1,1089 +1,1814 @@
-<script>
-    // ═══════════════════════════════════════════════════════════════════
-    //  CLASSIC MOVIES — Updated for CLASSICS Schema (FIXED)
-    // ═══════════════════════════════════════════════════════════════════
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Movies</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+    <style>
+        /* ─── CSS RESET & BASE ─────────────────────────────────── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    (function() {
-        'use strict';
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #18202F;
+            color: #FAF7F2;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-        console.log('🎬 [CLASSIC MOVIES] Starting... (CLASSICS schema)');
+        /* ─── LAYOUT ────────────────────────────────────────────── */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
 
-        // ─── READ SUPABASE CONFIG ──────────────────────────────────
-        let SUPABASE_URL, SUPABASE_ANON_KEY;
-        try {
-            if (typeof design !== 'undefined' && design.supabase) {
-                if (!design.supabase.url || !design.supabase.anonKey) {
-                    throw new Error('Supabase configuration is incomplete');
-                }
-                SUPABASE_URL = design.supabase.url;
-                SUPABASE_ANON_KEY = design.supabase.anonKey;
-                console.log('✅ [CONFIG] Loaded from config.js');
-            } else {
-                throw new Error('design.supabase not found');
+        /* ─── SIDEBAR ───────────────────────────────────────────── */
+        .sidebar {
+            width: 80px;
+            background: rgba(24, 32, 47, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            position: fixed;
+            height: 100vh;
+            z-index: 50;
+            backdrop-filter: blur(20px);
+        }
+
+        .sidebar-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            background: transparent;
+            border: none;
+            color: #68748A;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-item:hover {
+            background: rgba(184, 115, 79, 0.15);
+            color: #B8734F;
+            transform: translateY(-2px);
+        }
+
+        .sidebar-item.active {
+            background: #B8734F;
+            color: #FAF7F2;
+            box-shadow: 0 8px 25px rgba(184, 115, 79, 0.3);
+        }
+
+        .sidebar-item .icon {
+            font-size: 1.5rem;
+        }
+
+        .sidebar-item .tooltip {
+            position: absolute;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #18202F;
+            color: #FAF7F2;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-item:hover .tooltip {
+            opacity: 1;
+            left: 75px;
+        }
+
+        /* ─── MAIN CONTENT ──────────────────────────────────────── */
+        .main-content {
+            flex: 1;
+            margin-left: 80px;
+            padding: 1.5rem;
+            max-width: calc(100% - 80px);
+        }
+
+        /* ─── TOP BAR ───────────────────────────────────────────── */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #FAF7F2;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #B8734F;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(184, 115, 79, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #68748A;
+        }
+
+        .status-badge-top {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.green { background: #10B981; }
+        .status-dot.red { background: #EF4444; }
+        .status-dot.amber { background: #F59E0B; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ─── PANELS ────────────────────────────────────────────── */
+        .panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #FAF7F2;
+        }
+
+        /* ─── STATS GRID ────────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.25rem;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #68748A;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #FAF7F2;
+        }
+
+        /* ─── TABLE STYLES ──────────────────────────────────────── */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        thead {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        th {
+            padding: 0.875rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #68748A;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            color: #B8734F;
+        }
+
+        td {
+            padding: 0.875rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tbody tr {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ─── BADGES ────────────────────────────────────────────── */
+        .badge-done {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10B981;
+        }
+
+        .badge-overdue {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(239, 68, 68, 0.2);
+            color: #EF4444;
+        }
+
+        .badge-toair {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(59, 130, 246, 0.2);
+            color: #3B82F6;
+        }
+
+        .progress-complete {
+            color: #10B981;
+        }
+
+        .progress-incomplete {
+            color: #F59E0B;
+        }
+
+        /* ─── BUTTONS ───────────────────────────────────────────── */
+        .btn-primary {
+            padding: 0.625rem 1.25rem;
+            background: #B8734F;
+            color: #FAF7F2;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary:hover {
+            background: #A05F3D;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(184, 115, 79, 0.3);
+        }
+
+        .btn-delete-episode {
+            background: transparent;
+            border: none;
+            color: #EF4444;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .btn-delete-episode:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* ─── EDITABLE CELLS ────────────────────────────────────── */
+        .editable-cell {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .editable-cell:hover {
+            background: rgba(184, 115, 79, 0.1);
+        }
+
+        .edit-icon {
+            opacity: 0;
+            font-size: 0.75rem;
+            margin-left: 0.25rem;
+            transition: opacity 0.2s;
+        }
+
+        .editable-cell:hover .edit-icon {
+            opacity: 1;
+        }
+
+        .edit-input {
+            width: 100%;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #B8734F;
+            border-radius: 6px;
+            color: #FAF7F2;
+            font-size: 0.875rem;
+        }
+
+        .edit-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(184, 115, 79, 0.2);
+        }
+
+        /* ─── CALENDAR ──────────────────────────────────────────── */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .calendar-day {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .calendar-day.has-events {
+            border: 1px solid rgba(184, 115, 79, 0.3);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .cal-event {
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cal-event:hover {
+            background: rgba(184, 115, 79, 0.1);
+        }
+
+        .cal-event-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .cal-event-show {
+            font-size: 0.75rem;
+            color: #68748A;
+        }
+
+        /* ─── SCHEDULE ITEMS ────────────────────────────────────── */
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .schedule-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .schedule-day {
+            font-weight: 600;
+            color: #B8734F;
+            min-width: 80px;
+        }
+
+        .schedule-time {
+            color: #68748A;
+            min-width: 120px;
+        }
+
+        .schedule-title {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        /* ─── TURNOVERS ─────────────────────────────────────────── */
+        .turnover-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .turnover-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .turnover-dates {
+            color: #68748A;
+            font-size: 0.875rem;
+        }
+
+        .turnover-divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        /* ─── RESPONSIVE ────────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
             }
-        } catch (e) {
-            console.error('❌ [CONFIG] Failed to load Supabase config:', e);
-            document.body.innerHTML = `
-                <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#18202F;padding:20px;font-family:Plus Jakarta Sans,sans-serif;">
-                    <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);">
-                        <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#B8734F;margin-bottom:12px;"></i>
-                        <h2 style="font-size:20px;font-weight:700;color:#FAF7F2;">Configuration Error</h2>
-                        <p style="color:rgba(250,247,242,0.7);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#B8734F;">config.js</code>.</p>
-                        <a href="../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#B8734F;color:#FAF7F2;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a>
+
+            .sidebar-item {
+                width: 45px;
+                height: 45px;
+                border-radius: 12px;
+            }
+
+            .sidebar-item .icon {
+                font-size: 1.25rem;
+            }
+
+            .main-content {
+                margin-left: 60px;
+                padding: 1rem;
+                max-width: calc(100% - 60px);
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-container {
+                max-width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ─── ANIMATIONS ────────────────────────────────────────── */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ─── FILTER PILLS ──────────────────────────────────────── */
+        .filter-pills {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .filter-pill {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            color: #68748A;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .filter-pill:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .filter-pill.active {
+            background: #B8734F;
+            color: #FAF7F2;
+            border-color: #B8734F;
+        }
+
+        /* ─── TOGGLE ────────────────────────────────────────────── */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toggle-switch {
+            width: 40px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #B8734F;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- ─── SIDEBAR ────────────────────────────────────────── -->
+        <aside class="sidebar">
+            <button class="sidebar-item active" id="overviewBtn" onclick="switchView('overview')">
+                <span class="icon"><i class="fa-solid fa-house"></i></span>
+                <span class="tooltip">Overview</span>
+            </button>
+            <div id="showButtons" style="display:flex;flex-direction:column;gap:0.5rem;margin-top:1rem;"></div>
+            <button class="sidebar-item" onclick="addNewShow()" style="margin-top:auto;">
+                <span class="icon"><i class="fa-solid fa-plus"></i></span>
+                <span class="tooltip">Add Show</span>
+            </button>
+        </aside>
+
+        <!-- ─── MAIN CONTENT ───────────────────────────────────── -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="search-container">
+                    <i class="fa-solid fa-search search-icon"></i>
+                    <input type="text" class="search-input" id="globalSearchInput" placeholder="Search shows..." oninput="handleGlobalSearch(this.value)">
+                    <button id="searchClear" onclick="clearSearch()" style="display:none;position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#68748A;cursor:pointer;">✕</button>
+                </div>
+                <div class="status-badge-top" id="statusBadge">
+                    <span class="status-dot amber"></span>
+                    <span>Loading...</span>
+                </div>
+            </div>
+
+            <!-- Message Area -->
+            <div id="messageArea"></div>
+
+            <!-- Sync Indicator -->
+            <div id="syncIndicator" style="text-align:right;font-size:0.75rem;color:#68748A;margin-bottom:1rem;"></div>
+
+            <!-- Overview Panel -->
+            <div id="overviewPanel">
+                <h1 class="panel-title" id="panelTitle">Classic Movies</h1>
+                
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Shows</div>
+                        <div class="stat-value" id="statTotalShows">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Next Expiring</div>
+                        <div class="stat-value" id="statNextExpire" style="font-size:1rem;">—</div>
                     </div>
                 </div>
-            `;
-            return;
-        }
 
-        // ─── SCHEMA CONFIGURATION ──────────────────────────────────
-        const SCHEMA_CONFIG = {
-            schema: 'CLASSICS',
-            
-            tables: {
-                titles: 'classic_titles',
-                episodes: 'classic_episodes',
-                schedule: 'classic_schedule',
-                turnovers: 'classic_turnovers'
-            }
-        };
-
-        console.log('📋 [SCHEMA] Using schema:', SCHEMA_CONFIG.schema);
-
-        // ─── DOM REFS ──────────────────────────────────────────────
-        const $ = id => document.getElementById(id);
-        const statusBadge = $('statusBadge');
-        const messageArea = $('messageArea');
-        const overviewPanel = $('overviewPanel');
-        const showViewPanel = $('showViewPanel');
-        const showButtons = $('showButtons');
-        const overviewTableBody = $('overviewTableBody');
-        const showViewTableBody = $('showViewTableBody');
-        const episodesCardsContainer = $('episodesCardsContainer');
-        const panelTitle = $('panelTitle');
-        const syncIndicator = $('syncIndicator');
-        const searchInput = $('globalSearchInput');
-
-        // ─── SUPABASE CLIENT ──────────────────────────────────────
-        let supabaseClient = null;
-        try {
-            if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-                    db: {
-                        schema: 'CLASSICS'  // Set default schema
-                    }
-                });
-                console.log('✅ [SUPABASE] Client created with CLASSICS schema');
-            } else {
-                console.warn('⚠️ [SUPABASE] Supabase library not loaded');
-            }
-        } catch (e) {
-            console.warn('⚠️ [SUPABASE] Failed to create client:', e.message);
-        }
-
-        // ─── STATE ─────────────────────────────────────────────────
-        let allShows = [];
-        let allEpisodes = [];
-        let weekendData = [];
-        let turnoverData = [];
-        let currentView = 'overview';
-        let currentShowTitle = null;
-        let currentShowObject = null;
-        let editingCell = null;
-        let calendarWeekOffset = 0;
-        let sortField = 'air_date';
-        let sortDir = 'asc';
-        let episodeFilter = 'all';
-        let episodeSearchTerm = '';
-        let hideFinished = false;
-
-        // ─── HELPERS ──────────────────────────────────────────────
-        function setStatus(text, type) {
-            const colors = { ok: 'status-ok', error: 'status-error', waiting: 'status-waiting' };
-            const dots = { ok: 'green', error: 'red', waiting: 'amber' };
-            statusBadge.className = `status-badge-top ${colors[type] || 'status-waiting'}`;
-            statusBadge.innerHTML = `<span class="status-dot ${dots[type] || 'amber'}"></span>`;
-        }
-
-        function showMessage(text, type) {
-            const colors = {
-                info: 'bg-mist border-slate-200 text-midnight',
-                success: 'bg-mist border-slate-200 text-midnight',
-                error: 'bg-mist border-slate-200 text-midnight',
-                warning: 'bg-mist border-slate-200 text-midnight'
-            };
-            messageArea.innerHTML = `
-                <div class="rounded-xl border px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm ${colors[type] || colors.info} flex items-center justify-between fade-in" style="margin-bottom:0.75rem;">
-                    <span>${text}</span>
-                    <button onclick="this.parentElement.remove()" class="text-slateblue hover:text-midnight ml-4">✕</button>
+                <!-- Toggle Hide Finished -->
+                <div class="toggle-container" style="margin-bottom:1rem;" onclick="toggleHideFinished()">
+                    <div class="toggle-switch" id="hideFinishedToggle"></div>
+                    <span style="font-size:0.875rem;">Hide Finished Shows</span>
                 </div>
-            `;
-            setTimeout(() => { if (messageArea.firstChild) messageArea.firstChild.remove(); }, 3000);
-        }
 
-        function esc(s) {
-            if (s == null || s === '') return '—';
-            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
+                <!-- Overview Table -->
+                <div class="table-container" style="margin-bottom:1.5rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Show Title</th>
+                                <th>Available Until</th>
+                                <th style="text-align:right;">Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overviewTableBody"></tbody>
+                    </table>
+                </div>
 
-        function jsEscape(s) {
-            return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        }
+                <!-- Calendar -->
+                <div class="panel" style="margin-bottom:1.5rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3 style="font-size:1.125rem;font-weight:700;">This Week</h3>
+                        <div style="display:flex;gap:0.5rem;">
+                            <button class="btn-primary" onclick="changeWeek(-1)" style="padding:0.5rem 1rem;">←</button>
+                            <span id="weekLabel" style="font-size:0.875rem;align-self:center;"></span>
+                            <button class="btn-primary" onclick="changeWeek(1)" style="padding:0.5rem 1rem;">→</button>
+                        </div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                </div>
 
-        function formatDate(dateStr) {
-            if (!dateStr || dateStr === '—') return '—';
+                <!-- Schedule -->
+                <div class="panel" style="margin-bottom:1.5rem;">
+                    <h3 style="font-size:1.125rem;font-weight:700;margin-bottom:1rem;">Schedule</h3>
+                    <div id="scheduleCompactContainer"></div>
+                </div>
+
+                <!-- Turnovers -->
+                <div class="panel">
+                    <h3 style="font-size:1.125rem;font-weight:700;margin-bottom:1rem;">Turnovers</h3>
+                    <div id="turnoversContainer"></div>
+                </div>
+            </div>
+
+            <!-- Show View Panel -->
+            <div id="showViewPanel" style="display:none;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+                    <h1 class="panel-title" id="showViewTitle" style="margin-bottom:0;"></h1>
+                    <button class="btn-primary" onclick="switchView('overview')">← Back</button>
+                </div>
+                
+                <div id="showViewInfo" style="margin-bottom:1rem;"></div>
+                
+                <div style="display:flex;gap:2rem;align-items:center;margin-bottom:1.5rem;">
+                    <div style="flex:1;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                            <span style="font-size:0.875rem;color:#68748A;">Progress</span>
+                            <span id="showViewCount" style="font-weight:600;">0/0</span>
+                        </div>
+                        <div style="height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;">
+                            <div id="showViewProgressFill" style="height:100%;background:#B8734F;width:0%;transition:width 0.3s;"></div>
+                        </div>
+                    </div>
+                    <span id="episodeCountBadge" style="font-size:0.875rem;color:#68748A;">0 total</span>
+                </div>
+
+                <!-- Episode Filters -->
+                <div class="filter-pills">
+                    <button class="filter-pill active" data-filter="all" onclick="filterEpisodes('all')">All</button>
+                    <button class="filter-pill" data-filter="done" onclick="filterEpisodes('done')">Done</button>
+                    <button class="filter-pill" data-filter="toair" onclick="filterEpisodes('toair')">To Air</button>
+                    <button class="filter-pill" data-filter="overdue" onclick="filterEpisodes('overdue')">Overdue</button>
+                </div>
+
+                <!-- Episode Counts -->
+                <div style="display:flex;gap:1rem;margin-bottom:1rem;font-size:0.875rem;">
+                    <span>All: <strong id="countAll">0</strong></span>
+                    <span>Done: <strong id="countDone" style="color:#10B981;">0</strong></span>
+                    <span>To Air: <strong id="countToAir" style="color:#3B82F6;">0</strong></span>
+                    <span>Overdue: <strong id="countOverdue" style="color:#EF4444;">0</strong></span>
+                </div>
+
+                <!-- Add Episode Button -->
+                <button class="btn-primary" onclick="addEpisode()" style="margin-bottom:1.5rem;">
+                    <i class="fa-solid fa-plus mr-2"></i> Add Episode
+                </button>
+
+                <!-- Episodes Table -->
+                <div class="table-container" style="margin-bottom:1.5rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="air_date" onclick="sortEpisodesBy('air_date')">
+                                    Air Date <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="episode_name" onclick="sortEpisodesBy('episode_name')">
+                                    Episode Name <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="status" onclick="sortEpisodesBy('status')" style="text-align:center;">
+                                    Status <i class="fa-solid fa-sort"></i>
+                                </th>
+                                <th style="text-align:center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="showViewTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Episodes Cards (Mobile) -->
+                <div id="episodesCardsContainer" style="display:none;"></div>
+
+                <!-- Schedule -->
+                <div class="panel" style="margin-bottom:1.5rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3 style="font-size:1.125rem;font-weight:700;">Schedule</h3>
+                        <button class="btn-primary" onclick="addScheduleItem()" style="padding:0.5rem 1rem;">Add</button>
+                    </div>
+                    <div id="showScheduleItems"></div>
+                </div>
+
+                <!-- Turnovers -->
+                <div class="panel">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3 style="font-size:1.125rem;font-weight:700;">Turnovers</h3>
+                        <button class="btn-primary" onclick="addTurnover()" style="padding:0.5rem 1rem;">Add</button>
+                    </div>
+                    <div id="showTurnoversContainer"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ─── LOAD CONFIG FIRST ─────────────────────────────────── -->
+    <script src="config.js"></script>
+    
+    <!-- ─── LOAD SUPABASE ─────────────────────────────────────── -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- ─── MAIN SCRIPT ───────────────────────────────────────── -->
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        //  CLASSIC MOVIES — Updated for CLASSICS Schema (FIXED)
+        // ═══════════════════════════════════════════════════════════════════
+
+        (function() {
+            'use strict';
+
+            console.log('🎬 [CLASSIC MOVIES] Starting... (CLASSICS schema)');
+
+            // ─── READ SUPABASE CONFIG ──────────────────────────────────
+            let SUPABASE_URL, SUPABASE_ANON_KEY;
             try {
-                const d = new Date(dateStr);
-                if (isNaN(d.getTime())) {
-                    const d2 = new Date(dateStr + 'T00:00:00');
-                    if (isNaN(d2.getTime())) return dateStr;
-                    return d2.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                }
-                return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-            } catch { return dateStr; }
-        }
-
-        function getShowIcon(title) {
-            const icons = {
-                'CHARLIE CHAPLIN': 'fa-hat-wizard',
-                'I MARRIED JOAN': 'fa-ring',
-                'JOHNNY STACCATO': 'fa-microphone',
-                "LI'L HITLER": 'fa-mask',
-                'POPEYE CLASSIC': 'fa-anchor',
-                "WHAT'S MY LINE GAME SHOW": 'fa-gamepad'
-            };
-            return icons[title] || 'fa-tv';
-        }
-
-        function isOverdue(episode) {
-            if (episode.status === true || episode.status === 'Done') return false;
-            if (!episode.air_date) return false;
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const airDate = new Date(episode.air_date);
-            airDate.setHours(0, 0, 0, 0);
-            return airDate < today;
-        }
-
-        function calculateAvailableUntil(showTitle) {
-            const showEpisodes = allEpisodes.filter(ep => ep.show_title === showTitle);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const futureToAir = showEpisodes.filter(ep => {
-                if (ep.status === true || ep.status === 'Done') return false;
-                if (!ep.air_date) return false;
-                const airDate = new Date(ep.air_date);
-                airDate.setHours(0, 0, 0, 0);
-                return airDate >= today;
-            });
-            if (futureToAir.length === 0) return null;
-            const latestDate = futureToAir.map(ep => ep.air_date).sort().pop();
-            return latestDate;
-        }
-
-        function getShowProgress(showTitle) {
-            const episodes = allEpisodes.filter(ep => ep.show_title === showTitle);
-            const done = episodes.filter(ep => ep.status === true || ep.status === 'Done').length;
-            const total = episodes.length;
-            return { done, total };
-        }
-
-        function isShowFinished(showTitle) {
-            const { done, total } = getShowProgress(showTitle);
-            return total > 0 && done === total;
-        }
-
-        function updateSyncIndicator() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            syncIndicator.innerHTML = `<i class="fa-solid fa-cloud-arrow-up mr-1"></i>Synced ${timeStr}`;
-        }
-
-        // ─── ANIME.JS ─────────────────────────────────────────────
-        function animatePanelIn(panel) {
-            if (typeof anime !== 'undefined') {
-                anime({
-                    targets: panel,
-                    opacity: [0, 1],
-                    translateY: [10, 0],
-                    duration: 400,
-                    easing: 'easeOutCubic'
-                });
-            } else {
-                panel.style.opacity = '1';
-            }
-        }
-
-        // ─── AUTH ──────────────────────────────────────────────────
-        async function checkSession() {
-            setStatus('Checking...', 'waiting');
-            if (!supabaseClient) { setStatus('⚠️ No Supabase', 'error'); return; }
-            try {
-                const { data, error } = await supabaseClient.auth.getSession();
-                if (error) throw error;
-                const session = data?.session;
-                if (!session || !session.user) {
-                    setStatus('🔓 Not logged in', 'error');
-                    setTimeout(() => { window.location.href = '../index.html'; }, 1500);
-                    return;
-                }
-                try {
-                    const { data: profile } = await supabaseClient
-                        .from('profiles').select('role').eq('id', session.user.id).maybeSingle();
-                    if (!profile) {
-                        await supabaseClient.from('profiles').insert({ id: session.user.id, email: session.user.email, role: 'user' });
+                if (typeof design !== 'undefined' && design.supabase) {
+                    if (!design.supabase.url || !design.supabase.anonKey) {
+                        throw new Error('Supabase configuration is incomplete');
                     }
-                } catch (e) { console.warn('Profile fetch error:', e.message); }
-                setStatus('✅', 'ok');
-                await loadAllData();
-            } catch (err) { 
-                console.error('Session error:', err);
-                setStatus('❌', 'error'); 
-            }
-        }
-
-        // ─── LOAD DATA (FIXED) ──────────────────────────────────
-        async function loadAllData() {
-            if (!supabaseClient) return;
-            try {
-                console.log('📊 [QUERY] Loading data from CLASSICS schema...');
-                
-                // Use .schema() method for proper schema handling
-                const [titlesRes, episodesRes, weekendRes, turnoversRes] = await Promise.all([
-                    supabaseClient
-                        .schema('CLASSICS')
-                        .from('classic_titles')
-                        .select('*')
-                        .order('title'),
-                    supabaseClient
-                        .schema('CLASSICS')
-                        .from('classic_episodes')
-                        .select('*')
-                        .order('air_date', { ascending: true }),
-                    supabaseClient
-                        .schema('CLASSICS')
-                        .from('classic_schedule')
-                        .select('*')
-                        .order('day'),
-                    supabaseClient
-                        .schema('CLASSICS')
-                        .from('classic_turnovers')
-                        .select('*')
-                        .order('start_date')
-                ]);
-                
-                if (titlesRes.error) {
-                    console.error('❌ [ERROR] Titles:', titlesRes.error);
-                    throw titlesRes.error;
+                    SUPABASE_URL = design.supabase.url;
+                    SUPABASE_ANON_KEY = design.supabase.anonKey;
+                    console.log('✅ [CONFIG] Loaded from config.js');
+                } else if (typeof window.design !== 'undefined' && window.design.supabase) {
+                    SUPABASE_URL = window.design.supabase.url;
+                    SUPABASE_ANON_KEY = window.design.supabase.anonKey;
+                    console.log('✅ [CONFIG] Loaded from window.design');
+                } else {
+                    // Fallback hardcoded values
+                    SUPABASE_URL = 'https://kqombshcwbqgtwszfycv.supabase.co';
+                    SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtxb21ic2hjd2JxZ3R3c3pmeWN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTY1ODMsImV4cCI6MjEwMzMzMjU4M30.F90RlAyc7DSJPjeJ9zpTKlMP5aPa8Nzgwxmw23hZ3qM';
+                    console.warn('⚠️ [CONFIG] Using hardcoded fallback values');
                 }
-                if (episodesRes.error) {
-                    console.error('❌ [ERROR] Episodes:', episodesRes.error);
-                    throw episodesRes.error;
-                }
-                if (weekendRes.error) {
-                    console.error('❌ [ERROR] Schedule:', weekendRes.error);
-                    throw weekendRes.error;
-                }
-                if (turnoversRes.error) {
-                    console.error('❌ [ERROR] Turnovers:', turnoversRes.error);
-                    throw turnoversRes.error;
-                }
-                
-                allShows = titlesRes.data || [];
-                allEpisodes = episodesRes.data || [];
-                weekendData = weekendRes.data || [];
-                turnoverData = turnoversRes.data || [];
-                
-                console.log('✅ [DATA] Loaded successfully:', {
-                    shows: allShows.length,
-                    episodes: allEpisodes.length,
-                    schedule: weekendData.length,
-                    turnovers: turnoverData.length
-                });
-                
-                renderSidebar();
-                renderOverview();
-                if (currentView === 'show' && currentShowTitle) {
-                    currentShowObject = allShows.find(s => s.title === currentShowTitle) || null;
-                    if (currentShowObject) renderShowView(currentShowTitle);
-                    else switchView('overview');
-                }
-            } catch (err) {
-                console.error('❌ [ERROR] Load error:', err);
-                setStatus('⚠️', 'error');
-                showMessage('Failed to load data: ' + err.message, 'error');
-            }
-        }
-
-        // ─── RENDER FUNCTIONS ────────────────────────────────────
-        
-        function renderSidebar() {
-            let filteredShows = allShows;
-            if (hideFinished) {
-                filteredShows = allShows.filter(show => !isShowFinished(show.title));
-            }
-            
-            if (!filteredShows.length) {
-                showButtons.innerHTML = '<div style="color:#68748A;font-size:0.65rem;padding:0.3rem 0.5rem;text-align:center;">—</div>';
+            } catch (e) {
+                console.error('❌ [CONFIG] Failed to load Supabase config:', e);
+                document.body.innerHTML = `
+                    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#18202F;padding:20px;font-family:Plus Jakarta Sans,sans-serif;">
+                        <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(16px);border-radius:40px;padding:40px;max-width:400px;text-align:center;border:1px solid rgba(255,255,255,0.1);">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size:3rem;color:#B8734F;margin-bottom:12px;"></i>
+                            <h2 style="font-size:20px;font-weight:700;color:#FAF7F2;">Configuration Error</h2>
+                            <p style="color:rgba(250,247,242,0.7);margin-top:8px;font-size:14px;">Could not load Supabase credentials. Please check <code style="color:#B8734F;">config.js</code>.</p>
+                            <a href="../index.html" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#B8734F;color:#FAF7F2;border-radius:12px;text-decoration:none;font-weight:600;">Back to Login</a>
+                        </div>
+                    </div>
+                `;
                 return;
             }
-            
-            showButtons.innerHTML = filteredShows.map(show => {
-                const icon = getShowIcon(show.title);
-                return `
-                    <button class="sidebar-item" onclick="switchView('show', '${jsEscape(show.title)}')" data-show-title="${esc(show.title)}">
-                        <span class="icon"><i class="fa-solid ${icon}"></i></span>
-                        <span class="tooltip">${esc(show.title)}</span>
-                    </button>
+
+            // ─── SCHEMA CONFIGURATION ──────────────────────────────────
+            const SCHEMA_CONFIG = {
+                schema: 'CLASSICS',
+                
+                tables: {
+                    titles: 'classic_titles',
+                    episodes: 'classic_episodes',
+                    schedule: 'classic_schedule',
+                    turnovers: 'classic_turnovers'
+                }
+            };
+
+            console.log('📋 [SCHEMA] Using schema:', SCHEMA_CONFIG.schema);
+
+            // ─── DOM REFS ──────────────────────────────────────────────
+            const $ = id => document.getElementById(id);
+            const statusBadge = $('statusBadge');
+            const messageArea = $('messageArea');
+            const overviewPanel = $('overviewPanel');
+            const showViewPanel = $('showViewPanel');
+            const showButtons = $('showButtons');
+            const overviewTableBody = $('overviewTableBody');
+            const showViewTableBody = $('showViewTableBody');
+            const episodesCardsContainer = $('episodesCardsContainer');
+            const panelTitle = $('panelTitle');
+            const syncIndicator = $('syncIndicator');
+
+            // ─── SUPABASE CLIENT ──────────────────────────────────────
+            let supabaseClient = null;
+            try {
+                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                        db: {
+                            schema: 'CLASSICS'
+                        }
+                    });
+                    console.log('✅ [SUPABASE] Client created with CLASSICS schema');
+                } else {
+                    console.warn('⚠️ [SUPABASE] Supabase library not loaded');
+                }
+            } catch (e) {
+                console.warn('⚠️ [SUPABASE] Failed to create client:', e.message);
+            }
+
+            // ─── STATE ─────────────────────────────────────────────────
+            let allShows = [];
+            let allEpisodes = [];
+            let weekendData = [];
+            let turnoverData = [];
+            let currentView = 'overview';
+            let currentShowTitle = null;
+            let currentShowObject = null;
+            let editingCell = null;
+            let calendarWeekOffset = 0;
+            let sortField = 'air_date';
+            let sortDir = 'asc';
+            let episodeFilter = 'all';
+            let episodeSearchTerm = '';
+            let hideFinished = false;
+
+            // ─── HELPERS ──────────────────────────────────────────────
+            function setStatus(text, type) {
+                const colors = { ok: 'status-ok', error: 'status-error', waiting: 'status-waiting' };
+                const dots = { ok: 'green', error: 'red', waiting: 'amber' };
+                statusBadge.className = `status-badge-top ${colors[type] || 'status-waiting'}`;
+                statusBadge.innerHTML = `<span class="status-dot ${dots[type] || 'amber'}"></span>${text}`;
+            }
+
+            function showMessage(text, type) {
+                messageArea.innerHTML = `
+                    <div class="rounded-xl border px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm bg-mist border-slate-200 text-midnight flex items-center justify-between fade-in" style="margin-bottom:0.75rem;">
+                        <span>${text}</span>
+                        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;margin-left:1rem;cursor:pointer;">✕</button>
+                    </div>
                 `;
-            }).join('');
-        }
+                setTimeout(() => { if (messageArea.firstChild) messageArea.firstChild.remove(); }, 3000);
+            }
 
-        // ─── TOGGLE HIDE FINISHED ────────────────────────────────
-        window.toggleHideFinished = function() {
-            hideFinished = document.getElementById('hideFinishedToggle').checked;
-            renderSidebar();
-            renderOverview();
-        };
+            function esc(s) {
+                if (s == null || s === '') return '—';
+                return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
 
-        // ─── SWITCH VIEW ──────────────────────────────────────────
-        window.switchView = function(view, showTitle) {
-            currentView = view;
-            document.querySelectorAll('.sidebar-item').forEach(btn => btn.classList.remove('active'));
-            if (view === 'overview') {
-                $('overviewBtn').classList.add('active');
-                currentShowTitle = null;
-                currentShowObject = null;
-                overviewPanel.style.display = 'block';
-                showViewPanel.style.display = 'none';
-                panelTitle.textContent = 'Classic Movies';
-                animatePanelIn(overviewPanel);
-                renderOverview();
-            } else if (view === 'show' && showTitle) {
-                currentShowTitle = showTitle;
-                currentShowObject = allShows.find(s => s.title === showTitle);
-                if (!currentShowObject) { showMessage('Show not found', 'error'); return; }
-                document.querySelectorAll(`.sidebar-item[data-show-title]`).forEach(btn => {
-                    if (btn.dataset.showTitle === showTitle) btn.classList.add('active');
+            function jsEscape(s) {
+                return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            }
+
+            function formatDate(dateStr) {
+                if (!dateStr || dateStr === '—') return '—';
+                try {
+                    const d = new Date(dateStr);
+                    if (isNaN(d.getTime())) {
+                        const d2 = new Date(dateStr + 'T00:00:00');
+                        if (isNaN(d2.getTime())) return dateStr;
+                        return d2.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    }
+                    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                } catch { return dateStr; }
+            }
+
+            function getShowIcon(title) {
+                const icons = {
+                    'CHARLIE CHAPLIN': 'fa-hat-wizard',
+                    'I MARRIED JOAN': 'fa-ring',
+                    'JOHNNY STACCATO': 'fa-microphone',
+                    "LI'L HITLER": 'fa-mask',
+                    'POPEYE CLASSIC': 'fa-anchor',
+                    "WHAT'S MY LINE GAME SHOW": 'fa-gamepad'
+                };
+                return icons[title] || 'fa-tv';
+            }
+
+            function isOverdue(episode) {
+                if (episode.status === true || episode.status === 'Done') return false;
+                if (!episode.air_date) return false;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const airDate = new Date(episode.air_date);
+                airDate.setHours(0, 0, 0, 0);
+                return airDate < today;
+            }
+
+            function calculateAvailableUntil(showTitle) {
+                const showEpisodes = allEpisodes.filter(ep => ep.show_title === showTitle);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const futureToAir = showEpisodes.filter(ep => {
+                    if (ep.status === true || ep.status === 'Done') return false;
+                    if (!ep.air_date) return false;
+                    const airDate = new Date(ep.air_date);
+                    airDate.setHours(0, 0, 0, 0);
+                    return airDate >= today;
                 });
-                overviewPanel.style.display = 'none';
-                showViewPanel.style.display = 'block';
-                panelTitle.textContent = showTitle;
-                animatePanelIn(showViewPanel);
-                renderShowView(showTitle);
+                if (futureToAir.length === 0) return null;
+                const latestDate = futureToAir.map(ep => ep.air_date).sort().pop();
+                return latestDate;
             }
-        };
 
-        // ─── RENDER OVERVIEW ──────────────────────────────────────
-        function renderOverview() {
-            let filteredShows = allShows;
-            if (hideFinished) {
-                filteredShows = allShows.filter(show => !isShowFinished(show.title));
+            function getShowProgress(showTitle) {
+                const episodes = allEpisodes.filter(ep => ep.show_title === showTitle);
+                const done = episodes.filter(ep => ep.status === true || ep.status === 'Done').length;
+                const total = episodes.length;
+                return { done, total };
             }
-            
-            const totalShows = filteredShows.length;
-            const availableUntilMap = {};
-            filteredShows.forEach(show => { availableUntilMap[show.title] = calculateAvailableUntil(show.title); });
-            
-            let nextExpire = null;
-            let nextExpireShow = null;
-            Object.keys(availableUntilMap).forEach(title => {
-                const date = availableUntilMap[title];
-                if (date && (!nextExpire || date < nextExpire)) { nextExpire = date; nextExpireShow = title; }
-            });
-            $('statTotalShows').textContent = totalShows;
-            $('statNextExpire').textContent = nextExpireShow && nextExpire ? `${nextExpireShow} — ${formatDate(nextExpire)}` : '—';
 
-            if (!filteredShows.length) {
-                overviewTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">No titles yet.</td></tr>';
-            } else {
-                overviewTableBody.innerHTML = filteredShows.map(show => {
-                    const availableUntil = availableUntilMap[show.title];
-                    const { done, total } = getShowProgress(show.title);
-                    const progressText = total > 0 ? `${done}/${total}` : '0/0';
-                    const isComplete = total > 0 && done === total;
-                    const progressDisplay = isComplete ? `${progressText} ✓` : progressText;
-                    const progressClass = isComplete ? 'progress-complete' : 'progress-incomplete';
+            function isShowFinished(showTitle) {
+                const { done, total } = getShowProgress(showTitle);
+                return total > 0 && done === total;
+            }
+
+            function updateSyncIndicator() {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                syncIndicator.innerHTML = `<i class="fa-solid fa-cloud-arrow-up mr-1"></i>Synced ${timeStr}`;
+            }
+
+            // ─── AUTH ──────────────────────────────────────────────────
+            async function checkSession() {
+                setStatus('Checking...', 'waiting');
+                if (!supabaseClient) { setStatus('⚠️ No Supabase', 'error'); return; }
+                try {
+                    const { data, error } = await supabaseClient.auth.getSession();
+                    if (error) throw error;
+                    const session = data?.session;
+                    if (!session || !session.user) {
+                        setStatus('🔓 Not logged in', 'error');
+                        setTimeout(() => { window.location.href = '../index.html'; }, 1500);
+                        return;
+                    }
+                    setStatus('✅ Connected', 'ok');
+                    await loadAllData();
+                } catch (err) { 
+                    console.error('Session error:', err);
+                    setStatus('❌ Error', 'error'); 
+                }
+            }
+
+            // ─── LOAD DATA (FIXED) ──────────────────────────────────
+            async function loadAllData() {
+                if (!supabaseClient) return;
+                try {
+                    console.log('📊 [QUERY] Loading data from CLASSICS schema...');
+                    
+                    const [titlesRes, episodesRes, weekendRes, turnoversRes] = await Promise.all([
+                        supabaseClient.schema('CLASSICS').from('classic_titles').select('*').order('title'),
+                        supabaseClient.schema('CLASSICS').from('classic_episodes').select('*').order('air_date', { ascending: true }),
+                        supabaseClient.schema('CLASSICS').from('classic_schedule').select('*').order('day'),
+                        supabaseClient.schema('CLASSICS').from('classic_turnovers').select('*').order('start_date')
+                    ]);
+                    
+                    if (titlesRes.error) throw titlesRes.error;
+                    if (episodesRes.error) throw episodesRes.error;
+                    if (weekendRes.error) throw weekendRes.error;
+                    if (turnoversRes.error) throw turnoversRes.error;
+                    
+                    allShows = titlesRes.data || [];
+                    allEpisodes = episodesRes.data || [];
+                    weekendData = weekendRes.data || [];
+                    turnoverData = turnoversRes.data || [];
+                    
+                    console.log('✅ [DATA] Loaded successfully:', {
+                        shows: allShows.length,
+                        episodes: allEpisodes.length,
+                        schedule: weekendData.length,
+                        turnovers: turnoverData.length
+                    });
+                    
+                    renderSidebar();
+                    renderOverview();
+                    if (currentView === 'show' && currentShowTitle) {
+                        currentShowObject = allShows.find(s => s.title === currentShowTitle) || null;
+                        if (currentShowObject) renderShowView(currentShowTitle);
+                        else switchView('overview');
+                    }
+                } catch (err) {
+                    console.error('❌ [ERROR] Load error:', err);
+                    setStatus('⚠️ Error', 'error');
+                    showMessage('Failed to load data: ' + err.message, 'error');
+                }
+            }
+
+            // ─── RENDER SIDEBAR ────────────────────────────────────
+            function renderSidebar() {
+                let filteredShows = allShows;
+                if (hideFinished) {
+                    filteredShows = allShows.filter(show => !isShowFinished(show.title));
+                }
+                
+                if (!filteredShows.length) {
+                    showButtons.innerHTML = '<div style="color:#68748A;font-size:0.65rem;padding:0.3rem 0.5rem;text-align:center;">—</div>';
+                    return;
+                }
+                
+                showButtons.innerHTML = filteredShows.map(show => {
+                    const icon = getShowIcon(show.title);
                     return `
-                        <tr onclick="switchView('show', '${jsEscape(show.title)}')" class="fade-in">
-                            <td class="font-bold">${esc(show.title)}</td>
-                            <td>${availableUntil ? formatDate(availableUntil) : '—'}</td>
-                            <td style="text-align:right;font-weight:600;" class="${progressClass}">${progressDisplay}</td>
-                        </tr>
+                        <button class="sidebar-item" onclick="switchView('show', '${jsEscape(show.title)}')" data-show-title="${esc(show.title)}">
+                            <span class="icon"><i class="fa-solid ${icon}"></i></span>
+                            <span class="tooltip">${esc(show.title)}</span>
+                        </button>
                     `;
                 }).join('');
             }
 
-            renderCalendar('calendarGrid', weekendData);
-            renderCompactSchedule('scheduleCompactContainer', weekendData);
-            renderTurnovers('turnoversContainer', turnoverData);
-            updateWeekLabel();
-        }
-
-        // ─── RENDER COMPACT SCHEDULE ──────────────────────────────
-        function renderCompactSchedule(containerId, data) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            if (!data || !data.length) {
-                container.innerHTML = '<div class="no-schedule">No schedule items</div>';
-                return;
-            }
-            container.innerHTML = data.map(item => `
-                <div class="schedule-item">
-                    <span class="schedule-day">${esc(item.day || '—')}</span>
-                    <span class="schedule-time">${esc(item.time_slot || '—')}</span>
-                    <span class="schedule-title" title="${esc(item.title || '')}">${esc(item.title || '')}</span>
-                </div>
-            `).join('');
-        }
-
-        // ─── RENDER CALENDAR ──────────────────────────────────────
-        function renderCalendar(gridId, scheduleData) {
-            const grid = document.getElementById(gridId);
-            if (!grid) return;
-            
-            const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            const today = new Date();
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (calendarWeekOffset * 7));
-            
-            const daysWithEvents = [];
-            
-            daysOfWeek.forEach((day, idx) => {
-                const date = new Date(startOfWeek);
-                date.setDate(startOfWeek.getDate() + idx);
-                const dateStr = date.toISOString().split('T')[0];
-                
-                const dayEpisodes = allEpisodes.filter(ep => ep.air_date === dateStr);
-                
-                if (dayEpisodes.length > 0) {
-                    daysWithEvents.push({ day, date, episodes: dayEpisodes });
+            // ─── TOGGLE HIDE FINISHED ────────────────────────────────
+            window.toggleHideFinished = function() {
+                hideFinished = !hideFinished;
+                const toggle = document.getElementById('hideFinishedToggle');
+                if (toggle) {
+                    toggle.classList.toggle('active', hideFinished);
                 }
-            });
-            
-            if (daysWithEvents.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:1rem;color:#94a3b8;font-size:0.8rem;">No episodes this week</div>';
-                return;
-            }
-            
-            grid.innerHTML = daysWithEvents.map(({ day, date, episodes }) => {
-                return `<div class="calendar-day has-events">
-                    <div class="day-header">
-                        <span>${day}</span>
-                        <span>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                    </div>
-                    <div class="day-body">
-                        ${episodes.map(ep => {
-                            return `<div class="cal-event">
-                                <div class="cal-event-title">${esc(ep.episode_name || 'Untitled')}</div>
-                                <div class="cal-event-show">${esc(ep.show_title)}</div>
-                            </div>`;
-                        }).join('')}
-                    </div>
-                </div>`;
-            }).join('');
-            
-            updateWeekLabel();
-        }
+                renderSidebar();
+                renderOverview();
+            };
 
-        window.changeWeek = function(direction) {
-            calendarWeekOffset += direction;
-            renderCalendar('calendarGrid', weekendData);
-            updateWeekLabel();
-        };
-        
-        function updateWeekLabel() {
-            const today = new Date();
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (calendarWeekOffset * 7));
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
-            const weekLabel = document.getElementById('weekLabel');
-            if (weekLabel) {
-                weekLabel.textContent = `${formatDate(startOfWeek)} – ${formatDate(endOfWeek)}`;
-            }
-        }
+            // ─── SWITCH VIEW ──────────────────────────────────────────
+            window.switchView = function(view, showTitle) {
+                currentView = view;
+                document.querySelectorAll('.sidebar-item').forEach(btn => btn.classList.remove('active'));
+                if (view === 'overview') {
+                    $('overviewBtn').classList.add('active');
+                    currentShowTitle = null;
+                    currentShowObject = null;
+                    overviewPanel.style.display = 'block';
+                    showViewPanel.style.display = 'none';
+                    panelTitle.textContent = 'Classic Movies';
+                    renderOverview();
+                } else if (view === 'show' && showTitle) {
+                    currentShowTitle = showTitle;
+                    currentShowObject = allShows.find(s => s.title === showTitle);
+                    if (!currentShowObject) { showMessage('Show not found', 'error'); return; }
+                    document.querySelectorAll(`.sidebar-item[data-show-title]`).forEach(btn => {
+                        if (btn.dataset.showTitle === showTitle) btn.classList.add('active');
+                    });
+                    overviewPanel.style.display = 'none';
+                    showViewPanel.style.display = 'block';
+                    panelTitle.textContent = showTitle;
+                    renderShowView(showTitle);
+                }
+            };
 
-        // ─── RENDER TURNOVERS ─────────────────────────────────────
-        function renderTurnovers(containerId, data) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            if (!data || !data.length) {
-                container.innerHTML = '<div style="padding:0.75rem 1rem;font-size:0.8rem;color:#94a3b8;text-align:center;">No turnovers</div>';
-                return;
+            // ─── RENDER OVERVIEW ──────────────────────────────────────
+            function renderOverview() {
+                let filteredShows = allShows;
+                if (hideFinished) {
+                    filteredShows = allShows.filter(show => !isShowFinished(show.title));
+                }
+                
+                const totalShows = filteredShows.length;
+                const availableUntilMap = {};
+                filteredShows.forEach(show => { availableUntilMap[show.title] = calculateAvailableUntil(show.title); });
+                
+                let nextExpire = null;
+                let nextExpireShow = null;
+                Object.keys(availableUntilMap).forEach(title => {
+                    const date = availableUntilMap[title];
+                    if (date && (!nextExpire || date < nextExpire)) { nextExpire = date; nextExpireShow = title; }
+                });
+                $('statTotalShows').textContent = totalShows;
+                $('statNextExpire').textContent = nextExpireShow && nextExpire ? `${nextExpireShow} — ${formatDate(nextExpire)}` : '—';
+
+                if (!filteredShows.length) {
+                    overviewTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:1.5rem;color:#68748A;">No titles yet.</td></tr>';
+                } else {
+                    overviewTableBody.innerHTML = filteredShows.map(show => {
+                        const availableUntil = availableUntilMap[show.title];
+                        const { done, total } = getShowProgress(show.title);
+                        const progressText = total > 0 ? `${done}/${total}` : '0/0';
+                        const isComplete = total > 0 && done === total;
+                        const progressDisplay = isComplete ? `${progressText} ✓` : progressText;
+                        const progressClass = isComplete ? 'progress-complete' : 'progress-incomplete';
+                        return `
+                            <tr onclick="switchView('show', '${jsEscape(show.title)}')" class="fade-in">
+                                <td style="font-weight:700;">${esc(show.title)}</td>
+                                <td>${availableUntil ? formatDate(availableUntil) : '—'}</td>
+                                <td style="text-align:right;font-weight:600;" class="${progressClass}">${progressDisplay}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                renderCalendar('calendarGrid');
+                renderCompactSchedule('scheduleCompactContainer', weekendData);
+                renderTurnovers('turnoversContainer', turnoverData);
+                updateWeekLabel();
+            }
+
+            // ─── RENDER COMPACT SCHEDULE ──────────────────────────────
+            function renderCompactSchedule(containerId, data) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                if (!data || !data.length) {
+                    container.innerHTML = '<div style="padding:0.75rem;text-align:center;color:#68748A;">No schedule items</div>';
+                    return;
+                }
+                container.innerHTML = data.map(item => `
+                    <div class="schedule-item">
+                        <span class="schedule-day">${esc(item.day || '—')}</span>
+                        <span class="schedule-time">${esc(item.time_slot || '—')}</span>
+                        <span class="schedule-title" title="${esc(item.title || '')}">${esc(item.title || '')}</span>
+                    </div>
+                `).join('');
+            }
+
+            // ─── RENDER CALENDAR ──────────────────────────────────────
+            function renderCalendar(gridId) {
+                const grid = document.getElementById(gridId);
+                if (!grid) return;
+                
+                const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                const today = new Date();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (calendarWeekOffset * 7));
+                
+                const daysWithEvents = [];
+                
+                daysOfWeek.forEach((day, idx) => {
+                    const date = new Date(startOfWeek);
+                    date.setDate(startOfWeek.getDate() + idx);
+                    const dateStr = date.toISOString().split('T')[0];
+                    
+                    const dayEpisodes = allEpisodes.filter(ep => {
+                        if (!ep.air_date) return false;
+                        try {
+                            const airDate = new Date(ep.air_date);
+                            return airDate.toISOString().split('T')[0] === dateStr;
+                        } catch { return false; }
+                    });
+                    
+                    if (dayEpisodes.length > 0) {
+                        daysWithEvents.push({ day, date, episodes: dayEpisodes });
+                    }
+                });
+                
+                if (daysWithEvents.length === 0) {
+                    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:1rem;color:#68748A;">No episodes this week</div>';
+                    return;
+                }
+                
+                grid.innerHTML = daysWithEvents.map(({ day, date, episodes }) => {
+                    return `<div class="calendar-day has-events">
+                        <div class="day-header">
+                            <span>${day}</span>
+                            <span>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        </div>
+                        <div class="day-body">
+                            ${episodes.map(ep => {
+                                return `<div class="cal-event">
+                                    <div class="cal-event-title">${esc(ep.episode_name || 'Untitled')}</div>
+                                    <div class="cal-event-show">${esc(ep.show_title)}</div>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>`;
+                }).join('');
+                
+                updateWeekLabel();
+            }
+
+            window.changeWeek = function(direction) {
+                calendarWeekOffset += direction;
+                renderCalendar('calendarGrid');
+                updateWeekLabel();
+            };
+            
+            function updateWeekLabel() {
+                const today = new Date();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + (calendarWeekOffset * 7));
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+                const weekLabel = document.getElementById('weekLabel');
+                if (weekLabel) {
+                    weekLabel.textContent = `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                }
+            }
+
+            // ─── RENDER TURNOVERS ─────────────────────────────────────
+            function renderTurnovers(containerId, data) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                if (!data || !data.length) {
+                    container.innerHTML = '<div style="padding:0.75rem;text-align:center;color:#68748A;">No turnovers</div>';
+                    return;
+                }
+                
+                const grouped = {};
+                data.forEach(item => {
+                    const key = item.title || 'Untitled';
+                    if (!grouped[key]) grouped[key] = [];
+                    grouped[key].push(item);
+                });
+                
+                let html = '';
+                let index = 0;
+                Object.keys(grouped).forEach(showTitle => {
+                    const items = grouped[showTitle];
+                    items.forEach(item => {
+                        if (index > 0) html += `<hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:0.5rem 0;">`;
+                        
+                        const startDate = item.start_date ? formatDate(item.start_date) : '—';
+                        const endDate = item.end_date ? formatDate(item.end_date) : '—';
+                        
+                        html += `
+                            <div style="padding:0.75rem;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:0.5rem;">
+                                <div style="font-weight:600;margin-bottom:0.25rem;">${esc(showTitle)}</div>
+                                <div style="color:#68748A;font-size:0.875rem;">
+                                    ${startDate} — ${endDate}
+                                    ${item.notes ? `<span style="margin-left:0.5rem;">${esc(item.notes)}</span>` : ''}
+                                </div>
+                            </div>
+                        `;
+                        index++;
+                    });
+                });
+                container.innerHTML = html;
+            }
+
+            // ─── RENDER SHOW VIEW ─────────────────────────────────────
+            function renderShowView(showTitle) {
+                const show = allShows.find(s => s.title === showTitle);
+                if (!show) { showMessage('Show not found', 'error'); return; }
+                $('showViewTitle').textContent = show.title;
+                const showEpisodes = allEpisodes.filter(ep => ep.show_title === showTitle);
+                const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done').length;
+                const total = showEpisodes.length;
+                const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+                const availableUntil = calculateAvailableUntil(showTitle);
+                $('showViewInfo').innerHTML = `<span style="display:flex;align-items:center;gap:0.5rem;"><i class="fa-regular fa-calendar" style="color:#B8734F;"></i> Available Until: <strong>${availableUntil ? formatDate(availableUntil) : 'No upcoming episodes'}</strong></span>`;
+                $('showViewCount').textContent = `${done}/${total}`;
+                $('showViewProgressFill').style.width = `${percent}%`;
+                $('episodeCountBadge').textContent = `${total} total`;
+                renderEpisodes(showEpisodes);
+                const filteredSchedule = weekendData.filter(item => item.title && item.title.toLowerCase() === showTitle.toLowerCase());
+                renderShowSchedule('showScheduleItems', filteredSchedule);
+                const filteredTurnovers = turnoverData.filter(item => item.title && item.title.toLowerCase() === showTitle.toLowerCase());
+                renderEditableTurnovers('showTurnoversContainer', filteredTurnovers);
+            }
+
+            // ─── EPISODES RENDERING ───────────────────────────────────
+            function renderEpisodes(episodes) {
+                let filtered = episodes;
+                if (episodeFilter === 'done') filtered = filtered.filter(ep => ep.status === true || ep.status === 'Done');
+                else if (episodeFilter === 'toair') filtered = filtered.filter(ep => (ep.status !== true && ep.status !== 'Done') && !isOverdue(ep));
+                else if (episodeFilter === 'overdue') filtered = filtered.filter(ep => isOverdue(ep));
+                if (episodeSearchTerm) {
+                    const term = episodeSearchTerm.toLowerCase();
+                    filtered = filtered.filter(ep => 
+                        (ep.episode_name || '').toLowerCase().includes(term) || 
+                        (ep.air_date || '').toLowerCase().includes(term)
+                    );
+                }
+                filtered.sort((a, b) => {
+                    let valA, valB;
+                    if (sortField === 'air_date') { valA = a.air_date || ''; valB = b.air_date || ''; }
+                    else if (sortField === 'episode_name') { valA = a.episode_name || ''; valB = b.episode_name || ''; }
+                    else if (sortField === 'status') {
+                        valA = a.status === true || a.status === 'Done' ? 'done' : (isOverdue(a) ? 'overdue' : 'toair');
+                        valB = b.status === true || b.status === 'Done' ? 'done' : (isOverdue(b) ? 'overdue' : 'toair');
+                    }
+                    if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+                    return 0;
+                });
+
+                const totalEpisodes = episodes.length;
+                const doneCount = episodes.filter(ep => ep.status === true || ep.status === 'Done').length;
+                const overdueCount = episodes.filter(ep => isOverdue(ep)).length;
+                const toairCount = totalEpisodes - doneCount - overdueCount;
+                document.getElementById('countAll').textContent = totalEpisodes;
+                document.getElementById('countDone').textContent = doneCount;
+                document.getElementById('countToAir').textContent = toairCount;
+                document.getElementById('countOverdue').textContent = overdueCount;
+
+                if (!filtered.length) {
+                    showViewTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:#68748A;">No episodes match.</td></tr>';
+                } else {
+                    showViewTableBody.innerHTML = filtered.map(ep => {
+                        const overdue = isOverdue(ep);
+                        const statusClass = ep.status === true || ep.status === 'Done' ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
+                        const statusText = ep.status === true || ep.status === 'Done' ? 'Done' : (overdue ? 'Overdue' : 'To Air');
+                        return `
+                            <tr data-episode-id="${ep.id}" class="fade-in">
+                                <td onclick="editCell(this, 'air_date', '${ep.id}')" class="editable-cell" title="Click to edit">${esc(ep.air_date || '—')} <span class="edit-icon">✏️</span></td>
+                                <td onclick="editCell(this, 'episode_name', '${ep.id}')" class="editable-cell" title="${esc(ep.episode_name || '')}">${esc(ep.episode_name || '—')} <span class="edit-icon">✏️</span></td>
+                                <td style="text-align:center;" onclick="toggleStatus('${ep.id}', ${ep.status === true || ep.status === 'Done'})" style="cursor:pointer;"><span class="${statusClass}">${statusText}</span></td>
+                                <td style="text-align:center;"><button class="btn-delete-episode" onclick="deleteEpisode('${ep.id}')" title="Delete"><i class="fa-solid fa-trash-can"></i></button></td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // ─── FILTER & SEARCH EPISODES ────────────────────────────
+            window.filterEpisodes = function(filter) {
+                episodeFilter = filter;
+                document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
+                document.querySelector(`.filter-pill[data-filter="${filter}"]`).classList.add('active');
+                if (currentShowTitle) renderShowView(currentShowTitle);
+            };
+            
+            window.sortEpisodesBy = function(field) {
+                if (sortField === field) {
+                    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortField = field;
+                    sortDir = 'asc';
+                }
+                if (currentShowTitle) renderShowView(currentShowTitle);
+            };
+
+            // ─── ADD EPISODE ─────────────────────────────────────────
+            window.addEpisode = async function() {
+                if (!currentShowTitle) return;
+                try {
+                    const { data, error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_episodes')
+                        .insert({ show_title: currentShowTitle, air_date: null, episode_name: 'New Episode', status: false })
+                        .select();
+                    if (error) throw error;
+                    if (data && data[0]) allEpisodes.push(data[0]);
+                    showMessage('✅ Episode added', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) {
+                    showMessage('❌ ' + err.message, 'error');
+                }
+            };
+
+            // ─── DELETE EPISODE ──────────────────────────────────────
+            window.deleteEpisode = async function(episodeId) {
+                if (!confirm('Delete this episode?')) return;
+                try {
+                    const { error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_episodes')
+                        .delete()
+                        .eq('id', episodeId);
+                    if (error) throw error;
+                    allEpisodes = allEpisodes.filter(ep => ep.id != episodeId);
+                    showMessage('✅ Episode deleted', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) {
+                    showMessage('❌ ' + err.message, 'error');
+                }
+            };
+
+            // ─── TOGGLE STATUS ───────────────────────────────────────
+            window.toggleStatus = async function(episodeId, currentStatus) {
+                const newStatus = !currentStatus;
+                try {
+                    const { error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_episodes')
+                        .update({ status: newStatus })
+                        .eq('id', episodeId);
+                    if (error) throw error;
+                    const ep = allEpisodes.find(e => e.id == episodeId);
+                    if (ep) ep.status = newStatus;
+                    showMessage('✅ Status updated', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) {
+                    showMessage('❌ ' + err.message, 'error');
+                }
+            };
+
+            // ─── EDIT CELL ──────────────────────────────────────────
+            window.editCell = function(td, field, episodeId) {
+                if (editingCell) return;
+                const currentValue = td.textContent.replace('✏️', '').trim();
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue === '—' ? '' : currentValue;
+                input.className = 'edit-input';
+                td.textContent = '';
+                td.appendChild(input);
+                input.focus();
+                input.select();
+                editingCell = { td, field, episodeId, oldValue: currentValue };
+                input.addEventListener('blur', function() { saveEdit(td, field, episodeId, input.value); });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); saveEdit(td, field, episodeId, input.value); }
+                    if (e.key === 'Escape') { td.textContent = editingCell.oldValue === '' ? '—' : editingCell.oldValue; editingCell = null; }
+                });
+            };
+
+            async function saveEdit(td, field, episodeId, newValue) {
+                if (!editingCell) return;
+                const oldValue = editingCell.oldValue;
+                editingCell = null;
+                const finalValue = newValue.trim() || '—';
+                if (finalValue === oldValue) { td.textContent = oldValue; return; }
+                td.textContent = finalValue;
+                try {
+                    const updateData = {};
+                    if (field === 'air_date') updateData.air_date = finalValue === '—' ? null : finalValue;
+                    else if (field === 'episode_name') updateData.episode_name = finalValue === '—' ? '' : finalValue;
+                    const { error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_episodes')
+                        .update(updateData)
+                        .eq('id', episodeId);
+                    if (error) throw error;
+                    const ep = allEpisodes.find(e => e.id == episodeId);
+                    if (ep) {
+                        if (field === 'air_date') ep.air_date = finalValue === '—' ? null : finalValue;
+                        else if (field === 'episode_name') ep.episode_name = finalValue === '—' ? '' : finalValue;
+                    }
+                    showMessage('✅ Updated', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) {
+                    showMessage('❌ ' + err.message, 'error');
+                    td.textContent = oldValue;
+                }
+            }
+
+            // ─── SCHEDULE ────────────────────────────────────────────
+            function renderShowSchedule(containerId, data) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                if (!data || !data.length) {
+                    container.innerHTML = '<div style="padding:0.75rem;text-align:center;color:#68748A;">No schedule items</div>';
+                    return;
+                }
+                container.innerHTML = data.map(item => `
+                    <div class="schedule-item">
+                        <span class="editable-cell schedule-day" onclick="editScheduleDay(this, '${item.id}')" style="cursor:pointer;min-width:90px;">
+                            ${esc(item.day || '—')} <span class="edit-icon">✏️</span>
+                        </span>
+                        <span class="editable-cell schedule-time" onclick="editScheduleTime(this, '${item.id}')" style="cursor:pointer;min-width:130px;">
+                            ${esc(item.time_slot || '—')} <span class="edit-icon">✏️</span>
+                        </span>
+                        <span class="schedule-title">${esc(item.title || '')}</span>
+                        <button class="btn-delete-episode" onclick="deleteScheduleItem('${item.id}')" style="margin-left:auto;"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `).join('');
+            }
+
+            window.editScheduleDay = function(el, scheduleId) {
+                if (editingCell) return;
+                const currentValue = el.textContent.replace('✏️', '').trim();
+                const select = document.createElement('select');
+                select.className = 'edit-input';
+                const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                days.forEach(day => {
+                    const opt = document.createElement('option');
+                    opt.value = day; opt.textContent = day;
+                    if (day === currentValue) opt.selected = true;
+                    select.appendChild(opt);
+                });
+                el.textContent = ''; el.appendChild(select); select.focus();
+                editingCell = { el, scheduleId, oldValue: currentValue, type: 'scheduleDay' };
+                select.addEventListener('change', function() { saveScheduleDay(el, scheduleId, select.value); });
+                select.addEventListener('blur', function() { saveScheduleDay(el, scheduleId, select.value); });
+                select.addEventListener('keydown', function(e) { if (e.key === 'Escape') { el.textContent = currentValue; editingCell = null; } });
+            };
+
+            window.editScheduleTime = function(el, scheduleId) {
+                if (editingCell) return;
+                const currentValue = el.textContent.replace('✏️', '').trim();
+                const input = document.createElement('input');
+                input.type = 'text'; input.value = currentValue === '—' ? '' : currentValue;
+                input.placeholder = 'e.g., 4:00PM - 4:30PM'; input.className = 'edit-input';
+                el.textContent = ''; el.appendChild(input); input.focus(); input.select();
+                editingCell = { el, scheduleId, oldValue: currentValue, type: 'scheduleTime' };
+                input.addEventListener('blur', function() { saveScheduleTime(el, scheduleId, input.value); });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); saveScheduleTime(el, scheduleId, input.value); }
+                    if (e.key === 'Escape') { el.textContent = currentValue === '' ? '—' : currentValue; editingCell = null; }
+                });
+            };
+
+            async function saveScheduleDay(el, scheduleId, newValue) {
+                if (!editingCell) return;
+                const oldValue = editingCell.oldValue; editingCell = null;
+                if (newValue === oldValue) { el.textContent = oldValue; return; }
+                el.textContent = newValue;
+                try {
+                    const { error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_schedule')
+                        .update({ day: newValue })
+                        .eq('id', scheduleId);
+                    if (error) throw error;
+                    const sched = weekendData.find(s => s.id == scheduleId);
+                    if (sched) sched.day = newValue;
+                    showMessage('✅ Updated', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) {
+                    showMessage('❌ ' + err.message, 'error');
+                    el.textContent = oldValue;
+                }
             }
             
-            const grouped = {};
-            data.forEach(item => {
-                const key = item.title || 'Untitled';
-                if (!grouped[key]) grouped[key] = [];
-                grouped[key].push(item);
-            });
+            async function saveScheduleTime(el, scheduleId, newValue) {
+                if (!editingCell) return;
+                const oldValue = editingCell.oldValue; editingCell = null;
+                const finalValue = newValue.trim() || '—';
+                if (finalValue === oldValue) { el.textContent = oldValue; return; }
+                el.textContent = finalValue;
+                try {
+                    const { error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_schedule')
+                        .update({ time_slot: finalValue === '—' ? '' : finalValue })
+                        .eq('id', scheduleId);
+                    if (error) throw error;
+                    const sched = weekendData.find(s => s.id == scheduleId);
+                    if (sched) sched.time_slot = finalValue === '—' ? '' : finalValue;
+                    showMessage('✅ Updated', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) {
+                    showMessage('❌ ' + err.message, 'error');
+                    el.textContent = oldValue;
+                }
+            }
+
+            window.addScheduleItem = async function() {
+                if (!currentShowTitle) return;
+                try {
+                    const { data, error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_schedule')
+                        .insert({ title: currentShowTitle, day: 'Monday', time_slot: '' })
+                        .select();
+                    if (error) throw error;
+                    if (data && data[0]) weekendData.push(data[0]);
+                    showMessage('✅ Schedule added', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) { showMessage('❌ ' + err.message, 'error'); }
+            };
             
-            let html = '';
-            let index = 0;
-            Object.keys(grouped).forEach(showTitle => {
-                const items = grouped[showTitle];
-                items.forEach(item => {
-                    if (index > 0) html += `<hr class="turnover-divider" />`;
+            window.deleteScheduleItem = async function(id) {
+                if (!confirm('Delete this schedule item?')) return;
+                try {
+                    const { error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_schedule')
+                        .delete()
+                        .eq('id', id);
+                    if (error) throw error;
+                    weekendData = weekendData.filter(s => s.id != id);
+                    showMessage('✅ Deleted', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) { showMessage('❌ ' + err.message, 'error'); }
+            };
+
+            // ─── TURNOVERS (Editable) ───────────────────────────────
+            function renderEditableTurnovers(containerId, data) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                if (!data || !data.length) {
+                    container.innerHTML = '<div style="padding:0.75rem;text-align:center;color:#68748A;">No turnovers</div>';
+                    return;
+                }
+                
+                let html = '';
+                data.forEach((item, index) => {
+                    if (index > 0) html += `<hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:0.5rem 0;">`;
                     
                     const startDate = item.start_date ? formatDate(item.start_date) : '—';
                     const endDate = item.end_date ? formatDate(item.end_date) : '—';
                     
                     html += `
-                        <div class="turnover-item">
-                            <div class="turnover-title">${esc(showTitle)}</div>
-                            <div class="turnover-dates">
+                        <div style="padding:1rem;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:0.5rem;">
+                            <div class="editable-cell" onclick="editTurnoverCell(this, 'title', '${item.id}')" style="cursor:pointer;font-weight:600;margin-bottom:0.25rem;">
+                                ${esc(item.title)} <span class="edit-icon">✏️</span>
+                            </div>
+                            <div class="editable-cell" onclick="editTurnoverCell(this, 'dates', '${item.id}')" style="cursor:pointer;color:#68748A;font-size:0.875rem;">
                                 ${startDate} — ${endDate}
-                                ${item.notes ? `<span style="color:#18202F;margin-left:0.5rem;">${esc(item.notes)}</span>` : ''}
+                                ${item.notes ? `<span style="margin-left:0.5rem;">${esc(item.notes)}</span>` : ''}
+                                <span class="edit-icon">✏️</span>
                             </div>
                         </div>
                     `;
-                    index++;
                 });
-            });
-            container.innerHTML = html;
-        }
-
-        // ─── RENDER SHOW VIEW ─────────────────────────────────────
-        function renderShowView(showTitle) {
-            const show = allShows.find(s => s.title === showTitle);
-            if (!show) { showMessage('Show not found', 'error'); return; }
-            $('showViewTitle').textContent = show.title;
-            const showEpisodes = allEpisodes.filter(ep => ep.show_title === showTitle);
-            const done = showEpisodes.filter(ep => ep.status === true || ep.status === 'Done').length;
-            const total = showEpisodes.length;
-            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-            const availableUntil = calculateAvailableUntil(showTitle);
-            $('showViewInfo').innerHTML = `<span style="display:flex;align-items:center;gap:0.5rem;"><i class="fa-regular fa-calendar" style="color:#B8734F;"></i> Available Until: <strong>${availableUntil ? formatDate(availableUntil) : 'No upcoming episodes'}</strong></span>`;
-            $('showViewCount').textContent = `${done}/${total}`;
-            $('showViewProgressFill').style.width = `${percent}%`;
-            $('episodeCountBadge').textContent = `${total} total`;
-            renderEpisodes(showEpisodes);
-            const filteredSchedule = weekendData.filter(item => item.title && item.title.toLowerCase() === showTitle.toLowerCase());
-            renderShowSchedule('showScheduleItems', filteredSchedule);
-            const filteredTurnovers = turnoverData.filter(item => item.title && item.title.toLowerCase() === showTitle.toLowerCase());
-            renderEditableTurnovers('showTurnoversContainer', filteredTurnovers);
-        }
-
-        // ─── EPISODES RENDERING ───────────────────────────────────
-        function renderEpisodes(episodes) {
-            let filtered = episodes;
-            if (episodeFilter === 'done') filtered = filtered.filter(ep => ep.status === true || ep.status === 'Done');
-            else if (episodeFilter === 'toair') filtered = filtered.filter(ep => (ep.status !== true && ep.status !== 'Done') && !isOverdue(ep));
-            else if (episodeFilter === 'overdue') filtered = filtered.filter(ep => isOverdue(ep));
-            if (episodeSearchTerm) {
-                const term = episodeSearchTerm.toLowerCase();
-                filtered = filtered.filter(ep => 
-                    (ep.episode_name || '').toLowerCase().includes(term) || 
-                    (ep.air_date || '').toLowerCase().includes(term)
-                );
-            }
-            filtered.sort((a, b) => {
-                let valA, valB;
-                if (sortField === 'air_date') { valA = a.air_date || ''; valB = b.air_date || ''; }
-                else if (sortField === 'episode_name') { valA = a.episode_name || ''; valB = b.episode_name || ''; }
-                else if (sortField === 'status') {
-                    valA = a.status === true || a.status === 'Done' ? 'done' : (isOverdue(a) ? 'overdue' : 'toair');
-                    valB = b.status === true || b.status === 'Done' ? 'done' : (isOverdue(b) ? 'overdue' : 'toair');
-                }
-                if (valA < valB) return sortDir === 'asc' ? -1 : 1;
-                if (valA > valB) return sortDir === 'asc' ? 1 : -1;
-                return 0;
-            });
-
-            const totalEpisodes = episodes.length;
-            const doneCount = episodes.filter(ep => ep.status === true || ep.status === 'Done').length;
-            const overdueCount = episodes.filter(ep => isOverdue(ep)).length;
-            const toairCount = totalEpisodes - doneCount - overdueCount;
-            document.getElementById('countAll').textContent = totalEpisodes;
-            document.getElementById('countDone').textContent = doneCount;
-            document.getElementById('countToAir').textContent = toairCount;
-            document.getElementById('countOverdue').textContent = overdueCount;
-
-            if (!filtered.length) {
-                showViewTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">No episodes match.</td></tr>';
-            } else {
-                showViewTableBody.innerHTML = filtered.map(ep => {
-                    const overdue = isOverdue(ep);
-                    const statusClass = ep.status === true || ep.status === 'Done' ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
-                    const statusText = ep.status === true || ep.status === 'Done' ? 'Done' : (overdue ? 'Overdue' : 'To Air');
-                    return `
-                        <tr data-episode-id="${ep.id}" class="fade-in">
-                            <td onclick="editCell(this, 'air_date', '${ep.id}')" class="editable-cell" title="Click to edit">${esc(ep.air_date || '—')} <span class="edit-icon">✏️</span></td>
-                            <td onclick="editCell(this, 'episode_name', '${ep.id}')" class="editable-cell episode-title" title="${esc(ep.episode_name || '')}">${esc(ep.episode_name || '—')} <span class="edit-icon">✏️</span></td>
-                            <td class="text-center" onclick="toggleStatus('${ep.id}', ${ep.status === true || ep.status === 'Done'})" style="cursor:pointer;"><span class="${statusClass}">${statusText}</span></td>
-                            <td class="text-center"><button class="btn-delete-episode" onclick="deleteEpisode('${ep.id}')" title="Delete"><i class="fa-solid fa-trash-can"></i></button></td>
-                        </tr>
-                    `;
-                }).join('');
+                container.innerHTML = html;
             }
 
-            if (!filtered.length) {
-                episodesCardsContainer.innerHTML = '<div style="padding:0.75rem;text-align:center;color:#94a3b8;font-size:0.8rem;">No episodes match.</div>';
-            } else {
-                episodesCardsContainer.innerHTML = filtered.map(ep => {
-                    const overdue = isOverdue(ep);
-                    const statusClass = ep.status === true || ep.status === 'Done' ? 'badge-done' : (overdue ? 'badge-overdue' : 'badge-toair');
-                    const statusText = ep.status === true || ep.status === 'Done' ? 'Done' : (overdue ? 'Overdue' : 'To Air');
-                    return `
-                        <div class="episode-card fade-in">
-                            <div class="card-header">
-                                <div>
-                                    <h4 title="${esc(ep.episode_name || '')}">${esc(ep.episode_name || 'Untitled')}</h4>
-                                    <div class="date">📅 ${esc(ep.air_date || '—')}</div>
-                                </div>
-                                <span class="${statusClass}">${statusText}</span>
-                            </div>
-                            <div class="card-actions">
-                                <button style="background:none;border:none;color:#68748A;font-size:0.8rem;cursor:pointer;" onclick="editCell(this.closest('.episode-card').querySelector('.date'), 'air_date', '${ep.id}')"><i class="fa-solid fa-pen"></i> Edit</button>
-                                <button style="background:none;border:none;color:#b91c1c;font-size:0.8rem;cursor:pointer;" onclick="deleteEpisode('${ep.id}')"><i class="fa-solid fa-trash-can"></i> Delete</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-        }
+            window.editTurnoverCell = function(el, field, id) {
+                if (editingCell) return;
+                let currentValue = el.textContent.replace('✏️', '').trim();
+                const input = document.createElement('input');
+                input.type = 'text'; 
+                input.value = currentValue === '—' ? '' : currentValue;
+                input.className = 'edit-input';
+                el.textContent = ''; 
+                el.appendChild(input); 
+                input.focus(); 
+                input.select();
+                editingCell = { el, field, id, oldValue: currentValue || '—' };
+                input.addEventListener('blur', function() { saveTurnoverEdit(el, field, id, input.value); });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); saveTurnoverEdit(el, field, id, input.value); }
+                    if (e.key === 'Escape') { el.textContent = editingCell.oldValue === '' ? '—' : editingCell.oldValue; editingCell = null; }
+                });
+            };
 
-        // ─── FILTER & SEARCH EPISODES ────────────────────────────
-        window.filterEpisodes = function(filter) {
-            episodeFilter = filter;
-            document.querySelectorAll('.filter-pill').forEach(pill => pill.classList.remove('active'));
-            document.querySelector(`.filter-pill[data-filter="${filter}"]`).classList.add('active');
-            if (currentShowTitle) renderShowView(currentShowTitle);
-        };
-        window.searchEpisodes = function(term) {
-            episodeSearchTerm = term.trim().toLowerCase();
-            if (currentShowTitle) renderShowView(currentShowTitle);
-        };
-        window.sortEpisodesBy = function(field) {
-            if (sortField === field) {
-                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortField = field;
-                sortDir = 'asc';
-            }
-            document.querySelectorAll('.sortable').forEach(th => {
-                th.querySelector('i').className = 'fa-solid fa-sort';
-            });
-            const activeTh = document.querySelector(`.sortable[data-sort="${field}"]`);
-            if (activeTh) {
-                activeTh.querySelector('i').className = sortDir === 'asc' ? 'fa-solid fa-arrow-up-short-wide' : 'fa-solid fa-arrow-down-short-wide';
-            }
-            if (currentShowTitle) renderShowView(currentShowTitle);
-        };
-
-        // ─── ADD EPISODE ─────────────────────────────────────────
-        window.addEpisode = async function() {
-            if (!currentShowTitle) return;
-            try {
-                const { data, error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_episodes')
-                    .insert({ show_title: currentShowTitle, air_date: null, episode_name: 'New Episode', status: false })
-                    .select();
-                if (error) throw error;
-                if (data && data[0]) allEpisodes.push(data[0]);
-                showMessage('✅ Episode added', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) {
-                showMessage('❌ ' + err.message, 'error');
-            }
-        };
-
-        // ─── DELETE EPISODE ──────────────────────────────────────
-        window.deleteEpisode = async function(episodeId) {
-            if (!confirm('Delete this episode?')) return;
-            try {
-                const { error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_episodes')
-                    .delete()
-                    .eq('id', episodeId);
-                if (error) throw error;
-                allEpisodes = allEpisodes.filter(ep => ep.id != episodeId);
-                showMessage('✅ Episode deleted', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) {
-                showMessage('❌ ' + err.message, 'error');
-            }
-        };
-
-        // ─── TOGGLE STATUS ───────────────────────────────────────
-        window.toggleStatus = async function(episodeId, currentStatus) {
-            const newStatus = !currentStatus;
-            try {
-                const { error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_episodes')
-                    .update({ status: newStatus })
-                    .eq('id', episodeId);
-                if (error) throw error;
-                const ep = allEpisodes.find(e => e.id == episodeId);
-                if (ep) ep.status = newStatus;
-                showMessage('✅ Status updated', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) {
-                showMessage('❌ ' + err.message, 'error');
-            }
-        };
-
-        // ─── EDIT CELL ──────────────────────────────────────────
-        window.editCell = function(td, field, episodeId) {
-            if (editingCell) return;
-            const currentValue = td.textContent.replace('✏️', '').trim();
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = currentValue === '—' ? '' : currentValue;
-            input.className = 'edit-input';
-            td.textContent = '';
-            td.appendChild(input);
-            input.focus();
-            input.select();
-            editingCell = { td, field, episodeId, oldValue: currentValue };
-            input.addEventListener('blur', function() { saveEdit(td, field, episodeId, input.value); });
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); saveEdit(td, field, episodeId, input.value); }
-                if (e.key === 'Escape') { td.textContent = editingCell.oldValue === '' ? '—' : editingCell.oldValue; editingCell = null; }
-            });
-        };
-
-        async function saveEdit(td, field, episodeId, newValue) {
-            if (!editingCell) return;
-            const oldValue = editingCell.oldValue;
-            editingCell = null;
-            const finalValue = newValue.trim() || '—';
-            if (finalValue === oldValue) { td.textContent = oldValue; return; }
-            td.textContent = finalValue;
-            try {
-                const updateData = {};
-                if (field === 'air_date') updateData.air_date = finalValue === '—' ? null : finalValue;
-                else if (field === 'episode_name') updateData.episode_name = finalValue === '—' ? '' : finalValue;
-                const { error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_episodes')
-                    .update(updateData)
-                    .eq('id', episodeId);
-                if (error) throw error;
-                const ep = allEpisodes.find(e => e.id == episodeId);
-                if (ep) {
-                    if (field === 'air_date') ep.air_date = finalValue === '—' ? null : finalValue;
-                    else if (field === 'episode_name') ep.episode_name = finalValue === '—' ? '' : finalValue;
-                }
-                showMessage('✅ Updated', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) {
-                showMessage('❌ ' + err.message, 'error');
-                td.textContent = oldValue;
-            }
-        }
-
-        // ─── SCHEDULE ────────────────────────────────────────────
-        function renderShowSchedule(containerId, data) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            if (!data || !data.length) {
-                container.innerHTML = '<div style="padding:0.75rem 1rem;font-size:0.8rem;color:#94a3b8;text-align:center;">No schedule items</div>';
-                return;
-            }
-            container.innerHTML = data.map(item => `
-                <div class="schedule-item" style="border-bottom:1px solid rgba(24,32,47,0.06);">
-                    <span class="editable-cell schedule-day" onclick="editScheduleDay(this, '${item.id}')" style="cursor:pointer;min-width:90px;">
-                        ${esc(item.day || '—')} <span class="edit-icon">✏️</span>
-                    </span>
-                    <span class="editable-cell schedule-time" onclick="editScheduleTime(this, '${item.id}')" style="cursor:pointer;min-width:130px;">
-                        ${esc(item.time_slot || '—')} <span class="edit-icon">✏️</span>
-                    </span>
-                    <span class="schedule-title">${esc(item.title || '')}</span>
-                    <button class="btn-delete-episode" onclick="deleteScheduleItem('${item.id}')" style="margin-left:auto;"><i class="fa-solid fa-trash-can"></i></button>
-                </div>
-            `).join('');
-        }
-
-        window.editScheduleDay = function(el, scheduleId) {
-            if (editingCell) return;
-            const currentValue = el.textContent.replace('✏️', '').trim();
-            const select = document.createElement('select');
-            select.className = 'edit-input';
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            days.forEach(day => {
-                const opt = document.createElement('option');
-                opt.value = day; opt.textContent = day;
-                if (day === currentValue) opt.selected = true;
-                select.appendChild(opt);
-            });
-            el.textContent = ''; el.appendChild(select); select.focus();
-            editingCell = { el, scheduleId, oldValue: currentValue, type: 'scheduleDay' };
-            select.addEventListener('change', function() { saveScheduleDay(el, scheduleId, select.value); });
-            select.addEventListener('blur', function() { saveScheduleDay(el, scheduleId, select.value); });
-            select.addEventListener('keydown', function(e) { if (e.key === 'Escape') { el.textContent = currentValue; editingCell = null; } });
-        };
-
-        window.editScheduleTime = function(el, scheduleId) {
-            if (editingCell) return;
-            const currentValue = el.textContent.replace('✏️', '').trim();
-            const input = document.createElement('input');
-            input.type = 'text'; input.value = currentValue === '—' ? '' : currentValue;
-            input.placeholder = 'e.g., 4:00PM - 4:30PM'; input.className = 'edit-input';
-            el.textContent = ''; el.appendChild(input); input.focus(); input.select();
-            editingCell = { el, scheduleId, oldValue: currentValue, type: 'scheduleTime' };
-            input.addEventListener('blur', function() { saveScheduleTime(el, scheduleId, input.value); });
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); saveScheduleTime(el, scheduleId, input.value); }
-                if (e.key === 'Escape') { el.textContent = currentValue === '' ? '—' : currentValue; editingCell = null; }
-            });
-        };
-
-        async function saveScheduleDay(el, scheduleId, newValue) {
-            if (!editingCell) return;
-            const oldValue = editingCell.oldValue; editingCell = null;
-            if (newValue === oldValue) { el.textContent = oldValue; return; }
-            el.textContent = newValue;
-            try {
-                const { error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_schedule')
-                    .update({ day: newValue })
-                    .eq('id', scheduleId);
-                if (error) throw error;
-                const sched = weekendData.find(s => s.id == scheduleId);
-                if (sched) sched.day = newValue;
-                showMessage('✅ Updated', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) {
-                showMessage('❌ ' + err.message, 'error');
-                el.textContent = oldValue;
-            }
-        }
-        
-        async function saveScheduleTime(el, scheduleId, newValue) {
-            if (!editingCell) return;
-            const oldValue = editingCell.oldValue; editingCell = null;
-            const finalValue = newValue.trim() || '—';
-            if (finalValue === oldValue) { el.textContent = oldValue; return; }
-            el.textContent = finalValue;
-            try {
-                const { error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_schedule')
-                    .update({ time_slot: finalValue === '—' ? '' : finalValue })
-                    .eq('id', scheduleId);
-                if (error) throw error;
-                const sched = weekendData.find(s => s.id == scheduleId);
-                if (sched) sched.time_slot = finalValue === '—' ? '' : finalValue;
-                showMessage('✅ Updated', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) {
-                showMessage('❌ ' + err.message, 'error');
-                el.textContent = oldValue;
-            }
-        }
-
-        window.addScheduleItem = async function() {
-            if (!currentShowTitle) return;
-            try {
-                const { data, error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_schedule')
-                    .insert({ title: currentShowTitle, day: 'Monday', time_slot: '' })
-                    .select();
-                if (error) throw error;
-                if (data && data[0]) weekendData.push(data[0]);
-                showMessage('✅ Schedule added', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) { showMessage('❌ ' + err.message, 'error'); }
-        };
-        
-        window.deleteScheduleItem = async function(id) {
-            if (!confirm('Delete this schedule item?')) return;
-            try {
-                const { error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_schedule')
-                    .delete()
-                    .eq('id', id);
-                if (error) throw error;
-                weekendData = weekendData.filter(s => s.id != id);
-                showMessage('✅ Deleted', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) { showMessage('❌ ' + err.message, 'error'); }
-        };
-
-        // ─── TURNOVERS (Editable) ───────────────────────────────
-        function renderEditableTurnovers(containerId, data) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            if (!data || !data.length) {
-                container.innerHTML = '<div style="padding:0.75rem 1rem;font-size:0.8rem;color:#94a3b8;text-align:center;">No turnovers</div>';
-                return;
-            }
-            
-            let html = '';
-            data.forEach((item, index) => {
-                if (index > 0) html += `<hr class="turnover-divider" />`;
-                
-                const startDate = item.start_date ? formatDate(item.start_date) : '—';
-                const endDate = item.end_date ? formatDate(item.end_date) : '—';
-                
-                html += `
-                    <div class="turnover-item" data-id="${item.id}">
-                        <div class="turnover-title editable-cell" onclick="editTurnoverCell(this, 'title', '${item.id}')" style="cursor:pointer;">
-                            ${esc(item.title)} <span class="edit-icon">✏️</span>
-                        </div>
-                        <div class="turnover-dates editable-cell" onclick="editTurnoverCell(this, 'dates', '${item.id}')" style="cursor:pointer;">
-                            ${startDate} — ${endDate}
-                            ${item.notes ? `<span style="color:#18202F;margin-left:0.5rem;">${esc(item.notes)}</span>` : ''}
-                            <span class="edit-icon">✏️</span>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        window.editTurnoverCell = function(el, field, id) {
-            if (editingCell) return;
-            let currentValue = el.textContent.replace('✏️', '').trim();
-            const input = document.createElement('input');
-            input.type = 'text'; 
-            input.value = currentValue === '—' ? '' : currentValue;
-            input.className = 'edit-input';
-            el.textContent = ''; 
-            el.appendChild(input); 
-            input.focus(); 
-            input.select();
-            editingCell = { el, field, id, oldValue: currentValue || '—' };
-            input.addEventListener('blur', function() { saveTurnoverEdit(el, field, id, input.value); });
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); saveTurnoverEdit(el, field, id, input.value); }
-                if (e.key === 'Escape') { el.textContent = editingCell.oldValue === '' ? '—' : editingCell.oldValue; editingCell = null; }
-            });
-        };
-
-        async function saveTurnoverEdit(el, field, id, newValue) {
-            if (!editingCell) return;
-            const oldValue = editingCell.oldValue;
-            editingCell = null;
-            const finalValue = newValue.trim() || '—';
-            if (finalValue === oldValue) { el.textContent = finalValue; return; }
-            el.textContent = finalValue;
-            try {
-                const updateData = {};
-                if (field === 'title') updateData.title = finalValue === '—' ? '' : finalValue;
-                else if (field === 'dates') {
-                    const parts = finalValue.split('—').map(s => s.trim());
-                    updateData.start_date = parts[0] && parts[0] !== '—' ? parts[0] : null;
-                    updateData.end_date = parts[1] && parts[1] !== '—' ? parts[1] : null;
-                }
-                const { error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_turnovers')
-                    .update(updateData)
-                    .eq('id', id);
-                if (error) throw error;
-                const turnover = turnoverData.find(t => t.id == id);
-                if (turnover) {
-                    if (field === 'title') turnover.title = updateData.title;
-                    else if (field === 'dates') {
-                        turnover.start_date = updateData.start_date;
-                        turnover.end_date = updateData.end_date;
-                    }
-                }
-                showMessage('✅ Updated', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) {
-                showMessage('❌ ' + err.message, 'error');
-                el.textContent = oldValue;
-            }
-        }
-
-        window.addTurnover = async function() {
-            if (!currentShowTitle) return;
-            try {
-                const { data, error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_turnovers')
-                    .insert({ title: currentShowTitle, start_date: null, end_date: null, notes: '' })
-                    .select();
-                if (error) throw error;
-                if (data && data[0]) turnoverData.push(data[0]);
-                showMessage('✅ Turnover added', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) { showMessage('❌ ' + err.message, 'error'); }
-        };
-
-        window.deleteTurnover = async function(id) {
-            if (!confirm('Delete this turnover?')) return;
-            try {
-                const { error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_turnovers')
-                    .delete()
-                    .eq('id', id);
-                if (error) throw error;
-                turnoverData = turnoverData.filter(t => t.id != id);
-                showMessage('✅ Deleted', 'success');
-                if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) { showMessage('❌ ' + err.message, 'error'); }
-        };
-
-        // ─── GLOBAL SEARCH ────────────────────────────────────────
-        function handleGlobalSearch(query) {
-            const q = query.trim().toLowerCase();
-            const clearBtn = document.getElementById('searchClear');
-            if (q) clearBtn.classList.add('visible'); else clearBtn.classList.remove('visible');
-            document.querySelectorAll('#showButtons .sidebar-item').forEach(btn => {
-                const title = btn.dataset.showTitle?.toLowerCase() || '';
-                btn.style.display = title.includes(q) ? '' : 'none';
-            });
-        }
-        
-        function clearSearch() {
-            const input = document.getElementById('globalSearchInput');
-            input.value = '';
-            handleGlobalSearch('');
-            input.focus();
-        }
-        
-        window.handleGlobalSearch = handleGlobalSearch;
-        window.clearSearch = clearSearch;
-
-        // ─── ADD NEW SHOW ───────────────────────────────────────
-        window.addNewShow = async function() {
-            const showName = prompt('Enter show name:');
-            if (!showName) return;
-            try {
-                const { data, error } = await supabaseClient
-                    .schema('CLASSICS')
-                    .from('classic_titles')
-                    .insert({ title: showName.trim(), status: 'Active' })
-                    .select();
-                if (error) throw error;
-                if (data && data[0]) allShows.push(data[0]);
-                showMessage('✅ Show added', 'success');
-                renderSidebar();
-                if (data && data[0]) switchView('show', data[0].title);
-            } catch (err) { showMessage('❌ ' + err.message, 'error'); }
-        };
-
-        // ─── KEYBOARD SHORTCUTS ──────────────────────────────────
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && editingCell) {
-                const { el, oldValue } = editingCell;
-                el.textContent = oldValue === '' ? '—' : oldValue;
+            async function saveTurnoverEdit(el, field, id, newValue) {
+                if (!editingCell) return;
+                const oldValue = editingCell.oldValue;
                 editingCell = null;
-                e.preventDefault();
+                const finalValue = newValue.trim() || '—';
+                if (finalValue === oldValue) { el.textContent = finalValue; return; }
+                el.textContent = finalValue;
+                try {
+                    const updateData = {};
+                    if (field === 'title') updateData.title = finalValue === '—' ? '' : finalValue;
+                    else if (field === 'dates') {
+                        const parts = finalValue.split('—').map(s => s.trim());
+                        updateData.start_date = parts[0] && parts[0] !== '—' ? parts[0] : null;
+                        updateData.end_date = parts[1] && parts[1] !== '—' ? parts[1] : null;
+                    }
+                    const { error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_turnovers')
+                        .update(updateData)
+                        .eq('id', id);
+                    if (error) throw error;
+                    const turnover = turnoverData.find(t => t.id == id);
+                    if (turnover) {
+                        if (field === 'title') turnover.title = updateData.title;
+                        else if (field === 'dates') {
+                            turnover.start_date = updateData.start_date;
+                            turnover.end_date = updateData.end_date;
+                        }
+                    }
+                    showMessage('✅ Updated', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) {
+                    showMessage('❌ ' + err.message, 'error');
+                    el.textContent = oldValue;
+                }
             }
-        });
 
-        // ─── INIT ────────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', function() {
-            updateSyncIndicator();
-            setInterval(updateSyncIndicator, 60000);
-            if (supabaseClient) checkSession();
-            else setStatus('⚠️ No Supabase', 'error');
-        });
+            window.addTurnover = async function() {
+                if (!currentShowTitle) return;
+                try {
+                    const { data, error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_turnovers')
+                        .insert({ title: currentShowTitle, start_date: null, end_date: null, notes: '' })
+                        .select();
+                    if (error) throw error;
+                    if (data && data[0]) turnoverData.push(data[0]);
+                    showMessage('✅ Turnover added', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) { showMessage('❌ ' + err.message, 'error'); }
+            };
 
-        console.log('🎬 [CLASSIC MOVIES] Successfully initialized with CLASSICS schema!');
-    })();
-</script>
+            window.deleteTurnover = async function(id) {
+                if (!confirm('Delete this turnover?')) return;
+                try {
+                    const { error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_turnovers')
+                        .delete()
+                        .eq('id', id);
+                    if (error) throw error;
+                    turnoverData = turnoverData.filter(t => t.id != id);
+                    showMessage('✅ Deleted', 'success');
+                    if (currentShowTitle) renderShowView(currentShowTitle);
+                } catch (err) { showMessage('❌ ' + err.message, 'error'); }
+            };
+
+            // ─── GLOBAL SEARCH ────────────────────────────────────────
+            window.handleGlobalSearch = function(query) {
+                const q = query.trim().toLowerCase();
+                document.querySelectorAll('#showButtons .sidebar-item').forEach(btn => {
+                    const title = btn.dataset.showTitle?.toLowerCase() || '';
+                    btn.style.display = title.includes(q) ? '' : 'none';
+                });
+            };
+            
+            window.clearSearch = function() {
+                const input = document.getElementById('globalSearchInput');
+                input.value = '';
+                handleGlobalSearch('');
+                input.focus();
+            };
+
+            // ─── ADD NEW SHOW ───────────────────────────────────────
+            window.addNewShow = async function() {
+                const showName = prompt('Enter show name:');
+                if (!showName) return;
+                try {
+                    const { data, error } = await supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_titles')
+                        .insert({ title: showName.trim(), status: 'Active' })
+                        .select();
+                    if (error) throw error;
+                    if (data && data[0]) allShows.push(data[0]);
+                    showMessage('✅ Show added', 'success');
+                    renderSidebar();
+                    if (data && data[0]) switchView('show', data[0].title);
+                } catch (err) { showMessage('❌ ' + err.message, 'error'); }
+            };
+
+            // ─── KEYBOARD SHORTCUTS ──────────────────────────────────
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && editingCell) {
+                    const { el, oldValue } = editingCell;
+                    el.textContent = oldValue === '' ? '—' : oldValue;
+                    editingCell = null;
+                    e.preventDefault();
+                }
+            });
+
+            // ─── INIT ────────────────────────────────────────────────
+            document.addEventListener('DOMContentLoaded', function() {
+                updateSyncIndicator();
+                setInterval(updateSyncIndicator, 60000);
+                if (supabaseClient) checkSession();
+                else setStatus('⚠️ No Supabase', 'error');
+            });
+
+            console.log('🎬 [CLASSIC MOVIES] Successfully initialized with CLASSICS schema!');
+        })();
+    </script>
+</body>
+</html>
