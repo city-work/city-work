@@ -1,6 +1,6 @@
 <script>
     // ═══════════════════════════════════════════════════════════════════
-    //  CLASSIC MOVIES — Updated for CLASSICS Schema
+    //  CLASSIC MOVIES — Updated for CLASSICS Schema (FIXED)
     // ═══════════════════════════════════════════════════════════════════
 
     (function() {
@@ -38,30 +38,17 @@
 
         // ─── SCHEMA CONFIGURATION ──────────────────────────────────
         const SCHEMA_CONFIG = {
-            // Which schema to use - change this to switch between public and CLASSICS
-            schema: 'CLASSICS',  // Change to 'public' if you want to use public schema
+            schema: 'CLASSICS',
             
-            // Table names with schema prefix
             tables: {
                 titles: 'classic_titles',
                 episodes: 'classic_episodes',
                 schedule: 'classic_schedule',
                 turnovers: 'classic_turnovers'
-            },
-            
-            // Get full table name for Supabase queries
-            getTableName: function(tableKey) {
-                const tableName = this.tables[tableKey];
-                if (this.schema === 'public') {
-                    return tableName;  // public is default, no prefix needed
-                }
-                // For CLASSICS schema, use quoted identifier
-                return `"${this.schema}"."${tableName}"`;
             }
         };
 
         console.log('📋 [SCHEMA] Using schema:', SCHEMA_CONFIG.schema);
-        console.log('📋 [SCHEMA] Tables:', SCHEMA_CONFIG.tables);
 
         // ─── DOM REFS ──────────────────────────────────────────────
         const $ = id => document.getElementById(id);
@@ -81,8 +68,12 @@
         let supabaseClient = null;
         try {
             if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('✅ [SUPABASE] Client created');
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                    db: {
+                        schema: 'CLASSICS'  // Set default schema
+                    }
+                });
+                console.log('✅ [SUPABASE] Client created with CLASSICS schema');
             } else {
                 console.warn('⚠️ [SUPABASE] Supabase library not loaded');
             }
@@ -251,40 +242,59 @@
             }
         }
 
-        // ─── LOAD DATA ──────────────────────────────────────────
+        // ─── LOAD DATA (FIXED) ──────────────────────────────────
         async function loadAllData() {
             if (!supabaseClient) return;
             try {
-                const titlesTable = SCHEMA_CONFIG.getTableName('titles');
-                const episodesTable = SCHEMA_CONFIG.getTableName('episodes');
-                const scheduleTable = SCHEMA_CONFIG.getTableName('schedule');
-                const turnoversTable = SCHEMA_CONFIG.getTableName('turnovers');
+                console.log('📊 [QUERY] Loading data from CLASSICS schema...');
                 
-                console.log('📊 [QUERY] Loading from:', {
-                    titles: titlesTable,
-                    episodes: episodesTable,
-                    schedule: scheduleTable,
-                    turnovers: turnoversTable
-                });
-
+                // Use .schema() method for proper schema handling
                 const [titlesRes, episodesRes, weekendRes, turnoversRes] = await Promise.all([
-                    supabaseClient.from(titlesTable).select('*').order('title'),
-                    supabaseClient.from(episodesTable).select('*').order('air_date', { ascending: true }),
-                    supabaseClient.from(scheduleTable).select('*').order('day'),
-                    supabaseClient.from(turnoversTable).select('*').order('start_date')
+                    supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_titles')
+                        .select('*')
+                        .order('title'),
+                    supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_episodes')
+                        .select('*')
+                        .order('air_date', { ascending: true }),
+                    supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_schedule')
+                        .select('*')
+                        .order('day'),
+                    supabaseClient
+                        .schema('CLASSICS')
+                        .from('classic_turnovers')
+                        .select('*')
+                        .order('start_date')
                 ]);
                 
-                if (titlesRes.error) throw titlesRes.error;
-                if (episodesRes.error) throw episodesRes.error;
-                if (weekendRes.error) throw weekendRes.error;
-                if (turnoversRes.error) throw turnoversRes.error;
+                if (titlesRes.error) {
+                    console.error('❌ [ERROR] Titles:', titlesRes.error);
+                    throw titlesRes.error;
+                }
+                if (episodesRes.error) {
+                    console.error('❌ [ERROR] Episodes:', episodesRes.error);
+                    throw episodesRes.error;
+                }
+                if (weekendRes.error) {
+                    console.error('❌ [ERROR] Schedule:', weekendRes.error);
+                    throw weekendRes.error;
+                }
+                if (turnoversRes.error) {
+                    console.error('❌ [ERROR] Turnovers:', turnoversRes.error);
+                    throw turnoversRes.error;
+                }
                 
                 allShows = titlesRes.data || [];
                 allEpisodes = episodesRes.data || [];
                 weekendData = weekendRes.data || [];
                 turnoverData = turnoversRes.data || [];
                 
-                console.log('✅ [DATA] Loaded:', {
+                console.log('✅ [DATA] Loaded successfully:', {
                     shows: allShows.length,
                     episodes: allEpisodes.length,
                     schedule: weekendData.length,
@@ -302,17 +312,10 @@
                 console.error('❌ [ERROR] Load error:', err);
                 setStatus('⚠️', 'error');
                 showMessage('Failed to load data: ' + err.message, 'error');
-                
-                // If using CLASSICS schema fails, try public schema as fallback
-                if (SCHEMA_CONFIG.schema === 'CLASSICS') {
-                    console.warn('🔄 [FALLBACK] Trying public schema...');
-                    SCHEMA_CONFIG.schema = 'public';
-                    await loadAllData();
-                }
             }
         }
 
-        // ─── RENDER FUNCTIONS (same as before, but using SCHEMA_CONFIG) ──
+        // ─── RENDER FUNCTIONS ────────────────────────────────────
         
         function renderSidebar() {
             let filteredShows = allShows;
@@ -674,9 +677,9 @@
         window.addEpisode = async function() {
             if (!currentShowTitle) return;
             try {
-                const episodesTable = SCHEMA_CONFIG.getTableName('episodes');
                 const { data, error } = await supabaseClient
-                    .from(episodesTable)
+                    .schema('CLASSICS')
+                    .from('classic_episodes')
                     .insert({ show_title: currentShowTitle, air_date: null, episode_name: 'New Episode', status: false })
                     .select();
                 if (error) throw error;
@@ -692,8 +695,11 @@
         window.deleteEpisode = async function(episodeId) {
             if (!confirm('Delete this episode?')) return;
             try {
-                const episodesTable = SCHEMA_CONFIG.getTableName('episodes');
-                const { error } = await supabaseClient.from(episodesTable).delete().eq('id', episodeId);
+                const { error } = await supabaseClient
+                    .schema('CLASSICS')
+                    .from('classic_episodes')
+                    .delete()
+                    .eq('id', episodeId);
                 if (error) throw error;
                 allEpisodes = allEpisodes.filter(ep => ep.id != episodeId);
                 showMessage('✅ Episode deleted', 'success');
@@ -707,8 +713,11 @@
         window.toggleStatus = async function(episodeId, currentStatus) {
             const newStatus = !currentStatus;
             try {
-                const episodesTable = SCHEMA_CONFIG.getTableName('episodes');
-                const { error } = await supabaseClient.from(episodesTable).update({ status: newStatus }).eq('id', episodeId);
+                const { error } = await supabaseClient
+                    .schema('CLASSICS')
+                    .from('classic_episodes')
+                    .update({ status: newStatus })
+                    .eq('id', episodeId);
                 if (error) throw error;
                 const ep = allEpisodes.find(e => e.id == episodeId);
                 if (ep) ep.status = newStatus;
@@ -747,11 +756,14 @@
             if (finalValue === oldValue) { td.textContent = oldValue; return; }
             td.textContent = finalValue;
             try {
-                const episodesTable = SCHEMA_CONFIG.getTableName('episodes');
                 const updateData = {};
                 if (field === 'air_date') updateData.air_date = finalValue === '—' ? null : finalValue;
                 else if (field === 'episode_name') updateData.episode_name = finalValue === '—' ? '' : finalValue;
-                const { error } = await supabaseClient.from(episodesTable).update(updateData).eq('id', episodeId);
+                const { error } = await supabaseClient
+                    .schema('CLASSICS')
+                    .from('classic_episodes')
+                    .update(updateData)
+                    .eq('id', episodeId);
                 if (error) throw error;
                 const ep = allEpisodes.find(e => e.id == episodeId);
                 if (ep) {
@@ -828,8 +840,11 @@
             if (newValue === oldValue) { el.textContent = oldValue; return; }
             el.textContent = newValue;
             try {
-                const scheduleTable = SCHEMA_CONFIG.getTableName('schedule');
-                const { error } = await supabaseClient.from(scheduleTable).update({ day: newValue }).eq('id', scheduleId);
+                const { error } = await supabaseClient
+                    .schema('CLASSICS')
+                    .from('classic_schedule')
+                    .update({ day: newValue })
+                    .eq('id', scheduleId);
                 if (error) throw error;
                 const sched = weekendData.find(s => s.id == scheduleId);
                 if (sched) sched.day = newValue;
@@ -848,8 +863,11 @@
             if (finalValue === oldValue) { el.textContent = oldValue; return; }
             el.textContent = finalValue;
             try {
-                const scheduleTable = SCHEMA_CONFIG.getTableName('schedule');
-                const { error } = await supabaseClient.from(scheduleTable).update({ time_slot: finalValue === '—' ? '' : finalValue }).eq('id', scheduleId);
+                const { error } = await supabaseClient
+                    .schema('CLASSICS')
+                    .from('classic_schedule')
+                    .update({ time_slot: finalValue === '—' ? '' : finalValue })
+                    .eq('id', scheduleId);
                 if (error) throw error;
                 const sched = weekendData.find(s => s.id == scheduleId);
                 if (sched) sched.time_slot = finalValue === '—' ? '' : finalValue;
@@ -864,8 +882,11 @@
         window.addScheduleItem = async function() {
             if (!currentShowTitle) return;
             try {
-                const scheduleTable = SCHEMA_CONFIG.getTableName('schedule');
-                const { data, error } = await supabaseClient.from(scheduleTable).insert({ title: currentShowTitle, day: 'Monday', time_slot: '' }).select();
+                const { data, error } = await supabaseClient
+                    .schema('CLASSICS')
+                    .from('classic_schedule')
+                    .insert({ title: currentShowTitle, day: 'Monday', time_slot: '' })
+                    .select();
                 if (error) throw error;
                 if (data && data[0]) weekendData.push(data[0]);
                 showMessage('✅ Schedule added', 'success');
@@ -876,8 +897,11 @@
         window.deleteScheduleItem = async function(id) {
             if (!confirm('Delete this schedule item?')) return;
             try {
-                const scheduleTable = SCHEMA_CONFIG.getTableName('schedule');
-                const { error } = await supabaseClient.from(scheduleTable).delete().eq('id', id);
+                const { error } = await supabaseClient
+                    .schema('CLASSICS')
+                    .from('classic_schedule')
+                    .delete()
+                    .eq('id', id);
                 if (error) throw error;
                 weekendData = weekendData.filter(s => s.id != id);
                 showMessage('✅ Deleted', 'success');
@@ -944,7 +968,6 @@
             if (finalValue === oldValue) { el.textContent = finalValue; return; }
             el.textContent = finalValue;
             try {
-                const turnoversTable = SCHEMA_CONFIG.getTableName('turnovers');
                 const updateData = {};
                 if (field === 'title') updateData.title = finalValue === '—' ? '' : finalValue;
                 else if (field === 'dates') {
@@ -952,7 +975,11 @@
                     updateData.start_date = parts[0] && parts[0] !== '—' ? parts[0] : null;
                     updateData.end_date = parts[1] && parts[1] !== '—' ? parts[1] : null;
                 }
-                const { error } = await supabaseClient.from(turnoversTable).update(updateData).eq('id', id);
+                const { error } = await supabaseClient
+                    .schema('CLASSICS')
+                    .from('classic_turnovers')
+                    .update(updateData)
+                    .eq('id', id);
                 if (error) throw error;
                 const turnover = turnoverData.find(t => t.id == id);
                 if (turnover) {
@@ -973,9 +1000,9 @@
         window.addTurnover = async function() {
             if (!currentShowTitle) return;
             try {
-                const turnoversTable = SCHEMA_CONFIG.getTableName('turnovers');
                 const { data, error } = await supabaseClient
-                    .from(turnoversTable)
+                    .schema('CLASSICS')
+                    .from('classic_turnovers')
                     .insert({ title: currentShowTitle, start_date: null, end_date: null, notes: '' })
                     .select();
                 if (error) throw error;
@@ -988,8 +1015,11 @@
         window.deleteTurnover = async function(id) {
             if (!confirm('Delete this turnover?')) return;
             try {
-                const turnoversTable = SCHEMA_CONFIG.getTableName('turnovers');
-                const { error } = await supabaseClient.from(turnoversTable).delete().eq('id', id);
+                const { error } = await supabaseClient
+                    .schema('CLASSICS')
+                    .from('classic_turnovers')
+                    .delete()
+                    .eq('id', id);
                 if (error) throw error;
                 turnoverData = turnoverData.filter(t => t.id != id);
                 showMessage('✅ Deleted', 'success');
@@ -1023,8 +1053,11 @@
             const showName = prompt('Enter show name:');
             if (!showName) return;
             try {
-                const titlesTable = SCHEMA_CONFIG.getTableName('titles');
-                const { data, error } = await supabaseClient.from(titlesTable).insert({ title: showName.trim(), status: 'Active' }).select();
+                const { data, error } = await supabaseClient
+                    .schema('CLASSICS')
+                    .from('classic_titles')
+                    .insert({ title: showName.trim(), status: 'Active' })
+                    .select();
                 if (error) throw error;
                 if (data && data[0]) allShows.push(data[0]);
                 showMessage('✅ Show added', 'success');
@@ -1051,6 +1084,6 @@
             else setStatus('⚠️ No Supabase', 'error');
         });
 
-        console.log('🎬 [CLASSIC MOVIES] Updated for CLASSICS schema!');
+        console.log('🎬 [CLASSIC MOVIES] Successfully initialized with CLASSICS schema!');
     })();
 </script>
