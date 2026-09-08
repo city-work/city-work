@@ -1,726 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Classic Movies · City Work</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-
-    <!-- ═══ LOAD CONFIG FROM ROOT ═══ -->
-    <script src="../config.js"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
-                    colors: {
-                        midnight: '#18202F',
-                        slateblue: '#68748A',
-                        mist: '#DCE1E6',
-                        warmwhite: '#FAF7F2',
-                        copper: '#B8734F',
-                        copperhover: '#9D5D3C'
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        /* ─── RESET ─── */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body {
-            width: 100%; height: 100%; overflow: hidden;
-            background: #DCE1E6; font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-        .app-container { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
-
-        /* ─── STATUS BADGE ─── */
-        .status-ok { background: #e2e8f0; color: #18202F; border-color: #94a3b8; }
-        .status-error { background: #f5e6e6; color: #7a3b3b; border-color: #c9a1a1; }
-        .status-waiting { background: #f0ebe6; color: #6b5d4d; border-color: #cdbfae; }
-        .status-badge-top {
-            font-size: 0.65rem;
-            font-weight: 600;
-            padding: 0.2rem 0.7rem;
-            border-radius: 9999px;
-            border: 1px solid;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        .status-dot.green { background: #22c55e; }
-        .status-dot.amber { background: #eab308; animation: pulse 1.5s ease-in-out infinite; }
-        .status-dot.red { background: #ef4444; }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-
-        /* ═══ SIDEBAR - ICONS ONLY ═══ */
-        .sidebar {
-            background: rgba(220, 225, 230, 0.75);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(24, 32, 47, 0.08);
-            width: 60px;
-            min-width: 60px;
-            max-width: 60px;
-            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.03);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            overflow: hidden;
-            z-index: 10;
-            position: relative;
-        }
-        .sidebar-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px 8px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        .sidebar-scroll::-webkit-scrollbar { width: 0; background: transparent; }
-
-        .sidebar-item, .sidebar-back {
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border-radius: 0.5rem;
-            padding: 0.7rem 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #68748A;
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            position: relative;
-            width: 100%;
-            margin-bottom: 2px;
-            white-space: nowrap;
-            border: none;
-            background: transparent;
-        }
-        .sidebar-item .icon, .sidebar-back .icon {
-            font-size: 1.2rem;
-            width: 28px;
-            text-align: center;
-            transition: all 0.2s ease;
-        }
-        .sidebar-item .label, .sidebar-back .label { display: none; }
-        .sidebar-item:hover, .sidebar-back:hover {
-            background: rgba(184, 115, 79, 0.15);
-            color: #9D5D3C;
-        }
-        .sidebar-item:hover .icon, .sidebar-back:hover .icon { transform: scale(1.15); }
-        .sidebar-item.active {
-            background: rgba(184, 115, 79, 0.2);
-            color: #9D5D3C;
-        }
-        .sidebar-item.active .icon { transform: scale(1.1); }
-
-        .sidebar-item .tooltip, .sidebar-back .tooltip {
-            position: absolute;
-            left: calc(100% + 14px);
-            top: 50%;
-            transform: translateY(-50%);
-            background: #18202F;
-            color: #FAF7F2;
-            padding: 0.35rem 0.85rem;
-            border-radius: 0.5rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            z-index: 100;
-        }
-        .sidebar-item .tooltip::before, .sidebar-back .tooltip::before {
-            content: '';
-            position: absolute;
-            left: -6px;
-            top: 50%;
-            transform: translateY(-50%);
-            border-right: 6px solid #18202F;
-            border-top: 6px solid transparent;
-            border-bottom: 6px solid transparent;
-        }
-        .sidebar-item:hover .tooltip, .sidebar-item:focus-visible .tooltip,
-        .sidebar-back:hover .tooltip, .sidebar-back:focus-visible .tooltip { opacity: 1; }
-
-        .sidebar-divider { border-top: 1px solid rgba(24, 32, 47, 0.08); margin: 6px 12px; }
-        .sidebar-label { display: none; }
-
-        .brand-icon { font-size: 1.5rem; color: #B8734F; }
-        .brand-container { display: flex; align-items: center; justify-content: center; padding: 12px 0; border-bottom: 1px solid rgba(24,32,47,0.06); }
-
-        .sidebar-back-bottom {
-            margin-top: auto;
-            border-top: 1px solid rgba(24,32,47,0.08);
-            padding: 8px 0;
-        }
-
-        /* ─── MAIN CONTENT ─── */
-        .main-content { flex: 1; min-width: 0; background: #DCE1E6; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        header { background: #DCE1E6; border-bottom: 1px solid rgba(24, 32, 47, 0.08); flex-shrink: 0; padding: 0.75rem 1.5rem; min-height: 64px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
-        .scrollable-content { flex: 1; overflow-y: auto; padding: 1.5rem; min-height: 0; }
-        .scrollable-content::-webkit-scrollbar { width: 5px; }
-        .scrollable-content::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
-
-        /* ─── BUTTONS ─── */
-        .btn-retry {
-            background: transparent;
-            color: #68748A;
-            border: none;
-            padding: 0.4rem 0.6rem;
-            border-radius: 9999px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-retry:hover { background: #e8edf2; color: #18202F; transform: rotate(45deg); }
-
-        /* ─── SEARCH INPUT ─── */
-        .search-wrapper { position: relative; display: inline-flex; align-items: center; }
-        .search-input {
-            background: #FAF7F2; border: 1px solid rgba(24, 32, 47, 0.1); border-radius: 9999px;
-            padding: 0.35rem 2.2rem 0.35rem 2rem; font-size: 0.8rem; width: 200px; transition: all 0.2s ease; outline: none;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-        .search-input:focus { border-color: #B8734F; background: #FAF7F2; width: 260px; box-shadow: 0 0 0 3px rgba(184, 115, 79, 0.2); }
-        .search-input::placeholder { color: #94a3b8; }
-        .search-clear { position: absolute; right: 2.5rem; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; font-size: 0.7rem; padding: 0.2rem 0.4rem; border-radius: 9999px; transition: all 0.2s ease; display: none; }
-        .search-clear:hover { background: #e2e8f0; color: #68748A; }
-        .search-clear.visible { display: block; }
-
-        /* ─── SPINNER ─── */
-        .spinner { width: 18px; height: 18px; border: 2px solid rgba(24, 32, 47, 0.1); border-top-color: #B8734F; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; flex-shrink: 0; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ─── STATS ─── */
-        .stats-stacked { display: flex; flex-direction: column; gap: 0.5rem; background: #FAF7F2; border: 1px solid rgba(24,32,47,0.08); border-radius: 0.75rem; padding: 0.75rem 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 1.5rem; }
-        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 0.15rem 0; border-bottom: 1px solid rgba(24,32,47,0.05); }
-        .stat-row:last-child { border-bottom: none; }
-        .stat-label { font-size: 0.65rem; font-weight: 600; color: #68748A; }
-        .stat-value { font-size: 0.75rem; font-weight: 700; color: #18202F; }
-
-        /* ─── SECTION CARDS ─── */
-        .section-card { background: #FAF7F2; border: 1px solid rgba(24,32,47,0.08); border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 1.5rem; }
-        .section-header { padding: 0.6rem 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid rgba(24,32,47,0.08); background: #f0ebe6; }
-        .section-header h3 { font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; color: #475569; margin: 0; }
-
-        /* ─── TWO COLUMN LAYOUT ─── */
-        .two-col-grid {
-            display: grid;
-            grid-template-columns: 68% 32%;
-            gap: 0;
-        }
-        .two-col-grid .col-titles { 
-            min-width: 0; 
-            border-right: 2px solid rgba(24, 32, 47, 0.12);
-            padding-right: 0;
-        }
-        .two-col-grid .col-schedule { 
-            min-width: 0; 
-            padding-left: 0;
-        }
-
-        @media (max-width: 1024px) {
-            .two-col-grid {
-                grid-template-columns: 65% 35%;
-            }
-        }
-        @media (max-width: 768px) {
-            .two-col-grid {
-                grid-template-columns: 1fr;
-                gap: 0.75rem;
-            }
-            .two-col-grid .col-titles { 
-                border-right: none;
-                border-bottom: 2px solid rgba(24, 32, 47, 0.12);
-                padding-bottom: 0.75rem;
-            }
-            .two-col-grid .col-schedule { 
-                padding-top: 0;
-            }
-        }
-
-        /* ─── TITLES TABLE ─── */
-        .table-wrap { overflow-x: auto; }
-        .table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        .table-wrap th { text-align: left; padding: 0.4rem 0.8rem; font-weight: 600; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.3px; color: #94a3b8; border-bottom: 2px solid rgba(24, 32, 47, 0.1); background: #FAF7F2; white-space: nowrap; }
-        .table-wrap td { padding: 0.5rem 0.8rem; border-bottom: 1px solid rgba(24, 32, 47, 0.05); color: #18202F; vertical-align: middle; }
-        .table-wrap tr:last-child td { border-bottom: none; }
-        .table-wrap tr:hover td { background: rgba(220, 225, 230, 0.4); }
-        .table-wrap tr { cursor: pointer; transition: background 0.2s ease; }
-        .table-wrap tr .progress-complete { color: #22c55e; font-weight: 700; }
-        .table-wrap tr .progress-incomplete { color: #68748A; }
-
-        /* ─── SCHEDULE SIDEBAR ─── */
-        .schedule-compact .schedule-item { 
-            padding: 0.3rem 0.6rem; 
-            border-bottom: 1px solid rgba(24,32,47,0.04); 
-            display: flex; 
-            align-items: center; 
-            gap: 0.3rem; 
-            flex-wrap: wrap;
-            font-size: 0.7rem;
-        }
-        .schedule-compact .schedule-item:last-child { border-bottom: none; }
-        .schedule-compact .schedule-day { 
-            font-weight: 700; 
-            color: #475569; 
-            min-width: 60px; 
-            font-size: 0.6rem; 
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        .schedule-compact .schedule-time { 
-            font-weight: 500; 
-            color: #68748A; 
-            min-width: 75px; 
-            font-size: 0.65rem; 
-        }
-        .schedule-compact .schedule-title { 
-            font-weight: 500; 
-            color: #18202F; 
-            flex: 1; 
-            font-size: 0.7rem; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-        }
-        .schedule-compact .no-schedule { padding: 0.75rem; text-align: center; color: #94a3b8; font-size: 0.75rem; }
-
-        /* ─── TURNOVERS CARDS ─── */
-        .turnover-item { padding: 0.6rem 1rem; border-bottom: 1px solid rgba(24,32,47,0.06); }
-        .turnover-item:last-child { border-bottom: none; }
-        .turnover-item .turnover-title { font-weight: 700; font-size: 0.85rem; color: #18202F; }
-        .turnover-item .turnover-dates { font-size: 0.8rem; color: #18202F; margin-top: 0.15rem; }
-        .turnover-item .turnover-notes { font-size: 0.75rem; color: #18202F; margin-top: 0.1rem; }
-        .turnover-divider { border: none; border-top: 1px dashed rgba(24,32,47,0.1); margin: 0.25rem 1rem; }
-
-        /* ─── CALENDAR ─── */
-        .calendar-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
-            gap: 0.75rem; 
-            padding: 0.75rem; 
-        }
-        .calendar-day { 
-            background: #FAF7F2; 
-            border: 1px solid rgba(24, 32, 47, 0.08); 
-            border-radius: 0.5rem; 
-            overflow: hidden; 
-            min-height: 50px; 
-            display: none;
-        }
-        .calendar-day.has-events { 
-            display: block;
-            background: #FAF7F2; 
-            border-color: #B8734F; 
-            box-shadow: 0 2px 8px rgba(184, 115, 79, 0.15); 
-            min-height: 120px;
-        }
-        .calendar-day .day-header { 
-            background: #f0ebe6; 
-            padding: 0.4rem 0.6rem; 
-            font-size: 0.65rem; 
-            font-weight: 700; 
-            text-transform: uppercase; 
-            color: #94a3b8; 
-            text-align: center; 
-            border-bottom: 1px solid rgba(24, 32, 47, 0.08); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        .calendar-day.has-events .day-header { 
-            background: #B8734F; 
-            color: white; 
-        }
-        .calendar-day.has-events .day-header span { 
-            color: white; 
-            font-weight: 700; 
-        }
-        .calendar-day .day-body { 
-            padding: 0.4rem; 
-            max-height: none; 
-            overflow-y: auto; 
-        }
-        .calendar-day.has-events .day-body { 
-            max-height: 280px;
-        }
-        .cal-event { 
-            font-size: 0.6rem; 
-            padding: 0.3rem 0.4rem; 
-            background: white; 
-            border-radius: 4px; 
-            border: 1px solid rgba(24, 32, 47, 0.08); 
-            margin-bottom: 0.3rem; 
-            font-weight: 500; 
-            color: #18202F; 
-        }
-        .calendar-day.has-events .cal-event { 
-            background: rgba(184, 115, 79, 0.06); 
-            border-color: rgba(184, 115, 79, 0.2); 
-        }
-        .cal-event-title {
-            font-weight: 600;
-            font-size: 0.7rem;
-            color: #18202F;
-        }
-        .cal-event-show {
-            font-size: 0.55rem;
-            color: #68748A;
-            margin-top: 0.1rem;
-        }
-        .calendar-nav { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; border-bottom: 1px solid rgba(24,32,47,0.08); background: #f0ebe6; }
-        .calendar-nav button { background: transparent; border: none; cursor: pointer; color: #94a3b8; padding: 0.25rem 0.5rem; border-radius: 0.25rem; transition: all 0.2s; }
-        .calendar-nav button:hover { background: rgba(24,32,47,0.05); color: #18202F; }
-        .calendar-nav span { font-size: 0.7rem; font-weight: 600; color: #68748A; }
-
-        /* ─── EPISODE TABLE ─── */
-        .episode-filter-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-bottom: 1px solid rgba(24, 32, 47, 0.08); flex-wrap: wrap; }
-        .filter-pill { padding: 0.25rem 0.75rem; border-radius: 999px; background: #FAF7F2; border: 1px solid rgba(24, 32, 47, 0.1); font-size: 0.7rem; font-weight: 600; color: #68748A; cursor: pointer; transition: all 0.2s; }
-        .filter-pill.active { background: #B8734F; color: white; border-color: #B8734F; }
-        .filter-pill span { opacity: 0.7; margin-left: 0.3rem; }
-        .search-in-show { margin-left: auto; padding: 0.3rem 0.8rem; border-radius: 999px; border: 1px solid rgba(24, 32, 47, 0.1); font-size: 0.8rem; background: #FAF7F2; outline: none; width: 180px; transition: all 0.2s; }
-        .search-in-show:focus { border-color: #B8734F; box-shadow: 0 0 0 3px rgba(184, 115, 79, 0.2); }
-
-        .table-scroll-container { max-height: 400px; overflow-y: auto; overflow-x: auto; }
-        .table-scroll-container thead { position: sticky; top: 0; z-index: 10; background: #FAF7F2; }
-
-        .badge-done { background: #e2e8f0; color: #18202F; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
-        .badge-toair { background: #f0ebe6; color: #6b5d4d; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
-        .badge-overdue { background: #f5e6e6; color: #7a3b3b; padding: 0.15rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; display: inline-block; cursor: pointer; transition: all 0.2s; }
-        .badge-done:hover, .badge-toair:hover, .badge-overdue:hover { transform: scale(1.05); }
-
-        .btn-add-episode { background: #B8734F; color: white; border: none; padding: 0.35rem 1rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
-        .btn-add-episode:hover { background: #9D5D3C; transform: scale(1.02); }
-        .btn-delete-episode { background: transparent; color: #b91c1c; border: none; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-        .btn-delete-episode:hover { background: rgba(185, 28, 28, 0.1); transform: scale(1.1); }
-
-        .edit-icon { opacity: 0; transition: opacity 0.2s ease; font-size: 0.6rem; color: #94a3b8; margin-left: 0.25rem; }
-        .editable-cell:hover .edit-icon { opacity: 1; }
-        .editable-cell { cursor: pointer; }
-        .edit-input {
-            width: 100%;
-            padding: 0.25rem 0.5rem;
-            border: 1px solid #B8734F;
-            border-radius: 0.25rem;
-            font-size: 0.8rem;
-            background: #FFFFFF;
-            color: #18202F;
-            outline: none;
-        }
-        .edit-input:focus { border-color: #B8734F; box-shadow: 0 0 0 3px rgba(184, 115, 79, 0.2); }
-        select.edit-input { cursor: pointer; }
-
-        .episode-title { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-
-        .episode-cards { display: none; flex-direction: column; gap: 0.75rem; padding: 0.75rem; max-height: 400px; overflow-y: auto; }
-        .episode-card { background: #FAF7F2; border: 1px solid rgba(24, 32, 47, 0.08); border-radius: 0.75rem; padding: 0.9rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); }
-        .episode-card .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .episode-card .card-header h4 { font-size: 0.95rem; font-weight: 700; color: #18202F; margin: 0; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .episode-card .card-header .date { font-size: 0.75rem; color: #68748A; margin-top: 0.25rem; }
-        .episode-card .card-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; justify-content: flex-end; }
-
-        @media (max-width: 767px) {
-            .table-wrap { display: none; }
-            .episode-cards { display: flex; }
-        }
-        @media (min-width: 768px) { .episode-cards { display: none; } }
-
-        /* ─── RESPONSIVE ─── */
-        @media (max-width: 1024px) {
-            .calendar-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
-        }
-        @media (max-width: 768px) {
-            .sidebar { width: 50px; min-width: 50px; max-width: 50px; }
-            .sidebar-item .icon, .sidebar-back .icon { font-size: 1rem; width: 24px; }
-            header { padding: 0.5rem 1rem; min-height: 56px; }
-            .scrollable-content { padding: 1rem; }
-            .search-input { width: 140px; font-size: 0.7rem; padding: 0.25rem 1.8rem 0.25rem 1.6rem; }
-            .search-input:focus { width: 180px; }
-            .calendar-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
-        }
-        @media (max-width: 480px) {
-            .sidebar { width: 44px; min-width: 44px; max-width: 44px; }
-            .sidebar-item, .sidebar-back { padding: 0.5rem 0.3rem; }
-            .sidebar-item .icon, .sidebar-back .icon { font-size: 0.9rem; width: 20px; }
-            .search-input { width: 100px; font-size: 0.65rem; padding: 0.2rem 1.4rem 0.2rem 1.2rem; }
-            .search-input:focus { width: 130px; }
-            .search-clear { right: 1.6rem; font-size: 0.55rem; }
-            header { padding: 0.4rem 0.75rem; min-height: 48px; }
-            .scrollable-content { padding: 0.75rem; }
-            .calendar-grid { grid-template-columns: 1fr; gap: 0.5rem; }
-            .calendar-day.has-events { min-height: 80px; }
-        }
-
-        /* ─── HIDE FINISHED TOGGLE ─── */
-        .hide-finished-wrapper { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
-        .hide-finished-wrapper label { font-size: 0.65rem; font-weight: 600; color: #68748A; cursor: pointer; }
-
-        /* ─── UTILITY ─── */
-        .hidden { display: none !important; }
-        .fade-in { animation: fadeIn 0.25s ease-out; }
-        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
-        .text-copper { color: #B8734F; }
-
-        /* ─── FOCUS ─── */
-        a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #B8734F; outline-offset: 2px; }
-
-        /* ─── PRINT ─── */
-        @media print {
-            .sidebar, header, .search-wrapper, .btn-retry { display: none !important; }
-            .main-content { height: auto; overflow: visible; }
-            .scrollable-content { overflow: visible; padding: 0; }
-        }
-
-        /* ─── SCROLLBAR ─── */
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 9999px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    </style>
-</head>
-<body>
-
-<div class="app-container">
-    <!-- Sidebar - Icons Only -->
-    <aside class="sidebar" id="sidebar">
-        <div class="brand-container">
-            <span class="brand-icon"><i class="fa-solid fa-city"></i></span>
-        </div>
-        <nav class="sidebar-scroll" id="sidebarNav">
-            <button class="sidebar-item active" id="overviewBtn" onclick="switchView('overview')">
-                <span class="icon"><i class="fa-solid fa-gauge-high"></i></span>
-                <span class="tooltip">Overview</span>
-            </button>
-            <div class="sidebar-divider"></div>
-            <div id="showButtons"></div>
-            <div class="sidebar-divider"></div>
-            <button class="sidebar-item" onclick="addNewShow()" style="color:#22c55e;">
-                <span class="icon"><i class="fa-solid fa-plus"></i></span>
-                <span class="tooltip">Add New Show</span>
-            </button>
-        </nav>
-        <div class="sidebar-back-bottom">
-            <button class="sidebar-back" onclick="window.location.href='../dashboard/index.html'">
-                <span class="icon"><i class="fa-solid fa-arrow-left"></i></span>
-                <span class="tooltip">Back to Main Hub</span>
-            </button>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <header>
-            <div class="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
-                <span id="panelTitle" class="text-sm font-semibold text-midnight whitespace-nowrap">Classic Movies</span>
-                <span id="statusBadge" class="status-badge-top status-waiting">
-                    <span class="status-dot amber"></span>
-                </span>
-            </div>
-            <div class="flex items-center gap-1.5 sm:gap-3 flex-wrap">
-                <span id="syncIndicator" class="text-xs text-slateblue whitespace-nowrap">
-                    <i class="fa-solid fa-cloud-arrow-up mr-1"></i>Synced just now
-                </span>
-                <div class="search-wrapper">
-                    <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
-                    <input type="text" id="globalSearchInput" placeholder="Search shows..." class="search-input" oninput="handleGlobalSearch(this.value)" autocomplete="off" aria-label="Search" />
-                    <span id="searchClear" class="search-clear" onclick="clearSearch()" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></span>
-                </div>
-                <button class="btn-retry" onclick="location.reload()" aria-label="Reload" title="Reload">
-                    <i class="fa-solid fa-rotate-right"></i>
-                </button>
-            </div>
-        </header>
-
-        <div class="scrollable-content" id="scrollableContent">
-            <div id="messageArea"></div>
-
-            <!-- Overview Panel -->
-            <div id="overviewPanel">
-                <!-- Stats -->
-                <div class="stats-stacked">
-                    <div class="stat-row">
-                        <span class="stat-label"><i class="fa-solid fa-film text-copper"></i> Total Shows</span>
-                        <span class="stat-value" id="statTotalShows">0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label"><i class="fa-regular fa-clock text-copper"></i> Next Expiration</span>
-                        <span class="stat-value" id="statNextExpire">—</span>
-                    </div>
-                </div>
-
-                <!-- Weekly Calendar -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <i class="fa-regular fa-calendar text-copper"></i>
-                        <h3>Weekly Schedule</h3>
-                    </div>
-                    <div class="calendar-nav">
-                        <button onclick="changeWeek(-1)" aria-label="Previous week"><i class="fa-solid fa-chevron-left"></i></button>
-                        <span id="weekLabel">Loading...</span>
-                        <button onclick="changeWeek(1)" aria-label="Next week"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                    <div class="calendar-grid" id="calendarGrid"></div>
-                </div>
-
-                <!-- Titles + Schedule Side by Side -->
-                <div class="section-card" style="overflow:hidden;">
-                    <div class="two-col-grid">
-                        <!-- Titles Column (68%) -->
-                        <div class="col-titles">
-                            <div class="section-header" style="border-radius: 0; border-bottom: 1px solid rgba(24,32,47,0.08);">
-                                <i class="fa-solid fa-list text-copper"></i>
-                                <h3>Titles</h3>
-                                <div class="hide-finished-wrapper">
-                                    <label for="hideFinishedToggle">Hide Finished</label>
-                                    <input type="checkbox" id="hideFinishedToggle" onchange="toggleHideFinished()" />
-                                </div>
-                            </div>
-                            <div class="table-wrap">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th style="width:42%;">Title</th>
-                                            <th style="width:33%;">Available Until</th>
-                                            <th style="width:25%;text-align:right;">Progress</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="overviewTableBody">
-                                        <tr><td colspan="3" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Schedule Column (32%) -->
-                        <div class="col-schedule">
-                            <div class="section-header" style="border-radius: 0; border-bottom: 1px solid rgba(24,32,47,0.08);">
-                                <i class="fa-regular fa-calendar text-copper"></i>
-                                <h3>Schedule</h3>
-                            </div>
-                            <div class="schedule-compact" id="scheduleCompactContainer">
-                                <div class="no-schedule">Loading...</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Turnovers -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <i class="fa-regular fa-note-sticky text-copper"></i>
-                        <h3>Turnovers</h3>
-                    </div>
-                    <div id="turnoversContainer"></div>
-                </div>
-            </div>
-
-            <!-- Show View Panel -->
-            <div id="showViewPanel" style="display:none;">
-                <div id="showHeader" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-extrabold text-midnight tracking-tight" id="showViewTitle">Show Name</h1>
-                        <p class="text-xs text-slateblue mt-0.5" id="showViewInfo">Loading...</p>
-                    </div>
-                    <div id="showViewProgress" style="display:flex;align-items:center;gap:0.75rem;">
-                        <span class="text-xs font-semibold text-slateblue" id="showViewCount">0/0</span>
-                        <div style="width:120px;height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
-                            <div id="showViewProgressFill" style="height:100%;width:0%;background:linear-gradient(90deg,#B8734F,#22c55e);border-radius:999px;transition:width 0.6s ease;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Episodes -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <i class="fa-solid fa-list"></i>
-                        <h3>Episodes</h3>
-                        <span id="episodeCountBadge" style="margin-left:0.5rem;font-size:0.6rem;background:#e2e8f0;padding:0.15rem 0.6rem;border-radius:999px;color:#68748A;"></span>
-                        <button class="btn-add-episode" onclick="addEpisode()" style="margin-left:auto;"><i class="fa-solid fa-plus"></i> Add Episode</button>
-                    </div>
-                    <div class="episode-filter-bar">
-                        <button class="filter-pill active" data-filter="all" onclick="filterEpisodes('all')">All <span id="countAll">0</span></button>
-                        <button class="filter-pill" data-filter="done" onclick="filterEpisodes('done')">Done <span id="countDone">0</span></button>
-                        <button class="filter-pill" data-filter="toair" onclick="filterEpisodes('toair')">To Air <span id="countToAir">0</span></button>
-                        <button class="filter-pill" data-filter="overdue" onclick="filterEpisodes('overdue')">Overdue <span id="countOverdue">0</span></button>
-                        <input type="text" class="search-in-show" placeholder="Search episodes..." oninput="searchEpisodes(this.value)">
-                    </div>
-                    <div class="table-wrap table-scroll-container" id="episodesTableWrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th class="sortable" data-sort="air_date" onclick="sortEpisodesBy('air_date')" style="width:20%;">Air Date <i class="fa-solid fa-sort"></i></th>
-                                    <th class="sortable" data-sort="episode_name" onclick="sortEpisodesBy('episode_name')" style="width:55%;">Episode <i class="fa-solid fa-sort"></i></th>
-                                    <th class="sortable" data-sort="status" onclick="sortEpisodesBy('status')" style="width:15%;text-align:center;">Status <i class="fa-solid fa-sort"></i></th>
-                                    <th style="width:10%;text-align:center;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="showViewTableBody">
-                                <tr><td colspan="4" class="text-center py-6 text-slate-400 text-sm">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="episode-cards" id="episodesCardsContainer"></div>
-                </div>
-
-                <!-- Schedule -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <i class="fa-regular fa-calendar"></i>
-                        <h3>Schedule</h3>
-                        <span style="font-size:0.55rem;font-weight:400;color:#94a3b8;margin-left:0.5rem;">(click day/time to edit)</span>
-                        <button class="btn-add-episode" onclick="addScheduleItem()" style="margin-left:auto;"><i class="fa-solid fa-plus"></i> Add Schedule</button>
-                    </div>
-                    <div id="showScheduleItems"></div>
-                </div>
-
-                <!-- Turnovers -->
-                <div class="section-card">
-                    <div class="section-header">
-                        <i class="fa-regular fa-note-sticky"></i>
-                        <h3>Turnovers</h3>
-                        <span style="font-size:0.55rem;font-weight:400;color:#94a3b8;margin-left:0.5rem;">(click to edit)</span>
-                        <button class="btn-add-episode" onclick="addTurnover()" style="margin-left:auto;"><i class="fa-solid fa-plus"></i> Add Turnover</button>
-                    </div>
-                    <div id="showTurnoversContainer"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     // ═══════════════════════════════════════════════════════════════════
-    //  CLASSIC MOVIES — Final Version with Clear Separation
+    //  CLASSIC MOVIES — Updated for CLASSICS Schema
     // ═══════════════════════════════════════════════════════════════════
 
     (function() {
         'use strict';
 
-        console.log('🎬 [CLASSIC MOVIES] Starting...');
+        console.log('🎬 [CLASSIC MOVIES] Starting... (CLASSICS schema)');
 
         // ─── READ SUPABASE CONFIG ──────────────────────────────────
         let SUPABASE_URL, SUPABASE_ANON_KEY;
@@ -749,6 +35,33 @@
             `;
             return;
         }
+
+        // ─── SCHEMA CONFIGURATION ──────────────────────────────────
+        const SCHEMA_CONFIG = {
+            // Which schema to use - change this to switch between public and CLASSICS
+            schema: 'CLASSICS',  // Change to 'public' if you want to use public schema
+            
+            // Table names with schema prefix
+            tables: {
+                titles: 'classic_titles',
+                episodes: 'classic_episodes',
+                schedule: 'classic_schedule',
+                turnovers: 'classic_turnovers'
+            },
+            
+            // Get full table name for Supabase queries
+            getTableName: function(tableKey) {
+                const tableName = this.tables[tableKey];
+                if (this.schema === 'public') {
+                    return tableName;  // public is default, no prefix needed
+                }
+                // For CLASSICS schema, use quoted identifier
+                return `"${this.schema}"."${tableName}"`;
+            }
+        };
+
+        console.log('📋 [SCHEMA] Using schema:', SCHEMA_CONFIG.schema);
+        console.log('📋 [SCHEMA] Tables:', SCHEMA_CONFIG.tables);
 
         // ─── DOM REFS ──────────────────────────────────────────────
         const $ = id => document.getElementById(id);
@@ -942,20 +255,42 @@
         async function loadAllData() {
             if (!supabaseClient) return;
             try {
+                const titlesTable = SCHEMA_CONFIG.getTableName('titles');
+                const episodesTable = SCHEMA_CONFIG.getTableName('episodes');
+                const scheduleTable = SCHEMA_CONFIG.getTableName('schedule');
+                const turnoversTable = SCHEMA_CONFIG.getTableName('turnovers');
+                
+                console.log('📊 [QUERY] Loading from:', {
+                    titles: titlesTable,
+                    episodes: episodesTable,
+                    schedule: scheduleTable,
+                    turnovers: turnoversTable
+                });
+
                 const [titlesRes, episodesRes, weekendRes, turnoversRes] = await Promise.all([
-                    supabaseClient.from('classic_titles').select('*').order('title'),
-                    supabaseClient.from('classic_episodes').select('*').order('air_date', { ascending: true }),
-                    supabaseClient.from('classic_schedule').select('*').order('day'),
-                    supabaseClient.from('classic_turnovers').select('*').order('start_date')
+                    supabaseClient.from(titlesTable).select('*').order('title'),
+                    supabaseClient.from(episodesTable).select('*').order('air_date', { ascending: true }),
+                    supabaseClient.from(scheduleTable).select('*').order('day'),
+                    supabaseClient.from(turnoversTable).select('*').order('start_date')
                 ]);
+                
                 if (titlesRes.error) throw titlesRes.error;
                 if (episodesRes.error) throw episodesRes.error;
                 if (weekendRes.error) throw weekendRes.error;
                 if (turnoversRes.error) throw turnoversRes.error;
+                
                 allShows = titlesRes.data || [];
                 allEpisodes = episodesRes.data || [];
                 weekendData = weekendRes.data || [];
                 turnoverData = turnoversRes.data || [];
+                
+                console.log('✅ [DATA] Loaded:', {
+                    shows: allShows.length,
+                    episodes: allEpisodes.length,
+                    schedule: weekendData.length,
+                    turnovers: turnoverData.length
+                });
+                
                 renderSidebar();
                 renderOverview();
                 if (currentView === 'show' && currentShowTitle) {
@@ -964,13 +299,21 @@
                     else switchView('overview');
                 }
             } catch (err) {
-                console.error('Load error:', err);
+                console.error('❌ [ERROR] Load error:', err);
                 setStatus('⚠️', 'error');
                 showMessage('Failed to load data: ' + err.message, 'error');
+                
+                // If using CLASSICS schema fails, try public schema as fallback
+                if (SCHEMA_CONFIG.schema === 'CLASSICS') {
+                    console.warn('🔄 [FALLBACK] Trying public schema...');
+                    SCHEMA_CONFIG.schema = 'public';
+                    await loadAllData();
+                }
             }
         }
 
-        // ─── RENDER SIDEBAR - ICONS ONLY ──────────────────────────
+        // ─── RENDER FUNCTIONS (same as before, but using SCHEMA_CONFIG) ──
+        
         function renderSidebar() {
             let filteredShows = allShows;
             if (hideFinished) {
@@ -1091,7 +434,7 @@
             `).join('');
         }
 
-        // ─── RENDER CALENDAR - EPISODE ONLY ──────────────────────
+        // ─── RENDER CALENDAR ──────────────────────────────────────
         function renderCalendar(gridId, scheduleData) {
             const grid = document.getElementById(gridId);
             if (!grid) return;
@@ -1158,7 +501,7 @@
             }
         }
 
-        // ─── RENDER TURNOVERS - CLEAN CARD LAYOUT ────────────────
+        // ─── RENDER TURNOVERS ─────────────────────────────────────
         function renderTurnovers(containerId, data) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -1331,8 +674,9 @@
         window.addEpisode = async function() {
             if (!currentShowTitle) return;
             try {
+                const episodesTable = SCHEMA_CONFIG.getTableName('episodes');
                 const { data, error } = await supabaseClient
-                    .from('classic_episodes')
+                    .from(episodesTable)
                     .insert({ show_title: currentShowTitle, air_date: null, episode_name: 'New Episode', status: false })
                     .select();
                 if (error) throw error;
@@ -1348,7 +692,8 @@
         window.deleteEpisode = async function(episodeId) {
             if (!confirm('Delete this episode?')) return;
             try {
-                const { error } = await supabaseClient.from('classic_episodes').delete().eq('id', episodeId);
+                const episodesTable = SCHEMA_CONFIG.getTableName('episodes');
+                const { error } = await supabaseClient.from(episodesTable).delete().eq('id', episodeId);
                 if (error) throw error;
                 allEpisodes = allEpisodes.filter(ep => ep.id != episodeId);
                 showMessage('✅ Episode deleted', 'success');
@@ -1362,7 +707,8 @@
         window.toggleStatus = async function(episodeId, currentStatus) {
             const newStatus = !currentStatus;
             try {
-                const { error } = await supabaseClient.from('classic_episodes').update({ status: newStatus }).eq('id', episodeId);
+                const episodesTable = SCHEMA_CONFIG.getTableName('episodes');
+                const { error } = await supabaseClient.from(episodesTable).update({ status: newStatus }).eq('id', episodeId);
                 if (error) throw error;
                 const ep = allEpisodes.find(e => e.id == episodeId);
                 if (ep) ep.status = newStatus;
@@ -1401,10 +747,11 @@
             if (finalValue === oldValue) { td.textContent = oldValue; return; }
             td.textContent = finalValue;
             try {
+                const episodesTable = SCHEMA_CONFIG.getTableName('episodes');
                 const updateData = {};
                 if (field === 'air_date') updateData.air_date = finalValue === '—' ? null : finalValue;
                 else if (field === 'episode_name') updateData.episode_name = finalValue === '—' ? '' : finalValue;
-                const { error } = await supabaseClient.from('classic_episodes').update(updateData).eq('id', episodeId);
+                const { error } = await supabaseClient.from(episodesTable).update(updateData).eq('id', episodeId);
                 if (error) throw error;
                 const ep = allEpisodes.find(e => e.id == episodeId);
                 if (ep) {
@@ -1481,7 +828,8 @@
             if (newValue === oldValue) { el.textContent = oldValue; return; }
             el.textContent = newValue;
             try {
-                const { error } = await supabaseClient.from('classic_schedule').update({ day: newValue }).eq('id', scheduleId);
+                const scheduleTable = SCHEMA_CONFIG.getTableName('schedule');
+                const { error } = await supabaseClient.from(scheduleTable).update({ day: newValue }).eq('id', scheduleId);
                 if (error) throw error;
                 const sched = weekendData.find(s => s.id == scheduleId);
                 if (sched) sched.day = newValue;
@@ -1500,7 +848,8 @@
             if (finalValue === oldValue) { el.textContent = oldValue; return; }
             el.textContent = finalValue;
             try {
-                const { error } = await supabaseClient.from('classic_schedule').update({ time_slot: finalValue === '—' ? '' : finalValue }).eq('id', scheduleId);
+                const scheduleTable = SCHEMA_CONFIG.getTableName('schedule');
+                const { error } = await supabaseClient.from(scheduleTable).update({ time_slot: finalValue === '—' ? '' : finalValue }).eq('id', scheduleId);
                 if (error) throw error;
                 const sched = weekendData.find(s => s.id == scheduleId);
                 if (sched) sched.time_slot = finalValue === '—' ? '' : finalValue;
@@ -1515,7 +864,8 @@
         window.addScheduleItem = async function() {
             if (!currentShowTitle) return;
             try {
-                const { data, error } = await supabaseClient.from('classic_schedule').insert({ title: currentShowTitle, day: 'Monday', time_slot: '' }).select();
+                const scheduleTable = SCHEMA_CONFIG.getTableName('schedule');
+                const { data, error } = await supabaseClient.from(scheduleTable).insert({ title: currentShowTitle, day: 'Monday', time_slot: '' }).select();
                 if (error) throw error;
                 if (data && data[0]) weekendData.push(data[0]);
                 showMessage('✅ Schedule added', 'success');
@@ -1526,7 +876,8 @@
         window.deleteScheduleItem = async function(id) {
             if (!confirm('Delete this schedule item?')) return;
             try {
-                const { error } = await supabaseClient.from('classic_schedule').delete().eq('id', id);
+                const scheduleTable = SCHEMA_CONFIG.getTableName('schedule');
+                const { error } = await supabaseClient.from(scheduleTable).delete().eq('id', id);
                 if (error) throw error;
                 weekendData = weekendData.filter(s => s.id != id);
                 showMessage('✅ Deleted', 'success');
@@ -1593,6 +944,7 @@
             if (finalValue === oldValue) { el.textContent = finalValue; return; }
             el.textContent = finalValue;
             try {
+                const turnoversTable = SCHEMA_CONFIG.getTableName('turnovers');
                 const updateData = {};
                 if (field === 'title') updateData.title = finalValue === '—' ? '' : finalValue;
                 else if (field === 'dates') {
@@ -1600,7 +952,7 @@
                     updateData.start_date = parts[0] && parts[0] !== '—' ? parts[0] : null;
                     updateData.end_date = parts[1] && parts[1] !== '—' ? parts[1] : null;
                 }
-                const { error } = await supabaseClient.from('classic_turnovers').update(updateData).eq('id', id);
+                const { error } = await supabaseClient.from(turnoversTable).update(updateData).eq('id', id);
                 if (error) throw error;
                 const turnover = turnoverData.find(t => t.id == id);
                 if (turnover) {
@@ -1621,8 +973,9 @@
         window.addTurnover = async function() {
             if (!currentShowTitle) return;
             try {
+                const turnoversTable = SCHEMA_CONFIG.getTableName('turnovers');
                 const { data, error } = await supabaseClient
-                    .from('classic_turnovers')
+                    .from(turnoversTable)
                     .insert({ title: currentShowTitle, start_date: null, end_date: null, notes: '' })
                     .select();
                 if (error) throw error;
@@ -1635,7 +988,8 @@
         window.deleteTurnover = async function(id) {
             if (!confirm('Delete this turnover?')) return;
             try {
-                const { error } = await supabaseClient.from('classic_turnovers').delete().eq('id', id);
+                const turnoversTable = SCHEMA_CONFIG.getTableName('turnovers');
+                const { error } = await supabaseClient.from(turnoversTable).delete().eq('id', id);
                 if (error) throw error;
                 turnoverData = turnoverData.filter(t => t.id != id);
                 showMessage('✅ Deleted', 'success');
@@ -1669,7 +1023,8 @@
             const showName = prompt('Enter show name:');
             if (!showName) return;
             try {
-                const { data, error } = await supabaseClient.from('classic_titles').insert({ title: showName.trim(), status: 'Active' }).select();
+                const titlesTable = SCHEMA_CONFIG.getTableName('titles');
+                const { data, error } = await supabaseClient.from(titlesTable).insert({ title: showName.trim(), status: 'Active' }).select();
                 if (error) throw error;
                 if (data && data[0]) allShows.push(data[0]);
                 showMessage('✅ Show added', 'success');
@@ -1696,8 +1051,6 @@
             else setStatus('⚠️ No Supabase', 'error');
         });
 
-        console.log('🎬 [CLASSIC MOVIES] Final version ready!');
+        console.log('🎬 [CLASSIC MOVIES] Updated for CLASSICS schema!');
     })();
 </script>
-</body>
-</html>
