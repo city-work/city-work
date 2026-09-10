@@ -60,12 +60,6 @@
       object-fit: cover;
       z-index: -1;
       pointer-events: none;
-      animation: bgZoom 20s ease-in-out infinite alternate;
-    }
-
-    @keyframes bgZoom {
-      from { transform: scale(1); }
-      to   { transform: scale(1.1); }
     }
 
     #loadingSpinner {
@@ -700,7 +694,7 @@
 </head>
 <body>
 
-  <!-- Video background (replaces the old CSS background-image) -->
+  <!-- Video background -->
   <video
     class="bg-video"
     autoplay
@@ -1220,7 +1214,6 @@
           opt.addEventListener('click', function() {
             toggleOptions.forEach(o => o.classList.remove('active'));
             this.classList.add('active');
-            // since phone is disabled, we only have email active
           });
         }
       });
