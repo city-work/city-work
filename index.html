@@ -47,18 +47,25 @@
       align-items: flex-end;
       justify-content: center;
       font-family: var(--font-family);
-      background-color: var(--color-bg);
-      background-image: url('https://yffqtbqnzrcctfnjibbo.supabase.co/storage/v1/object/public/cats/vwave.mp4');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
+      background-color: var(--color-bg); /* fallback while video loads */
       padding: 20px;
-      animation: bgZoom 8s ease-in-out infinite alternate;
+    }
+
+    /* ── Video background ─────────────────────────────────────── */
+    .bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+      pointer-events: none;
+      animation: bgZoom 20s ease-in-out infinite alternate;
     }
 
     @keyframes bgZoom {
-      0% { background-size: 100% 100%; }
-      100% { background-size: 110% 110%; }
+      from { transform: scale(1); }
+      to   { transform: scale(1.1); }
     }
 
     #loadingSpinner {
@@ -303,8 +310,7 @@
       color: var(--color-error);
     }
 
-    /* FIX: Password field with both validation icon and show-password button */
-    /* We need extra padding and adjusted positions */
+    /* Password field with both validation icon and show-password button */
     .input-group.password-group input {
       padding-right: 70px; /* space for both icons */
     }
@@ -458,7 +464,7 @@
     .toggle-option:not(.active):hover {
       color: rgba(255, 255, 255, 0.8);
     }
-    /* FIX: Disabled phone option */
+    /* Disabled phone option */
     .toggle-option.disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -541,7 +547,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      animation: popIn 0.6s var(--transition-smooth);
+      animation: popIn 0.6s var(--transition-smooth), pulseGlow 2s ease-in-out 0.6s infinite;
       box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.2);
       position: relative;
     }
@@ -565,10 +571,6 @@
     @keyframes popIn {
       0% { transform: scale(0); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
-    }
-
-    .success-circle {
-      animation: popIn 0.6s var(--transition-smooth), pulseGlow 2s ease-in-out 0.6s infinite;
     }
     @keyframes pulseGlow {
       0%, 100% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.2); }
@@ -698,6 +700,19 @@
 </head>
 <body>
 
+  <!-- Video background (replaces the old CSS background-image) -->
+  <video
+    class="bg-video"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto"
+    aria-hidden="true"
+    tabindex="-1">
+    <source src="https://yffqtbqnzrcctfnjibbo.supabase.co/storage/v1/object/public/cats/vwave.mp4" type="video/mp4" />
+  </video>
+
   <div id="loadingSpinner" role="status" aria-live="polite">
     <i class="fa-solid fa-spinner" aria-hidden="true"></i>
     <p>Checking session...</p>
@@ -754,7 +769,7 @@
           </div>
         </form>
 
-        <!-- Toggle wrapper restored with phone disabled -->
+        <!-- Toggle wrapper with phone disabled -->
         <div class="toggle-wrapper" id="toggleWrapper" role="group" aria-label="Login method">
           <div class="toggle-option active" data-type="email" tabindex="0" role="button">Email</div>
           <div class="toggle-option disabled" data-type="phone" tabindex="0" role="button" title="Phone login coming soon">Phone <span style="font-size:10px;opacity:0.6;">(soon)</span></div>
@@ -1198,7 +1213,6 @@
           opt.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            // Optionally show a message
             setFormError('Phone login is not available yet.', false);
             setTimeout(() => setFormError(''), 3000);
           });
@@ -1207,7 +1221,6 @@
             toggleOptions.forEach(o => o.classList.remove('active'));
             this.classList.add('active');
             // since phone is disabled, we only have email active
-            // No need to change input type
           });
         }
       });
