@@ -714,7 +714,7 @@
 
 <script>
     // ═══════════════════════════════════════════════════════════════════
-    //  CLASSIC MOVIES — Final Version with Clear Separation
+    //  CLASSIC MOVIES — Full Fixed Version
     // ═══════════════════════════════════════════════════════════════════
 
     (function() {
@@ -1158,7 +1158,7 @@
             }
         }
 
-        // ─── RENDER TURNOVERS - CLEAN CARD LAYOUT ────────────────
+        // ─── RENDER TURNOVERS - OVERVIEW (read-only) ────────────
         function renderTurnovers(containerId, data) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -1334,12 +1334,15 @@
                 const { data, error } = await supabaseClient
                     .from('classic_episodes')
                     .insert({ show_title: currentShowTitle, air_date: null, episode_name: 'New Episode', status: false })
-                    .select();
+                    .select()
+                    .single();
                 if (error) throw error;
-                if (data && data[0]) allEpisodes.push(data[0]);
+                if (data) allEpisodes.push(data);
+                else await loadAllData();
                 showMessage('✅ Episode added', 'success');
                 if (currentShowTitle) renderShowView(currentShowTitle);
             } catch (err) {
+                console.error('Insert episode error:', err);
                 showMessage('❌ ' + err.message, 'error');
             }
         };
@@ -1350,7 +1353,7 @@
             try {
                 const { error } = await supabaseClient.from('classic_episodes').delete().eq('id', episodeId);
                 if (error) throw error;
-                allEpisodes = allEpisodes.filter(ep => ep.id != episodeId);
+                allEpisodes = allEpisodes.filter(ep => String(ep.id) !== String(episodeId));
                 showMessage('✅ Episode deleted', 'success');
                 if (currentShowTitle) renderShowView(currentShowTitle);
             } catch (err) {
@@ -1364,7 +1367,7 @@
             try {
                 const { error } = await supabaseClient.from('classic_episodes').update({ status: newStatus }).eq('id', episodeId);
                 if (error) throw error;
-                const ep = allEpisodes.find(e => e.id == episodeId);
+                const ep = allEpisodes.find(e => String(e.id) === String(episodeId));
                 if (ep) ep.status = newStatus;
                 showMessage('✅ Status updated', 'success');
                 if (currentShowTitle) renderShowView(currentShowTitle);
@@ -1373,18 +1376,18 @@
             }
         };
 
-        // ─── EDIT CELL ──────────────────────────────────────────
+        // ─── EDIT CELL (episodes) ────────────────────────────────
         window.editCell = function(td, field, episodeId) {
             if (editingCell) return;
             const currentValue = td.textContent.replace('✏️', '').trim();
             const input = document.createElement('input');
-            input.type = 'text';
+            input.type = field === 'air_date' ? 'date' : 'text';
             input.value = currentValue === '—' ? '' : currentValue;
             input.className = 'edit-input';
             td.textContent = '';
             td.appendChild(input);
             input.focus();
-            input.select();
+            if (input.select) input.select();
             editingCell = { td, field, episodeId, oldValue: currentValue };
             input.addEventListener('blur', function() { saveEdit(td, field, episodeId, input.value); });
             input.addEventListener('keydown', function(e) {
@@ -1399,21 +1402,23 @@
             editingCell = null;
             const finalValue = newValue.trim() || '—';
             if (finalValue === oldValue) { td.textContent = oldValue; return; }
-            td.textContent = finalValue;
             try {
                 const updateData = {};
                 if (field === 'air_date') updateData.air_date = finalValue === '—' ? null : finalValue;
                 else if (field === 'episode_name') updateData.episode_name = finalValue === '—' ? '' : finalValue;
-                const { error } = await supabaseClient.from('classic_episodes').update(updateData).eq('id', episodeId);
+                const { data, error } = await supabaseClient.from('classic_episodes').update(updateData).eq('id', episodeId).select().single();
                 if (error) throw error;
-                const ep = allEpisodes.find(e => e.id == episodeId);
-                if (ep) {
+                const ep = allEpisodes.find(e => String(e.id) === String(episodeId));
+                if (ep && data) {
+                    Object.assign(ep, data);
+                } else if (ep) {
                     if (field === 'air_date') ep.air_date = finalValue === '—' ? null : finalValue;
                     else if (field === 'episode_name') ep.episode_name = finalValue === '—' ? '' : finalValue;
                 }
                 showMessage('✅ Updated', 'success');
                 if (currentShowTitle) renderShowView(currentShowTitle);
             } catch (err) {
+                console.error('Save edit error:', err);
                 showMessage('❌ ' + err.message, 'error');
                 td.textContent = oldValue;
             }
@@ -1479,15 +1484,16 @@
             if (!editingCell) return;
             const oldValue = editingCell.oldValue; editingCell = null;
             if (newValue === oldValue) { el.textContent = oldValue; return; }
-            el.textContent = newValue;
             try {
-                const { error } = await supabaseClient.from('classic_schedule').update({ day: newValue }).eq('id', scheduleId);
+                const { data, error } = await supabaseClient.from('classic_schedule').update({ day: newValue }).eq('id', scheduleId).select().single();
                 if (error) throw error;
-                const sched = weekendData.find(s => s.id == scheduleId);
-                if (sched) sched.day = newValue;
+                const sched = weekendData.find(s => String(s.id) === String(scheduleId));
+                if (sched && data) Object.assign(sched, data);
+                else if (sched) sched.day = newValue;
                 showMessage('✅ Updated', 'success');
                 if (currentShowTitle) renderShowView(currentShowTitle);
             } catch (err) {
+                console.error('Save day error:', err);
                 showMessage('❌ ' + err.message, 'error');
                 el.textContent = oldValue;
             }
@@ -1498,15 +1504,16 @@
             const oldValue = editingCell.oldValue; editingCell = null;
             const finalValue = newValue.trim() || '—';
             if (finalValue === oldValue) { el.textContent = oldValue; return; }
-            el.textContent = finalValue;
             try {
-                const { error } = await supabaseClient.from('classic_schedule').update({ time_slot: finalValue === '—' ? '' : finalValue }).eq('id', scheduleId);
+                const { data, error } = await supabaseClient.from('classic_schedule').update({ time_slot: finalValue === '—' ? '' : finalValue }).eq('id', scheduleId).select().single();
                 if (error) throw error;
-                const sched = weekendData.find(s => s.id == scheduleId);
-                if (sched) sched.time_slot = finalValue === '—' ? '' : finalValue;
+                const sched = weekendData.find(s => String(s.id) === String(scheduleId));
+                if (sched && data) Object.assign(sched, data);
+                else if (sched) sched.time_slot = finalValue === '—' ? '' : finalValue;
                 showMessage('✅ Updated', 'success');
                 if (currentShowTitle) renderShowView(currentShowTitle);
             } catch (err) {
+                console.error('Save time error:', err);
                 showMessage('❌ ' + err.message, 'error');
                 el.textContent = oldValue;
             }
@@ -1515,12 +1522,16 @@
         window.addScheduleItem = async function() {
             if (!currentShowTitle) return;
             try {
-                const { data, error } = await supabaseClient.from('classic_schedule').insert({ title: currentShowTitle, day: 'Monday', time_slot: '' }).select();
+                const { data, error } = await supabaseClient.from('classic_schedule').insert({ title: currentShowTitle, day: 'Monday', time_slot: '' }).select().single();
                 if (error) throw error;
-                if (data && data[0]) weekendData.push(data[0]);
+                if (data) weekendData.push(data);
+                else await loadAllData();
                 showMessage('✅ Schedule added', 'success');
                 if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) { showMessage('❌ ' + err.message, 'error'); }
+            } catch (err) { 
+                console.error('Add schedule error:', err);
+                showMessage('❌ ' + err.message, 'error'); 
+            }
         };
         
         window.deleteScheduleItem = async function(id) {
@@ -1528,7 +1539,7 @@
             try {
                 const { error } = await supabaseClient.from('classic_schedule').delete().eq('id', id);
                 if (error) throw error;
-                weekendData = weekendData.filter(s => s.id != id);
+                weekendData = weekendData.filter(s => String(s.id) !== String(id));
                 showMessage('✅ Deleted', 'success');
                 if (currentShowTitle) renderShowView(currentShowTitle);
             } catch (err) { showMessage('❌ ' + err.message, 'error'); }
@@ -1552,13 +1563,21 @@
                 
                 html += `
                     <div class="turnover-item" data-id="${item.id}">
-                        <div class="turnover-title editable-cell" onclick="editTurnoverCell(this, 'title', '${item.id}')" style="cursor:pointer;">
+                        <div class="turnover-title editable-cell" onclick="editTurnoverTitle(this, '${item.id}')" style="cursor:pointer;">
                             ${esc(item.title)} <span class="edit-icon">✏️</span>
                         </div>
-                        <div class="turnover-dates editable-cell" onclick="editTurnoverCell(this, 'dates', '${item.id}')" style="cursor:pointer;">
-                            ${startDate} — ${endDate}
-                            ${item.notes ? `<span style="color:#18202F;margin-left:0.5rem;">${esc(item.notes)}</span>` : ''}
-                            <span class="edit-icon">✏️</span>
+                        <div class="turnover-dates" style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.25rem;">
+                            <span class="editable-cell" onclick="editTurnoverDate(this, 'start_date', '${item.id}')" style="cursor:pointer;font-size:0.8rem;color:#18202F;">
+                                📅 ${startDate} <span class="edit-icon">✏️</span>
+                            </span>
+                            <span style="color:#94a3b8;">—</span>
+                            <span class="editable-cell" onclick="editTurnoverDate(this, 'end_date', '${item.id}')" style="cursor:pointer;font-size:0.8rem;color:#18202F;">
+                                📅 ${endDate} <span class="edit-icon">✏️</span>
+                            </span>
+                            <span class="editable-cell" onclick="editTurnoverNotes(this, '${item.id}')" style="cursor:pointer;font-size:0.75rem;color:#68748A;margin-left:auto;">
+                                ${item.notes ? esc(item.notes) : '+ note'} <span class="edit-icon">✏️</span>
+                            </span>
+                            <button class="btn-delete-episode" onclick="deleteTurnover('${item.id}')" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
                 `;
@@ -1566,55 +1585,127 @@
             container.innerHTML = html;
         }
 
-        window.editTurnoverCell = function(el, field, id) {
+        window.editTurnoverTitle = function(el, id) {
             if (editingCell) return;
-            let currentValue = el.textContent.replace('✏️', '').trim();
+            const currentValue = el.textContent.replace('✏️', '').trim();
             const input = document.createElement('input');
-            input.type = 'text'; 
+            input.type = 'text';
             input.value = currentValue === '—' ? '' : currentValue;
             input.className = 'edit-input';
-            el.textContent = ''; 
-            el.appendChild(input); 
-            input.focus(); 
+            el.textContent = '';
+            el.appendChild(input);
+            input.focus();
             input.select();
-            editingCell = { el, field, id, oldValue: currentValue || '—' };
-            input.addEventListener('blur', function() { saveTurnoverEdit(el, field, id, input.value); });
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); saveTurnoverEdit(el, field, id, input.value); }
-                if (e.key === 'Escape') { el.textContent = editingCell.oldValue === '' ? '—' : editingCell.oldValue; editingCell = null; }
+            editingCell = { el, id, oldValue: currentValue };
+            
+            input.addEventListener('blur', () => saveTurnoverField(el, id, 'title', input.value, currentValue));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); saveTurnoverField(el, id, 'title', input.value, currentValue); }
+                if (e.key === 'Escape') { el.innerHTML = `${esc(currentValue)} <span class="edit-icon">✏️</span>`; editingCell = null; }
             });
         };
 
-        async function saveTurnoverEdit(el, field, id, newValue) {
+        window.editTurnoverDate = function(el, field, id) {
+            if (editingCell) return;
+            const item = turnoverData.find(t => String(t.id) === String(id));
+            const currentISO = item ? (item[field] || '') : '';
+            
+            const input = document.createElement('input');
+            input.type = 'date';
+            input.value = currentISO || '';
+            input.className = 'edit-input';
+            el.textContent = '';
+            el.appendChild(input);
+            input.focus();
+            editingCell = { el, id, oldValue: currentISO, field };
+            
+            input.addEventListener('blur', () => saveTurnoverField(el, id, field, input.value, currentISO));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                if (e.key === 'Escape') {
+                    el.innerHTML = `📅 ${currentISO ? formatDate(currentISO) : '—'} <span class="edit-icon">✏️</span>`;
+                    editingCell = null;
+                }
+            });
+        };
+
+        window.editTurnoverNotes = function(el, id) {
+            if (editingCell) return;
+            const item = turnoverData.find(t => String(t.id) === String(id));
+            const currentValue = item?.notes || '';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue;
+            input.placeholder = 'Add note...';
+            input.className = 'edit-input';
+            el.textContent = '';
+            el.appendChild(input);
+            input.focus();
+            input.select();
+            editingCell = { el, id, oldValue: currentValue, field: 'notes' };
+            
+            input.addEventListener('blur', () => saveTurnoverField(el, id, 'notes', input.value, currentValue));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); saveTurnoverField(el, id, 'notes', input.value, currentValue); }
+                if (e.key === 'Escape') { el.innerHTML = `${esc(currentValue) || '+ note'} <span class="edit-icon">✏️</span>`; editingCell = null; }
+            });
+        };
+
+        async function saveTurnoverField(el, id, field, newValue, oldValue) {
             if (!editingCell) return;
-            const oldValue = editingCell.oldValue;
             editingCell = null;
-            const finalValue = newValue.trim() || '—';
-            if (finalValue === oldValue) { el.textContent = finalValue; return; }
-            el.textContent = finalValue;
+            
+            const value = (newValue || '').trim();
+            const old = (oldValue || '').trim();
+            
+            if (value === old) {
+                reRenderTurnovers();
+                return;
+            }
+            
             try {
                 const updateData = {};
-                if (field === 'title') updateData.title = finalValue === '—' ? '' : finalValue;
-                else if (field === 'dates') {
-                    const parts = finalValue.split('—').map(s => s.trim());
-                    updateData.start_date = parts[0] && parts[0] !== '—' ? parts[0] : null;
-                    updateData.end_date = parts[1] && parts[1] !== '—' ? parts[1] : null;
+                updateData[field] = value === '' ? null : value;
+                
+                console.log('🔍 PATCH classic_turnovers', { id, field, updateData });
+                
+                const { data, error } = await supabaseClient
+                    .from('classic_turnovers')
+                    .update(updateData)
+                    .eq('id', id)
+                    .select()
+                    .single();
+                
+                if (error) {
+                    console.error('❌ PATCH failed:', error);
+                    throw error;
                 }
-                const { error } = await supabaseClient.from('classic_turnovers').update(updateData).eq('id', id);
-                if (error) throw error;
-                const turnover = turnoverData.find(t => t.id == id);
-                if (turnover) {
-                    if (field === 'title') turnover.title = updateData.title;
-                    else if (field === 'dates') {
-                        turnover.start_date = updateData.start_date;
-                        turnover.end_date = updateData.end_date;
-                    }
+                
+                const idx = turnoverData.findIndex(t => String(t.id) === String(id));
+                if (idx !== -1 && data) {
+                    turnoverData[idx] = data;
+                } else if (idx !== -1) {
+                    turnoverData[idx][field] = value === '' ? null : value;
                 }
-                showMessage('✅ Updated', 'success');
+                
+                showMessage('✅ Saved', 'success');
+                
                 if (currentShowTitle) renderShowView(currentShowTitle);
+                renderOverview();
+                
             } catch (err) {
-                showMessage('❌ ' + err.message, 'error');
-                el.textContent = oldValue;
+                console.error('❌ Save failed:', err);
+                showMessage('❌ Save failed: ' + (err.message || err), 'error');
+                if (currentShowTitle) renderShowView(currentShowTitle);
+            }
+        }
+
+        function reRenderTurnovers() {
+            if (currentShowTitle) {
+                const filtered = turnoverData.filter(t => 
+                    t.title && t.title.toLowerCase() === currentShowTitle.toLowerCase()
+                );
+                renderEditableTurnovers('showTurnoversContainer', filtered);
             }
         }
 
@@ -1624,12 +1715,17 @@
                 const { data, error } = await supabaseClient
                     .from('classic_turnovers')
                     .insert({ title: currentShowTitle, start_date: null, end_date: null, notes: '' })
-                    .select();
+                    .select()
+                    .single();
                 if (error) throw error;
-                if (data && data[0]) turnoverData.push(data[0]);
+                if (data) turnoverData.push(data);
+                else await loadAllData();
                 showMessage('✅ Turnover added', 'success');
                 if (currentShowTitle) renderShowView(currentShowTitle);
-            } catch (err) { showMessage('❌ ' + err.message, 'error'); }
+            } catch (err) { 
+                console.error('Add turnover error:', err);
+                showMessage('❌ ' + err.message, 'error'); 
+            }
         };
 
         window.deleteTurnover = async function(id) {
@@ -1637,7 +1733,7 @@
             try {
                 const { error } = await supabaseClient.from('classic_turnovers').delete().eq('id', id);
                 if (error) throw error;
-                turnoverData = turnoverData.filter(t => t.id != id);
+                turnoverData = turnoverData.filter(t => String(t.id) !== String(id));
                 showMessage('✅ Deleted', 'success');
                 if (currentShowTitle) renderShowView(currentShowTitle);
             } catch (err) { showMessage('❌ ' + err.message, 'error'); }
@@ -1669,20 +1765,28 @@
             const showName = prompt('Enter show name:');
             if (!showName) return;
             try {
-                const { data, error } = await supabaseClient.from('classic_titles').insert({ title: showName.trim(), status: 'Active' }).select();
+                const { data, error } = await supabaseClient.from('classic_titles').insert({ title: showName.trim(), status: 'Active' }).select().single();
                 if (error) throw error;
-                if (data && data[0]) allShows.push(data[0]);
-                showMessage('✅ Show added', 'success');
-                renderSidebar();
-                if (data && data[0]) switchView('show', data[0].title);
-            } catch (err) { showMessage('❌ ' + err.message, 'error'); }
+                if (data) {
+                    allShows.push(data);
+                    showMessage('✅ Show added', 'success');
+                    renderSidebar();
+                    switchView('show', data.title);
+                } else {
+                    await loadAllData();
+                    showMessage('✅ Show added', 'success');
+                }
+            } catch (err) { 
+                console.error('Add show error:', err);
+                showMessage('❌ ' + err.message, 'error'); 
+            }
         };
 
         // ─── KEYBOARD SHORTCUTS ──────────────────────────────────
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && editingCell) {
                 const { el, oldValue } = editingCell;
-                el.textContent = oldValue === '' ? '—' : oldValue;
+                if (el) el.textContent = oldValue === '' ? '—' : oldValue;
                 editingCell = null;
                 e.preventDefault();
             }
@@ -1696,7 +1800,7 @@
             else setStatus('⚠️ No Supabase', 'error');
         });
 
-        console.log('🎬 [CLASSIC MOVIES] Final version ready!');
+        console.log('🎬 [CLASSIC MOVIES] Full fixed version ready!');
     })();
 </script>
 </body>
